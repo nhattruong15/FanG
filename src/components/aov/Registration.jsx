@@ -41,22 +41,7 @@ export default function Registration({ selectedGame }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
               {/* Left: Text & CTA */}
               <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="inline-block px-3.5 py-1 rounded-full bg-emerald-600/15 border border-emerald-500/30 text-emerald-300 text-xs font-bold tracking-wider uppercase">
-                    ĐĂNG KÝ THI ĐẤU
-                  </span>
-                  {selectedGame && (
-                    <span 
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-black tracking-wider uppercase border ${
-                        selectedGame === 'valorant' 
-                          ? 'border-[#ff4655]/50 bg-[#ff4655]/20 text-[#ff4655]' 
-                          : 'border-[#f39c12]/50 bg-[#f39c12]/20 text-[#f39c12]'
-                      }`}
-                    >
-                      {selectedGame === 'valorant' ? 'VALORANT 5V5' : 'AOV 5V5'}
-                    </span>
-                  )}
-                </div>
+             
                 <h2 className="font-heading font-bold text-3xl sm:text-4xl text-white mb-3">
                   Sẵn sàng xưng bá?
                 </h2>

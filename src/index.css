@@ -39,6 +39,7 @@
   html {
     scroll-behavior: smooth;
     scroll-padding-top: 70px;
+    overflow-x: hidden;
   }
 
   body {
@@ -48,6 +49,7 @@
     min-height: 100vh;
     margin: 0;
     overflow-x: hidden;
+    overscroll-behavior-x: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }

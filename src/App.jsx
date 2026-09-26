@@ -64,7 +64,7 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen overflow-y-auto snap-y snap-proximity scroll-smooth bg-[#0e0906] text-slate-100 selection:bg-[#F37021] selection:text-white relative">
+    <div className="h-screen overflow-x-hidden overflow-y-auto lg:snap-y lg:snap-proximity scroll-smooth bg-[#0e0906] text-slate-100 selection:bg-[#F37021] selection:text-white relative">
       {/* Header Container (Navbar + Livestream Banner) */}
       <header className="fixed top-0 left-0 right-0 z-50">
         <Navbar selectedGame={selectedGame} onChangeGame={handleChangeGame} onOpenAdmin={() => setIsAdminView(true)} />
@@ -78,10 +78,11 @@ export default function App() {
 
       <div className="relative">
         {/* FPT Signature Orange #F37021 Ambient Atmospheric Glows throughout the page */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[#F37021]/15 rounded-full blur-[180px] pointer-events-none" />
-        <div className="absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#F37021]/20 rounded-full blur-[160px] pointer-events-none" />
-        <div className="absolute top-1/2 right-0 w-[600px] h-[600px] bg-[#F37021]/20 rounded-full blur-[170px] pointer-events-none" />
-        <div className="absolute top-3/4 left-1/4 w-[550px] h-[550px] bg-[#F37021]/15 rounded-full blur-[160px] pointer-events-none" />
+        {/* Ambient glows — hidden on mobile for performance */}
+        <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[#F37021]/15 rounded-full blur-[180px] pointer-events-none" />
+        <div className="hidden md:block absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#F37021]/20 rounded-full blur-[160px] pointer-events-none" />
+        <div className="hidden md:block absolute top-1/2 right-0 w-[600px] h-[600px] bg-[#F37021]/20 rounded-full blur-[170px] pointer-events-none" />
+        <div className="hidden md:block absolute top-3/4 left-1/4 w-[550px] h-[550px] bg-[#F37021]/15 rounded-full blur-[160px] pointer-events-none" />
 
         <div className="snap-start scroll-mt-28">
           <Introduction selectedGame={selectedGame} onChangeGame={handleChangeGame} />
