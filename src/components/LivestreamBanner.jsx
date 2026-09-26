@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, X, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import { subscribeVideoLivestream, parseYouTubeEmbed, INITIAL_VIDEO_LIVESTREAM } from '../config/firebase';
+import { subscribeVideoLivestream, parseYouTubeEmbed, INITIAL_LIVESTREAM_STREAMS } from '../config/firebase';
 
-export default function LivestreamBanner() {
+export default function LivestreamBanner({ selectedGame }) {
   const [isVisible, setIsVisible] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [streamData, setStreamData] = useState(INITIAL_VIDEO_LIVESTREAM);
+  const [streamData, setStreamData] = useState(INITIAL_LIVESTREAM_STREAMS);
 
   useEffect(() => {
     const unsub = subscribeVideoLivestream((data) => {
@@ -17,11 +17,24 @@ export default function LivestreamBanner() {
     return () => unsub();
   }, []);
 
-  // Hide banner if user closed it or if stream is toggled OFF (isLive === false)
-  if (!isVisible || streamData.isLive === false) return null;
+  const activeGameKey = (selectedGame || 'VALORANT').toUpperCase();
 
-  const embedUrl = parseYouTubeEmbed(streamData.embedUrl || streamData.url) + '?autoplay=1';
-  const watchUrl = streamData.url || streamData.embedUrl || 'https://www.youtube.com';
+  // Find active live stream for current game or fallback to ALL
+  let activeStream = null;
+  if (streamData && streamData[activeGameKey] && streamData[activeGameKey].isLive) {
+    activeStream = streamData[activeGameKey];
+  } else if (streamData && streamData.ALL && streamData.ALL.isLive) {
+    activeStream = streamData.ALL;
+  } else if (streamData && streamData.isLive) {
+    activeStream = streamData;
+  }
+
+  // Hide banner if user closed it or no active stream is live for selected game
+  if (!isVisible || !activeStream || activeStream.isLive === false) return null;
+
+  const streamGame = activeStream.game || activeGameKey;
+  const embedUrl = parseYouTubeEmbed(activeStream.embedUrl || activeStream.url) + '?autoplay=1';
+  const watchUrl = activeStream.url || activeStream.embedUrl || 'https://www.youtube.com';
 
   return (
     <motion.div
@@ -32,13 +45,22 @@ export default function LivestreamBanner() {
       <div className="bg-gradient-to-r from-orange-950/60 via-[#1e130d]/60 to-orange-950/60 backdrop-blur-sm border-b border-[#F37022]/20">
         {/* Compact Bar */}
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F37022] text-white text-xs font-black animate-pulse shadow-md shadow-orange-900/40">
               <Radio className="w-3 h-3" />
               LIVE
             </span>
+            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white shadow-sm ${
+              streamGame === 'VALORANT'
+                ? 'bg-rose-600'
+                : streamGame === 'AOV'
+                ? 'bg-cyan-600'
+                : 'bg-amber-500'
+            }`}>
+              {streamGame === 'ALL' ? 'TẤT CẢ GAME' : streamGame}
+            </span>
             <span className="text-sm font-semibold text-white/95 truncate">
-              {streamData.title || 'Xem trực tiếp ngay!'}
+              {activeStream.title || 'Xem trực tiếp ngay!'}
             </span>
           </div>
 

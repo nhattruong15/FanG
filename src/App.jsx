@@ -68,7 +68,7 @@ export default function App() {
       {/* Header Container (Navbar + Livestream Banner) */}
       <header className="fixed top-0 left-0 right-0 z-50">
         <Navbar selectedGame={selectedGame} onChangeGame={handleChangeGame} onOpenAdmin={() => setIsAdminView(true)} />
-        <LivestreamBanner />
+        <LivestreamBanner selectedGame={selectedGame} />
       </header>
 
       {/* Main Sections with Scroll Snap & Scroll Margin Top (Preventing Header Overlay) */}

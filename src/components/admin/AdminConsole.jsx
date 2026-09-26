@@ -28,17 +28,21 @@ import {
 } from 'lucide-react';
 
 import {
+  INITIAL_LIVESTREAM_STREAMS,
   INITIAL_VIDEO_LIVESTREAM,
   parseYouTubeEmbed,
   saveVideoLivestream,
   subscribeVideoLivestream,
   verifyAdminCredentials,
+  INITIAL_NEWS_ARTICLES,
+  saveNewsArticles,
+  subscribeNews,
 } from '../../config/firebase';
 
 /* ====================================================================
    INITIAL MOCK DATA FOR ADMIN CONSOLE
    ==================================================================== */
-const INITIAL_LIVESTREAM = INITIAL_VIDEO_LIVESTREAM;
+const INITIAL_LIVESTREAM = INITIAL_LIVESTREAM_STREAMS;
 
 const INITIAL_TEAMS = [
   { id: 1, name: 'ĐH FPT Hà Nội', school: 'Đại Học FPT', region: 'Miền Bắc', game: 'Valorant', captain: 'Nguyễn Văn A', members: 5, status: 'VERIFIED' },
@@ -74,34 +78,74 @@ export default function AdminConsole({ onBackToLanding }) {
   const [loginError, setLoginError] = useState(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
-  // Real-time State Management from Firestore
-  const [livestream, setLivestream] = useState(INITIAL_LIVESTREAM);
+  // Real-time State Management from Firestore (Streams map per game)
+  const [streamsMap, setStreamsMap] = useState(INITIAL_LIVESTREAM_STREAMS);
+  const [selectedStreamGame, setSelectedStreamGame] = useState('VALORANT');
   const [teams, setTeams] = useState(INITIAL_TEAMS);
   const [matches, setMatches] = useState(INITIAL_BRACKET_MATCHES);
-  const [news, setNews] = useState(INITIAL_NEWS);
+  const [news, setNews] = useState(INITIAL_NEWS_ARTICLES);
 
-  // Subscribe to real-time Firestore database collection "videolivestream"
+  // Subscribe to real-time Firestore database collection "videolivestream" & "news"
   React.useEffect(() => {
-    const unsub = subscribeVideoLivestream((data) => {
-      if (data) setLivestream(data);
+    const unsubStream = subscribeVideoLivestream((data) => {
+      if (data) {
+        if (data.VALORANT || data.AOV || data.ALL) {
+          setStreamsMap(data);
+        } else {
+          setStreamsMap({
+            ...INITIAL_LIVESTREAM_STREAMS,
+            [data.game || 'VALORANT']: data
+          });
+        }
+      }
     });
-    return () => unsub();
+    const unsubNews = subscribeNews((data) => {
+      if (Array.isArray(data)) setNews(data);
+    });
+    return () => {
+      unsubStream();
+      unsubNews();
+    };
   }, []);
+
+  const currentStream = streamsMap[selectedStreamGame] || INITIAL_LIVESTREAM_STREAMS[selectedStreamGame] || {
+    title: '',
+    url: '',
+    embedUrl: '',
+    isLive: false,
+    game: selectedStreamGame
+  };
 
   // Filters & Search
   const [teamSearch, setTeamSearch] = useState('');
   const [teamGameFilter, setTeamGameFilter] = useState('ALL');
   const [bracketRegionFilter, setBracketRegionFilter] = useState('Miền Bắc');
+  const [newsGameFilter, setNewsGameFilter] = useState('ALL');
 
   // Modals & Notifications
   const [toastMessage, setToastMessage] = useState(null);
   const [showAddTeamModal, setShowAddTeamModal] = useState(false);
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
+  const [editingArticleId, setEditingArticleId] = useState(null);
 
   // New Team Form State
   const [newTeam, setNewTeam] = useState({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 5 });
-  // New Article Form State
-  const [newArticle, setNewArticle] = useState({ title: '', category: 'Giải đấu', author: 'Admin', isFeatured: false });
+  
+  // Article Form State (Supports full metadata & game selection)
+  const [newArticle, setNewArticle] = useState({
+    game: 'VALORANT',
+    title: '',
+    category: 'Tin tức',
+    author: 'Admin',
+    date: new Date().toISOString().split('T')[0],
+    time: '12:00',
+    summary: '',
+    content: '',
+    thumbnail: '',
+    videoEmbed: '',
+    isFeatured: false,
+    status: 'PUBLISHED'
+  });
 
   const triggerToast = (msg) => {
     setToastMessage(msg);
@@ -149,20 +193,69 @@ export default function AdminConsole({ onBackToLanding }) {
     triggerToast('Đã thêm đội tuyển thành công!');
   };
 
-  // Add Article Handler
-  const handleAddArticle = (e) => {
+  // Add / Update Article Handler
+  const handleSaveArticle = async (e) => {
     e.preventDefault();
     if (!newArticle.title) return;
-    const articleToAdd = {
-      id: Date.now(),
-      ...newArticle,
-      date: new Date().toLocaleDateString('vi-VN'),
-      status: 'PUBLISHED',
-    };
-    setNews([articleToAdd, ...news]);
+
+    let updatedNews;
+    const embedUrl = parseYouTubeEmbed(newArticle.videoEmbed);
+
+    if (editingArticleId) {
+      // Edit existing article
+      updatedNews = news.map(item => item.id === editingArticleId ? { ...item, ...newArticle, videoEmbed: embedUrl } : item);
+      triggerToast('Đã cập nhật bài viết tin tức thành công!');
+    } else {
+      // Add new article
+      const articleToAdd = {
+        id: `news_${Date.now()}`,
+        ...newArticle,
+        videoEmbed: embedUrl,
+        status: 'PUBLISHED',
+      };
+      updatedNews = [articleToAdd, ...news];
+      triggerToast('Đã đăng bài viết tin tức mới thành công!');
+    }
+
+    setNews(updatedNews);
+    await saveNewsArticles(updatedNews);
+
     setShowAddNewsModal(false);
-    setNewArticle({ title: '', category: 'Giải đấu', author: 'Admin', isFeatured: false });
-    triggerToast('Đã đăng bài viết tin tức mới thành công!');
+    setEditingArticleId(null);
+    setNewArticle({
+      game: 'VALORANT',
+      title: '',
+      category: 'Tin tức',
+      author: 'Admin',
+      date: new Date().toISOString().split('T')[0],
+      time: '12:00',
+      summary: '',
+      content: '',
+      thumbnail: '',
+      videoEmbed: '',
+      isFeatured: false,
+      status: 'PUBLISHED'
+    });
+  };
+
+  // Open Edit Modal
+  const handleOpenEditNews = (item) => {
+    setEditingArticleId(item.id);
+    setNewArticle({
+      game: item.game || 'VALORANT',
+      title: item.title || '',
+      category: item.category || 'Tin tức',
+      author: item.author || 'Admin',
+      date: item.date || new Date().toISOString().split('T')[0],
+      time: item.time || '12:00',
+      summary: item.summary || item.description || '',
+      content: item.content || '',
+      thumbnail: item.thumbnail || '',
+      videoEmbed: item.videoEmbed || '',
+      isFeatured: !!item.isFeatured,
+      status: item.status || 'PUBLISHED'
+    });
+    setShowAddNewsModal(true);
   };
 
   // Delete Handlers
@@ -171,8 +264,10 @@ export default function AdminConsole({ onBackToLanding }) {
     triggerToast('Đã xóa đội tuyển.');
   };
 
-  const handleDeleteNews = (id) => {
-    setNews(news.filter(n => n.id !== id));
+  const handleDeleteNews = async (id) => {
+    const updatedNews = news.filter(n => n.id !== id);
+    setNews(updatedNews);
+    await saveNewsArticles(updatedNews);
     triggerToast('Đã xóa bài viết.');
   };
 
@@ -368,9 +463,11 @@ export default function AdminConsole({ onBackToLanding }) {
                     <Radio className="w-5 h-5 text-rose-500 animate-pulse" />
                   </div>
                   <div className="font-heading font-black text-2xl text-slate-900 mb-1">
-                    {livestream.isLive ? 'ĐANG PHÁT LIVE' : 'TẮT'}
+                    {Object.values(streamsMap).some(s => s.isLive) ? 'ĐANG PHÁT LIVE' : 'TẮT'}
                   </div>
-                  <div className="text-xs text-amber-600 font-semibold">{livestream.viewers.toLocaleString()} người xem</div>
+                  <div className="text-xs text-amber-600 font-semibold">
+                    {streamsMap[selectedStreamGame]?.viewers?.toLocaleString() || 14250} người xem
+                  </div>
                 </div>
 
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
@@ -405,12 +502,25 @@ export default function AdminConsole({ onBackToLanding }) {
               <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
                 <h3 className="font-heading font-bold text-md text-slate-900 mb-4 flex items-center gap-2">
                   <Sparkles className="w-4 h-4 text-[#F37022]" />
-                  TRẠNG THÁI LUỒNG PHÁT HIỆN TẠI
+                  TRẠNG THÁI LUỒNG PHÁT HIỆN TẠI (Đang chọn: {selectedStreamGame})
                 </h3>
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
                   <div>
-                    <div className="font-bold text-slate-900 text-sm mb-1">{livestream.title}</div>
-                    <div className="text-xs text-slate-500">Nền tảng: {livestream.platform} · {livestream.startTime}</div>
+                    <div className="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2">
+                      <span>{currentStream.title || 'Chưa đặt tiêu đề'}</span>
+                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${
+                        selectedStreamGame === 'VALORANT'
+                          ? 'bg-rose-600'
+                          : selectedStreamGame === 'AOV'
+                          ? 'bg-cyan-600'
+                          : 'bg-amber-500'
+                      }`}>
+                        {selectedStreamGame === 'ALL' ? 'TẤT CẢ GAME' : selectedStreamGame}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500">
+                      Nền tảng: {currentStream.platform || 'YouTube'} · Trạng thái: {currentStream.isLive ? 'ĐANG PHÁT LIVE' : 'TẮT'}
+                    </div>
                   </div>
                   <button
                     onClick={() => setActiveTab('livestream')}
@@ -428,11 +538,11 @@ export default function AdminConsole({ onBackToLanding }) {
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider">
-                  QUẢN LÝ VIDEO LIVESTREAM
+                  QUẢN LÝ VIDEO LIVESTREAM THEO GAME
                 </h2>
                 <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${livestream.isLive ? 'bg-rose-100 text-rose-600 border border-rose-300' : 'bg-slate-200 text-slate-600'}`}>
-                    {livestream.isLive ? '● LIVE BROADCAST' : '○ OFFLINE'}
+                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${currentStream.isLive ? 'bg-rose-100 text-rose-600 border border-rose-300' : 'bg-slate-200 text-slate-600'}`}>
+                    {currentStream.isLive ? `● LIVE BROADCAST [${selectedStreamGame}]` : `○ OFFLINE [${selectedStreamGame}]`}
                   </span>
                 </div>
               </div>
@@ -441,27 +551,61 @@ export default function AdminConsole({ onBackToLanding }) {
                 {/* Livestream Controls Form */}
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Tiêu Đề Trực Tiếp</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Chọn Game Để Cấu Hình Video Live</label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {[
+                        { id: 'VALORANT', label: 'VALORANT', color: 'bg-rose-600 border-rose-500' },
+                        { id: 'AOV', label: 'AOV (Liên Quân)', color: 'bg-cyan-600 border-cyan-500' },
+                        { id: 'ALL', label: 'Tất Cả Game', color: 'bg-[#F37022] border-orange-500' }
+                      ].map((g) => {
+                        const isSelected = selectedStreamGame === g.id;
+                        return (
+                          <button
+                            key={g.id}
+                            type="button"
+                            onClick={() => setSelectedStreamGame(g.id)}
+                            className={`py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer border flex items-center justify-center gap-1.5 ${
+                              isSelected
+                                ? `${g.color} text-white shadow-md shadow-slate-300 scale-[1.02]`
+                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            <span>{g.label}</span>
+                            {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Tiêu Đề Trực Tiếp ({selectedStreamGame})</label>
                     <input
                       type="text"
-                      value={livestream.title}
-                      onChange={(e) => setLivestream({ ...livestream, title: e.target.value })}
+                      value={currentStream.title || ''}
+                      onChange={(e) => setStreamsMap({
+                        ...streamsMap,
+                        [selectedStreamGame]: { ...currentStream, title: e.target.value }
+                      })}
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#F37022] focus:bg-white outline-none font-medium"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Stream Link YouTube / Embed URL</label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Stream Link YouTube / Embed URL ({selectedStreamGame})</label>
                     <input
                       type="text"
                       placeholder="Dán link YouTube (Ví dụ: https://www.youtube.com/watch?v=cI5b71ZBAn0)"
-                      value={livestream.embedUrl || livestream.url || ''}
+                      value={currentStream.embedUrl || currentStream.url || ''}
                       onChange={(e) => {
                         const newUrl = e.target.value;
-                        setLivestream({
-                          ...livestream,
-                          url: newUrl,
-                          embedUrl: parseYouTubeEmbed(newUrl)
+                        setStreamsMap({
+                          ...streamsMap,
+                          [selectedStreamGame]: {
+                            ...currentStream,
+                            url: newUrl,
+                            embedUrl: parseYouTubeEmbed(newUrl)
+                          }
                         });
                       }}
                       className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-sm text-slate-900 focus:border-[#F37022] focus:bg-white outline-none font-mono text-xs"
@@ -470,34 +614,35 @@ export default function AdminConsole({ onBackToLanding }) {
 
                   <div className="flex items-center justify-between pt-2">
                     <button
+                      type="button"
                       onClick={async () => {
-                        const nextLiveState = !livestream.isLive;
-                        const updated = {
-                          ...livestream,
-                          isLive: nextLiveState,
-                          embedUrl: parseYouTubeEmbed(livestream.embedUrl || livestream.url)
+                        const nextLiveState = !currentStream.isLive;
+                        const updatedMap = {
+                          ...streamsMap,
+                          [selectedStreamGame]: {
+                            ...currentStream,
+                            isLive: nextLiveState,
+                            embedUrl: parseYouTubeEmbed(currentStream.embedUrl || currentStream.url)
+                          }
                         };
-                        setLivestream(updated);
-                        await saveVideoLivestream(updated);
-                        triggerToast(nextLiveState ? 'Đã bật phát luồng livestream (Đã lưu CSDL!)' : 'Đã tắt luồng livestream (Đã lưu CSDL!)');
+                        setStreamsMap(updatedMap);
+                        await saveVideoLivestream(updatedMap);
+                        triggerToast(nextLiveState ? `Đã BẬT stream live cho ${selectedStreamGame}!` : `Đã TẮT stream live cho ${selectedStreamGame}!`);
                       }}
-                      className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all ${
-                        livestream.isLive ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                      className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                        currentStream.isLive ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                       }`}
                     >
-                      {livestream.isLive ? 'Tắt Stream Live' : 'Bật Stream Live'}
+                      {currentStream.isLive ? `Tắt Stream Live (${selectedStreamGame})` : `Bật Stream Live (${selectedStreamGame})`}
                     </button>
 
                     <button
+                      type="button"
                       onClick={async () => {
-                        const payload = {
-                          ...livestream,
-                          embedUrl: parseYouTubeEmbed(livestream.embedUrl || livestream.url)
-                        };
-                        await saveVideoLivestream(payload);
-                        triggerToast('Đã lưu cấu hình livestream vào CSDL Firestore!');
+                        await saveVideoLivestream(streamsMap);
+                        triggerToast(`Đã lưu cấu hình livestream riêng cho [${selectedStreamGame}] vào CSDL Firestore!`);
                       }}
-                      className="flex items-center gap-2 px-5 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                      className="flex items-center gap-2 px-5 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
                     >
                       <Save className="w-4 h-4" />
                       Lưu Thay Đổi (Firestore)
@@ -507,22 +652,33 @@ export default function AdminConsole({ onBackToLanding }) {
 
                 {/* Preview Frame */}
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 flex flex-col justify-between">
-                  <h3 className="font-heading font-bold text-sm text-slate-900 uppercase mb-3 flex items-center gap-2">
-                    <Eye className="w-4 h-4 text-[#F37022]" /> Xem Trước Khung Phát (Preview)
-                  </h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-heading font-bold text-sm text-slate-900 uppercase flex items-center gap-2">
+                      <Eye className="w-4 h-4 text-[#F37022]" /> Xem Trước Khung Phát ({selectedStreamGame})
+                    </h3>
+                    <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase text-white shadow-sm ${
+                      selectedStreamGame === 'VALORANT'
+                        ? 'bg-rose-600'
+                        : selectedStreamGame === 'AOV'
+                        ? 'bg-cyan-600'
+                        : 'bg-amber-500'
+                    }`}>
+                      {selectedStreamGame === 'ALL' ? 'TẤT CẢ GAME' : selectedStreamGame}
+                    </span>
+                  </div>
                   <div className="aspect-video bg-black rounded-xl border border-slate-300 overflow-hidden relative flex items-center justify-center">
-                    {(livestream.embedUrl || livestream.url) ? (
+                    {(currentStream.embedUrl || currentStream.url) ? (
                       <iframe
                         className="w-full h-full"
-                        src={parseYouTubeEmbed(livestream.embedUrl || livestream.url)}
-                        title="Livestream Preview"
+                        src={parseYouTubeEmbed(currentStream.embedUrl || currentStream.url)}
+                        title={`Livestream Preview ${selectedStreamGame}`}
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                         allowFullScreen
                       />
                     ) : (
                       <div className="text-slate-400 text-xs font-bold uppercase text-center p-4">
                         <Radio className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                        Chưa nhập link video livestream
+                        Chưa nhập link video livestream cho {selectedStreamGame}
                       </div>
                     )}
                   </div>
@@ -688,46 +844,134 @@ export default function AdminConsole({ onBackToLanding }) {
           {/* ================= TAB 5: NEWS ================= */}
           {activeTab === 'news' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider">
-                  QUẢN LÝ BÀI VIẾT TIN TỨC ({news.length})
-                </h2>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider">
+                    QUẢN LÝ BÀI VIẾT TIN TỨC & HIGHLIGHTS ({news.length})
+                  </h2>
+                
+                </div>
                 <button
-                  onClick={() => setShowAddNewsModal(true)}
-                  className="flex items-center gap-2 px-4 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                  onClick={() => {
+                    setEditingArticleId(null);
+                    setNewArticle({
+                      game: 'VALORANT',
+                      title: '',
+                      category: 'Tin tức',
+                      author: 'Admin',
+                      date: new Date().toISOString().split('T')[0],
+                      time: '12:00',
+                      summary: '',
+                      content: '',
+                      thumbnail: '',
+                      videoEmbed: '',
+                      isFeatured: false,
+                      status: 'PUBLISHED'
+                    });
+                    setShowAddNewsModal(true);
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   Tạo Bài Viết Mới
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {news.map((item) => (
-                  <div key={item.id} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 flex flex-col justify-between">
+              {/* Game Filter Bar */}
+              <div className="flex items-center gap-2 bg-white p-2 rounded-2xl border border-slate-200 shadow-sm w-fit">
+                <span className="text-xs font-bold text-slate-500 px-2 flex items-center gap-1">
+                  <Filter className="w-3.5 h-3.5 text-[#F37022]" /> Lọc Game:
+                </span>
+                {[
+                  { id: 'ALL', label: 'Tất Cả Bài Viết' },
+                  { id: 'VALORANT', label: 'VALORANT' },
+                  { id: 'AOV', label: 'AOV (Liên Quân)' }
+                ].map(g => (
+                  <button
+                    key={g.id}
+                    onClick={() => setNewsGameFilter(g.id)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      newsGameFilter === g.id
+                        ? 'bg-[#F37022] text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {g.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* News Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                {news
+                  .filter(item => newsGameFilter === 'ALL' || item.game === newsGameFilter || item.game === 'ALL')
+                  .map((item) => (
+                  <div key={item.id} className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
                     <div>
-                      <div className="flex items-center justify-between gap-2 mb-2">
-                        <span className="px-2 py-0.5 rounded bg-orange-100 text-[#F37022] text-[10px] font-bold">
-                          {item.category}
-                        </span>
-                        {item.isFeatured && (
-                          <span className="text-[10px] text-amber-600 font-bold flex items-center gap-1">
-                            ★ Nổi bật
+                      {/* Thumbnail or Video Preview */}
+                      <div className="relative aspect-video bg-slate-900 border-b border-slate-100 overflow-hidden">
+                        {item.thumbnail ? (
+                          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                        ) : item.videoEmbed ? (
+                          <iframe src={parseYouTubeEmbed(item.videoEmbed)} title={item.title} className="w-full h-full pointer-events-none" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                            <Newspaper className="w-8 h-8" />
+                          </div>
+                        )}
+
+                        {/* Game Badge */}
+                        <div className="absolute top-2 left-2 flex items-center gap-1">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase shadow-sm ${
+                            item.game === 'VALORANT'
+                              ? 'bg-rose-600 text-white'
+                              : item.game === 'AOV'
+                              ? 'bg-cyan-600 text-white'
+                              : 'bg-amber-500 text-white'
+                          }`}>
+                            {item.game || 'ALL GAME'}
                           </span>
+                          <span className="px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs">
+                            {item.category}
+                          </span>
+                        </div>
+
+                        {item.videoEmbed && (
+                          <div className="absolute bottom-2 right-2 bg-rose-600 text-white p-1 rounded-md text-[10px] font-bold flex items-center gap-1 shadow">
+                            <Radio className="w-3 h-3 animate-pulse" /> Video
+                          </div>
                         )}
                       </div>
-                      <h3 className="font-bold text-sm text-slate-900 mb-2 line-clamp-2">{item.title}</h3>
-                      <div className="text-xs text-slate-500">Tác giả: {item.author} · {item.date}</div>
+
+                      {/* Card Content */}
+                      <div className="p-4">
+                        <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                          <span>{item.date} {item.time ? `· ${item.time}` : ''}</span>
+                          <span className="font-medium text-slate-500">Tác giả: {item.author || 'Admin'}</span>
+                        </div>
+                        <h3 className="font-bold text-sm text-slate-900 mb-1.5 line-clamp-2">{item.title}</h3>
+                        <p className="text-xs text-slate-500 line-clamp-2 mb-3">{item.summary || item.description}</p>
+                      </div>
                     </div>
 
-                    <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-100">
-                      <span className="text-[10px] text-emerald-600 font-bold uppercase">{item.status}</span>
-                      <button
-                        onClick={() => handleDeleteNews(item.id)}
-                        className="p-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 transition-colors"
-                        title="Xóa bài viết"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                    <div className="flex items-center justify-between p-3.5 bg-slate-50 border-t border-slate-100">
+                      <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{item.status || 'PUBLISHED'}</span>
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          onClick={() => handleOpenEditNews(item)}
+                          className="p-1.5 rounded-lg bg-slate-200 hover:bg-[#F37022] hover:text-white text-slate-700 transition-colors cursor-pointer"
+                          title="Chỉnh sửa bài viết"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteNews(item.id)}
+                          className="p-1.5 rounded-lg bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-600 transition-colors cursor-pointer"
+                          title="Xóa bài viết"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -807,48 +1051,177 @@ export default function AdminConsole({ onBackToLanding }) {
         </div>
       )}
 
-      {/* Add News Modal */}
+      {/* Add / Edit News Modal */}
       {showAddNewsModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 max-w-md w-full">
-            <h3 className="font-heading font-black text-lg text-slate-900 mb-4 uppercase">Tạo Bài Viết Tin Tức Mới</h3>
-            <form onSubmit={handleAddArticle} className="space-y-3">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 max-w-xl w-full my-8">
+            <h3 className="font-heading font-black text-lg text-slate-900 mb-4 uppercase flex items-center gap-2">
+              {editingArticleId ? 'Chỉnh Sửa Bài Viết Tin Tức' : 'Tạo Bài Viết Tin Tức Mới'}
+            </h3>
+
+            <form onSubmit={handleSaveArticle} className="space-y-4">
+              {/* 2 DISTINCT GAME SELECTION BUTTONS */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tiêu Đề Bài Viết</label>
-                <input
-                  type="text"
-                  required
-                  value={newArticle.title}
-                  onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
+                <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">
+                  Đăng Cho Bộ Môn (Chọn Game):
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewArticle({ ...newArticle, game: 'VALORANT' })}
+                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${
+                      newArticle.game === 'VALORANT'
+                        ? 'bg-rose-600 text-white border-rose-700 shadow-md shadow-rose-600/30 ring-2 ring-rose-500/50'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                   VALORANT
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewArticle({ ...newArticle, game: 'AOV' })}
+                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${
+                      newArticle.game === 'AOV'
+                        ? 'bg-cyan-600 text-white border-cyan-700 shadow-md shadow-cyan-600/30 ring-2 ring-cyan-500/50'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                     AOV (LIÊN QUÂN)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setNewArticle({ ...newArticle, game: 'ALL' })}
+                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${
+                      newArticle.game === 'ALL'
+                        ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/30 ring-2 ring-amber-400/50'
+                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                    }`}
+                  >
+                    CẢ 2 GAME
+                  </button>
+                </div>
+              </div>
+
+              {/* Title & Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Tiêu Đề Bài Viết *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Nhập tiêu đề bài viết..."
+                    value={newArticle.title}
+                    onChange={(e) => setNewArticle({ ...newArticle, title: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Danh Mục</label>
+                  <select
+                    value={newArticle.category}
+                    onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
+                  >
+                    <option value="Tin tức">Tin tức</option>
+                    <option value="Highlight">Highlight Video</option>
+                    <option value="Giải đấu">Giải đấu</option>
+                    <option value="Lịch đấu">Lịch đấu</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Date & Time */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Ngày Đăng</label>
+                  <input
+                    type="date"
+                    value={newArticle.date}
+                    onChange={(e) => setNewArticle({ ...newArticle, date: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
+                  />
+                </div>
+                
+              </div>
+
+              {/* Thumbnail URL & Video Embed */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Ảnh Thumbnail (URL)</label>
+                  <input
+                    type="text"
+                    placeholder="https://images.unsplash.com/..."
+                    value={newArticle.thumbnail}
+                    onChange={(e) => setNewArticle({ ...newArticle, thumbnail: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Video YouTube / Embed</label>
+                  <input
+                    type="text"
+                    placeholder="https://www.youtube.com/watch?v=..."
+                    value={newArticle.videoEmbed}
+                    onChange={(e) => setNewArticle({ ...newArticle, videoEmbed: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
+                  />
+                </div>
+              </div>
+
+              {/* Summary */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Tóm Tắt Ngắn (Mô tả)</label>
+                <textarea
+                  rows="2"
+                  placeholder="Nhập đoạn tóm tắt hiển thị ngoài trang chủ..."
+                  value={newArticle.summary}
+                  onChange={(e) => setNewArticle({ ...newArticle, summary: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
                 />
               </div>
+
+              {/* Full Content */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Danh Mục</label>
-                <select
-                  value={newArticle.category}
-                  onChange={(e) => setNewArticle({ ...newArticle, category: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
-                >
-                  <option value="Giải đấu">Giải đấu</option>
-                  <option value="Tin tức">Tin tức</option>
-                  <option value="Lịch đấu">Lịch đấu</option>
-                </select>
+                <label className="block text-xs font-bold text-slate-700 mb-1">Nội Dung Chi Tiết Bài Viết</label>
+                <textarea
+                  rows="4"
+                  placeholder="Nhập nội dung đầy đủ bài viết khi bấm xem chi tiết..."
+                  value={newArticle.content}
+                  onChange={(e) => setNewArticle({ ...newArticle, content: e.target.value })}
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-3 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
+                />
               </div>
-              <div className="flex justify-end gap-2 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddNewsModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-300"
-                >
-                  Hủy
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#F37022] text-white text-xs font-bold hover:bg-orange-600 shadow-md"
-                >
-                  Đăng Bài
-                </button>
+
+              {/* Author & Featured Toggle */}
+              <div className="flex items-center justify-between pt-2">
+                <div className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="isFeatured"
+                    checked={newArticle.isFeatured}
+                    onChange={(e) => setNewArticle({ ...newArticle, isFeatured: e.target.checked })}
+                    className="w-4 h-4 text-[#F37022] rounded focus:ring-[#F37022]"
+                  />
+                  <label htmlFor="isFeatured" className="text-xs font-bold text-slate-700 cursor-pointer">
+                    ★ Đánh dấu là Bài Viết Nổi Bật
+                  </label>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddNewsModal(false)}
+                    className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-300 cursor-pointer"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-5 py-2 rounded-xl bg-[#F37022] text-white text-xs font-bold hover:bg-orange-600 shadow-md cursor-pointer"
+                  >
+                    {editingArticleId ? 'Lưu Cập Nhật' : 'Đăng Bài Viết'}
+                  </button>
+                </div>
               </div>
             </form>
           </div>
