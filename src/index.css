@@ -1,0 +1,248 @@
+@import "tailwindcss";
+
+/* ===== FPT Signature Orange (#F37022) Esports Design System ===== */
+@theme {
+  --font-heading: 'Outfit', system-ui, sans-serif;
+  --font-body: 'Be Vietnam Pro', system-ui, sans-serif;
+
+  /* Backgrounds: FPT Orange Midnight Dark Theme (#F37022 warmth, 0% purple) */
+  --color-bg-primary: #0e0906;
+  --color-bg-secondary: #150d09;
+  --color-bg-card: #1e130d;
+  --color-bg-card-hover: #291a12;
+  --color-bg-glass: rgba(30, 19, 13, 0.75);
+
+  /* FPT Signature Brand Colors */
+  --color-fpt-orange: #F37022;
+  --color-fpt-orange-hover: #ff8235;
+  --color-fpt-blue: #005A9E;
+  --color-fpt-green: #00A859;
+
+  /* Borders & Highlights */
+  --color-border: rgba(243, 112, 34, 0.25);
+  --color-border-hover: rgba(243, 112, 34, 0.6);
+
+  --color-text-primary: #fcfcfc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+
+  --color-accent-orange: #F37022;
+  --color-accent-amber: #ff9800;
+
+  --color-gradient-start: #F37022;
+  --color-gradient-mid: #ff8f3d;
+  --color-gradient-end: #d95305;
+}
+
+/* ===== Global Reset & Base ===== */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 70px;
+  }
+
+  body {
+    font-family: var(--font-body);
+    background-color: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::selection {
+    background-color: rgba(243, 112, 34, 0.45);
+    color: white;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: var(--color-bg-primary);
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #F37022;
+    border-radius: 3px;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+  }
+}
+
+/* ===== Utility Classes ===== */
+@layer utilities {
+  .text-gradient {
+    background: linear-gradient(135deg, #F37022 0%, #ff9d54 50%, #e05b0a 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-orange {
+    background: linear-gradient(135deg, #F37022, #ffaa48, #F37022);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .text-gradient-gold {
+    background: linear-gradient(135deg, #f59e0b, #fbbf24, #F37022);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-glass {
+    background: var(--color-bg-glass);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--color-border);
+  }
+
+  .bg-glass-strong {
+    background: rgba(14, 9, 6, 0.92);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--color-border);
+  }
+
+  .glow-orange {
+    box-shadow: 0 0 25px rgba(243, 112, 34, 0.4), 0 0 70px rgba(243, 112, 34, 0.2);
+  }
+
+  .border-glow {
+    border: 1px solid var(--color-border);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .border-glow:hover {
+    border-color: rgba(243, 112, 34, 0.7);
+    box-shadow: 0 0 30px rgba(243, 112, 34, 0.25);
+  }
+
+  .section-padding {
+    padding: 4rem 1rem;
+  }
+  @media (min-width: 768px) {
+    .section-padding {
+      padding: 5rem 2rem;
+    }
+  }
+  @media (min-width: 1024px) {
+    .section-padding {
+      padding: 6rem 2rem;
+    }
+  }
+
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+/* ===== Valorant & AOV Neon Buttons ===== */
+:root {
+  --valo-red: #ff4655;
+  --aov-gold: #f39c12;
+  --bg-dark: #0f1923;
+}
+
+.neon-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.25rem 2.5rem;
+  background-color: transparent;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 4px;
+  cursor: pointer;
+  outline: none;
+  border-radius: 0;
+  transition: all 0.3s ease-in-out;
+  white-space: nowrap;
+}
+
+.btn-valo {
+  color: var(--valo-red);
+  border: 2px solid var(--valo-red);
+  box-shadow: 0 0 10px rgba(255, 70, 85, 0.4), inset 0 0 10px rgba(255, 70, 85, 0.2);
+  text-shadow: 0 0 5px rgba(255, 70, 85, 0.8);
+  animation: pulse-valo 2.5s infinite alternate;
+}
+
+.btn-valo:hover {
+  background-color: var(--valo-red);
+  color: #ffffff;
+  box-shadow: 0 0 20px var(--valo-red), 0 0 40px var(--valo-red), inset 0 0 15px rgba(255, 255, 255, 0.3);
+  text-shadow: none;
+  transform: scale(1.05);
+  animation: none;
+}
+
+.btn-valo:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 10px var(--valo-red);
+}
+
+.btn-aov {
+  color: var(--aov-gold);
+  border: 2px solid var(--aov-gold);
+  box-shadow: 0 0 10px rgba(243, 156, 18, 0.4), inset 0 0 10px rgba(243, 156, 18, 0.2);
+  text-shadow: 0 0 5px rgba(243, 156, 18, 0.8);
+  animation: pulse-aov 2.5s infinite alternate;
+  animation-delay: 0.5s;
+}
+
+.btn-aov:hover {
+  background-color: var(--aov-gold);
+  color: #0f1923;
+  box-shadow: 0 0 20px var(--aov-gold), 0 0 40px var(--aov-gold), inset 0 0 15px rgba(255, 255, 255, 0.4);
+  text-shadow: none;
+  transform: scale(1.05);
+  animation: none;
+}
+
+.btn-aov:active {
+  transform: scale(0.95);
+  box-shadow: 0 0 10px var(--aov-gold);
+}
+
+@keyframes pulse-valo {
+  0% { 
+    box-shadow: 0 0 10px rgba(255, 70, 85, 0.3), inset 0 0 10px rgba(255, 70, 85, 0.2); 
+  }
+  100% { 
+    box-shadow: 0 0 20px rgba(255, 70, 85, 0.6), inset 0 0 15px rgba(255, 70, 85, 0.4); 
+    text-shadow: 0 0 10px rgba(255, 70, 85, 1); 
+  }
+}
+
+@keyframes pulse-aov {
+  0% { 
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.3), inset 0 0 10px rgba(243, 156, 18, 0.2); 
+  }
+  100% { 
+    box-shadow: 0 0 20px rgba(243, 156, 18, 0.6), inset 0 0 15px rgba(243, 156, 18, 0.4); 
+    text-shadow: 0 0 10px rgba(243, 156, 18, 1); 
+  }
+}
+
