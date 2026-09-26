@@ -118,25 +118,14 @@ export default function Introduction({ selectedGame, onChangeGame }) {
             className=" mt-5 relative w-full rounded-3xl overflow-hidden bg-cover bg-center bg-no-repeat shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_20px_40px_-10px_rgba(243,112,34,0.4)] border border-[#F37022]/40 group"
             style={{ backgroundImage: `url(${bgImg})` }}
           >
-            {/* Ambient Animated Orange Radial Glow behind banner */}
-            <motion.div
-              animate={{
-                scale: [1, 1.15, 1],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{
-                duration: 6,
-                repeat: Infinity,
-                ease: 'easeInOut',
-              }}
-              className="absolute -top-24 -left-24 w-96 h-96 bg-[#F37022]/35 rounded-full blur-[90px] pointer-events-none"
-            />
+            {/* Ambient Animated Orange Radial Glow behind banner — desktop only */}
+            <div className="hidden md:block absolute -top-24 -left-24 w-96 h-96 bg-[#F37022]/25 rounded-full blur-[90px] pointer-events-none" />
 
             {/* Subtle Overlay confined inside banner */}
             <div className="absolute inset-0 bg-[#0e0906]/55 pointer-events-none" />
 
-            {/* Floating Energy Particles Overlay */}
-            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            {/* Floating Energy Particles Overlay — hidden on mobile */}
+            <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
               {[...Array(6)].map((_, i) => (
                 <motion.div
                   key={i}
@@ -168,39 +157,17 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                 {/* LEFT COLUMN: Motion-Enhanced Logo (Smaller on mobile) */}
                 <div className="relative flex justify-center lg:justify-center">
                   <motion.div
-                    initial={{ scale: 0.8, opacity: 0, x: -40 }}
-                    whileInView={{ scale: 1, opacity: 1, x: 0 }}
+                    initial={{ scale: 0.9, opacity: 0, y: 15 }}
+                    whileInView={{ scale: 1, opacity: 1, y: 0 }}
                     viewport={{ once: true }}
-                    transition={{ duration: 0.8, type: 'spring', bounce: 0.3 }}
+                    transition={{ duration: 0.6 }}
                     className="relative group cursor-pointer flex justify-center"
                   >
                     {/* Ambient Pulsing Aura Glow Behind Logo */}
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.3, 1],
-                        opacity: [0.45, 0.85, 0.45],
-                      }}
-                      transition={{
-                        duration: 3,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                      className="absolute inset-0 bg-gradient-to-r from-[#F37022]/50 via-amber-500/50 to-[#F37022]/50 rounded-full blur-[80px] pointer-events-none"
-                    />
+                    <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-[#F37022]/40 via-amber-500/40 to-[#F37022]/40 rounded-full blur-[70px] pointer-events-none" />
 
-                    {/* Floating & Breathing Motion Logo — Compact on mobile */}
-                    <motion.img
-                      animate={{
-                        y: [0, -10, 0],
-                        scale: [1, 1.05, 1],
-                        rotate: [0, 0.5, -0.5, 0],
-                      }}
-                      transition={{
-                        duration: 4.5,
-                        repeat: Infinity,
-                        ease: 'easeInOut',
-                      }}
-                      whileHover={{ scale: 1.1, rotate: [-1.5, 1.5, -1.5] }}
+                    {/* Logo Image */}
+                    <img
                       src={logoImg}
                       alt="FanG Exports Logo"
                       className="relative z-10 max-h-44 sm:max-h-72 md:max-h-[440px] lg:max-h-[500px] ml-0 lg:ml-6 w-auto h-auto object-contain filter drop-shadow-[0_0_35px_rgba(243,112,34,0.9)] group-hover:drop-shadow-[0_0_65px_rgba(243,112,34,1)] transition-all duration-300"
@@ -210,27 +177,15 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
                 {/* RIGHT COLUMN: Chamfered Octagon Description Card */}
                 <motion.div
-                  initial={{ opacity: 0, x: 40 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  transition={{ duration: 0.7, delay: 0.2 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
                   className="relative w-full p-0.5"
                 >
-                  {/* Outer Cut-Corner Border Frame */}
-                  <motion.div 
-                    animate={{
-                      filter: [
-                        'drop-shadow(0 0 25px rgba(243,112,34,0.4))',
-                        'drop-shadow(0 0 45px rgba(243,112,34,0.8))',
-                        'drop-shadow(0 0 25px rgba(243,112,34,0.4))',
-                      ],
-                    }}
-                    transition={{
-                      duration: 3,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
-                    className="relative p-[1.5px] bg-gradient-to-b from-[#F37022] via-[#ff8f3d] to-[#F37022]"
+                  {/* Outer Cut-Corner Border Frame with CSS shadow */}
+                  <div 
+                    className="relative p-[1.5px] bg-gradient-to-b from-[#F37022] via-[#ff8f3d] to-[#F37022] shadow-[0_0_30px_rgba(243,112,34,0.45)]"
                     style={{
                       clipPath: 'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
                     }}
@@ -272,7 +227,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                         </p>
                       </div>
                     </div>
-                  </motion.div>
+                  </div>
                 </motion.div>
 
               </div>
