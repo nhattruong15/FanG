@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
   Tv,
@@ -24,7 +24,19 @@ import {
   Lock,
   Key,
   LogOut,
-  ShieldCheck,
+  GraduationCap,
+  Building2,
+  ChevronDown,
+  UserCheck,
+  Phone,
+  Upload,
+  QrCode,
+  BarChart3,
+  Activity,
+  TrendingUp,
+  PieChart,
+  MousePointer,
+  Share2,
 } from 'lucide-react';
 
 import {
@@ -37,20 +49,27 @@ import {
   INITIAL_NEWS_ARTICLES,
   saveNewsArticles,
   subscribeNews,
+  INITIAL_TEAMS,
+  saveTeams,
+  subscribeTeams,
+  subscribeQrScans,
+  INITIAL_QR_STATS,
+  subscribeLiveViews,
+  INITIAL_LIVE_STATS,
+  subscribeVisitorStats,
 } from '../../config/firebase';
+
+import {
+  fetchVietnamUniversities,
+  VIETNAM_UNIVERSITIES_FALLBACK
+} from '../../services/universityApi';
 
 /* ====================================================================
    INITIAL MOCK DATA FOR ADMIN CONSOLE
    ==================================================================== */
 const INITIAL_LIVESTREAM = INITIAL_LIVESTREAM_STREAMS;
 
-const INITIAL_TEAMS = [
-  { id: 1, name: 'ĐH FPT Hà Nội', school: 'Đại Học FPT', region: 'Miền Bắc', game: 'Valorant', captain: 'Nguyễn Văn A', members: 5, status: 'VERIFIED' },
-  { id: 2, name: 'ĐH FPT TP.HCM', school: 'Đại Học FPT', region: 'Miền Nam', game: 'Valorant', captain: 'Trần Văn B', members: 5, status: 'VERIFIED' },
-  { id: 3, name: 'ĐH Bách Khoa HN', school: 'ĐH Bách Khoa', region: 'Miền Bắc', game: 'AOV', captain: 'Lê Hoàng C', members: 5, status: 'VERIFIED' },
-  { id: 4, name: 'ĐH HUTECH', school: 'ĐH HUTECH', region: 'Miền Nam', game: 'AOV', captain: 'Phạm Minh D', members: 5, status: 'VERIFIED' },
-  { id: 5, name: 'ĐH Kinh Tế QD', school: 'ĐH Kinh Tế Quốc Dân', region: 'Miền Bắc', game: 'Valorant', captain: 'Vũ Quốc E', members: 5, status: 'PENDING' },
-];
+
 
 const INITIAL_BRACKET_MATCHES = [
   { id: 'M1', region: 'Miền Bắc', round: 'Vòng 1/16', team1: 'ĐH FPT Hà Nội', team2: 'ĐH Bách Khoa HN', score1: 2, score2: 0, status: 'DONE', winner: 1 },
@@ -84,8 +103,29 @@ export default function AdminConsole({ onBackToLanding }) {
   const [teams, setTeams] = useState(INITIAL_TEAMS);
   const [matches, setMatches] = useState(INITIAL_BRACKET_MATCHES);
   const [news, setNews] = useState(INITIAL_NEWS_ARTICLES);
+  const [qrStats, setQrStats] = useState(INITIAL_QR_STATS);
+  const [liveStats, setLiveStats] = useState(INITIAL_LIVE_STATS);
+  const [visitorStats, setVisitorStats] = useState({ totalVisits: 0, onlineCount: 0, activeSessions: [], lastVisitTime: null });
 
-  // Subscribe to real-time Firestore database collection "videolivestream" & "news"
+  // Analytics & Tracking UI State
+  const [overviewChartFilter, setOverviewChartFilter] = useState('ALL');
+  const [overviewChartType, setOverviewChartType] = useState('LINE'); // 'LINE' or 'BAR'
+  const [overviewTimeRange, setOverviewTimeRange] = useState('TODAY'); // 'TODAY' | 'YESTERDAY' | '7DAYS' | '30DAYS' | 'CUSTOM'
+  const [selectedChartDate, setSelectedChartDate] = useState('2026-09-28');
+  const [showScanLogs, setShowScanLogs] = useState(false);
+  const [scanLogFilter, setScanLogFilter] = useState('ALL');
+  const [scanLogPage, setScanLogPage] = useState(1);
+
+  const [showLiveLogs, setShowLiveLogs] = useState(false);
+  const [liveLogFilter, setLiveLogFilter] = useState('ALL');
+  const [liveLogPage, setLiveLogPage] = useState(1);
+  const ITEMS_PER_PAGE = 10;
+
+  // Track initial load for QR notification trigger
+  const isInitialQrLoad = React.useRef(true);
+  const isInitialLiveLoad = React.useRef(true);
+
+  // Subscribe to real-time Firestore database collection "videolivestream", "news", "teams", "qr_scans" & "live_views"
   React.useEffect(() => {
     const unsubStream = subscribeVideoLivestream((data) => {
       if (data) {
@@ -102,9 +142,41 @@ export default function AdminConsole({ onBackToLanding }) {
     const unsubNews = subscribeNews((data) => {
       if (Array.isArray(data)) setNews(data);
     });
+    const unsubTeams = subscribeTeams((data) => {
+      if (Array.isArray(data)) setTeams(data);
+    });
+    const unsubQr = subscribeQrScans((data) => {
+      if (data) {
+        setQrStats(prev => {
+          if (!isInitialQrLoad.current && data.totalScans > (prev.totalScans || 0)) {
+            triggerToast(`Đã nhận 1 lượt quét QR mới (${data.lastScanGame || 'ALL'})! Tổng: ${data.totalScans}`);
+          }
+          return data;
+        });
+        isInitialQrLoad.current = false;
+      }
+    });
+    const unsubLive = subscribeLiveViews((data) => {
+      if (data) {
+        setLiveStats(prev => {
+          if (!isInitialLiveLoad.current && data.totalViews > (prev.totalViews || 0)) {
+            triggerToast(`Đã nhận 1 lượt xem Live mới (${data.lastViewGame || 'ALL'})! Tổng: ${data.totalViews}`);
+          }
+          return data;
+        });
+        isInitialLiveLoad.current = false;
+      }
+    });
+    const unsubVisitor = subscribeVisitorStats((data) => {
+      if (data) setVisitorStats(data);
+    });
     return () => {
       unsubStream();
       unsubNews();
+      unsubTeams();
+      unsubQr();
+      unsubLive();
+      unsubVisitor();
     };
   }, []);
 
@@ -119,6 +191,8 @@ export default function AdminConsole({ onBackToLanding }) {
   // Filters & Search
   const [teamSearch, setTeamSearch] = useState('');
   const [teamGameFilter, setTeamGameFilter] = useState('ALL');
+  const [teamRegionFilter, setTeamRegionFilter] = useState('ALL');
+  const [editingTeamId, setEditingTeamId] = useState(null);
   const [bracketRegionFilter, setBracketRegionFilter] = useState('Miền Bắc');
   const [newsGameFilter, setNewsGameFilter] = useState('ALL');
 
@@ -128,8 +202,57 @@ export default function AdminConsole({ onBackToLanding }) {
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
   const [editingArticleId, setEditingArticleId] = useState(null);
 
+  // Vietnam Universities API & 5 Member Roster State
+  const [universitiesList, setUniversitiesList] = useState(VIETNAM_UNIVERSITIES_FALLBACK);
+  const [isLoadingUniversities, setIsLoadingUniversities] = useState(false);
+  const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
+  const [showUniDropdown, setShowUniDropdown] = useState(false);
+  const [viewingTeamRoster, setViewingTeamRoster] = useState(null);
+
+  const DEFAULT_6_MEMBERS = [
+    { id: 1, name: '', ingame: '', phone: '', role: 'Đội trưởng' },
+    { id: 2, name: '', ingame: '', phone: '', role: 'Thành viên' },
+    { id: 3, name: '', ingame: '', phone: '', role: 'Thành viên' },
+    { id: 4, name: '', ingame: '', role: 'Thành viên' },
+    { id: 5, name: '', ingame: '', role: 'Thành viên' },
+    { id: 6, name: '', ingame: '', phone: '', role: 'Dự bị' },
+  ];
+  const [newTeamMembers, setNewTeamMembers] = useState(DEFAULT_6_MEMBERS);
+
+  // Fetch Vietnam Universities & Colleges API on mount
+  useEffect(() => {
+    let isMounted = true;
+    async function loadUnis() {
+      setIsLoadingUniversities(true);
+      try {
+        const data = await fetchVietnamUniversities();
+        console.log('[Admin] Universities loaded from API:', data.length, 'schools');
+        if (isMounted) {
+          setUniversitiesList(data);
+          setIsLoadingUniversities(false);
+        }
+      } catch (err) {
+        console.error('[Admin] Failed to load universities:', err);
+        if (isMounted) setIsLoadingUniversities(false);
+      }
+    }
+    loadUnis();
+    return () => { isMounted = false; };
+  }, []);
+
   // New Team Form State
-  const [newTeam, setNewTeam] = useState({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 5 });
+  const [newTeam, setNewTeam] = useState({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 6, logo: '' });
+  
+  const handleLogoFileUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setNewTeam(prev => ({ ...prev, logo: reader.result }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
   
   // Article Form State (Supports full metadata & game selection)
   const [newArticle, setNewArticle] = useState({
@@ -178,19 +301,93 @@ export default function AdminConsole({ onBackToLanding }) {
     triggerToast('Đã đăng xuất khỏi Admin Console.');
   };
 
-  // Add Team Handler
-  const handleAddTeam = (e) => {
+  // Open Edit Team Modal
+  const handleOpenEditTeam = (team) => {
+    setEditingTeamId(team.id);
+    setNewTeam({
+      name: team.name || '',
+      school: team.school || '',
+      region: team.region || 'Miền Bắc',
+      game: team.game || 'Valorant',
+      captain: team.captain || '',
+      members: 6,
+      logo: team.logo || ''
+    });
+    setSchoolSearchQuery(team.school || '');
+    const existingMembers = team.membersList || [];
+    const filledMembers = Array.from({ length: 6 }).map((_, idx) => {
+      const existing = existingMembers[idx] || {};
+      return {
+        id: idx + 1,
+        name: existing.name || '',
+        ingame: existing.ingame || '',
+        phone: existing.phone || '',
+        role: existing.role || (idx === 0 ? 'Đội trưởng' : idx === 5 ? 'Dự bị' : 'Thành viên')
+      };
+    });
+    setNewTeamMembers(filledMembers);
+    setShowAddTeamModal(true);
+  };
+
+  // Add / Edit Team Handler with 6 Members
+  const handleAddTeam = async (e) => {
     e.preventDefault();
-    if (!newTeam.name) return;
-    const teamToAdd = {
-      id: Date.now(),
-      ...newTeam,
-      status: 'VERIFIED',
-    };
-    setTeams([teamToAdd, ...teams]);
+    if (!newTeam.name || !newTeam.school) return;
+
+    const captainObj = newTeamMembers.find(m => m.role === 'Đội trưởng') || newTeamMembers[0];
+    const captainName = captainObj.name.trim() || newTeamMembers[0].name.trim() || 'Chưa đặt tên';
+
+    const processedMembers = newTeamMembers.map((m, idx) => ({
+      id: idx + 1,
+      name: m.name.trim() || (idx === 5 ? `Thành viên Dự bị` : `Thành viên ${idx + 1}`),
+      ingame: m.ingame.trim() || `Player_${idx + 1}`,
+      phone: m.phone ? m.phone.trim() : '',
+      role: m.role || (idx === 0 ? 'Đội trưởng' : idx === 5 ? 'Dự bị' : 'Thành viên')
+    }));
+
+    let updatedTeams;
+    if (editingTeamId) {
+      updatedTeams = teams.map(t => {
+        if (t.id === editingTeamId) {
+          return {
+            ...t,
+            name: newTeam.name,
+            school: newTeam.school,
+            region: newTeam.region || 'Miền Bắc',
+            game: newTeam.game || 'Valorant',
+            captain: captainName,
+            membersCount: 6,
+            membersList: processedMembers,
+            logo: newTeam.logo || '',
+          };
+        }
+        return t;
+      });
+      triggerToast('Đã cập nhật thông tin đội tuyển thành công!');
+    } else {
+      const teamToAdd = {
+        id: Date.now(),
+        name: newTeam.name,
+        school: newTeam.school,
+        region: newTeam.region || 'Miền Bắc',
+        game: newTeam.game || 'Valorant',
+        captain: captainName,
+        membersCount: 6,
+        membersList: processedMembers,
+        logo: newTeam.logo || '',
+        status: 'VERIFIED',
+      };
+      updatedTeams = [teamToAdd, ...teams];
+      triggerToast('Đã thêm đội tuyển 6 thành viên (5 chính + 1 dự bị) thành công!');
+    }
+
+    setTeams(updatedTeams);
+    await saveTeams(updatedTeams);
     setShowAddTeamModal(false);
-    setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 5 });
-    triggerToast('Đã thêm đội tuyển thành công!');
+    setEditingTeamId(null);
+    setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 6, logo: '' });
+    setSchoolSearchQuery('');
+    setNewTeamMembers(DEFAULT_6_MEMBERS);
   };
 
   // Add / Update Article Handler
@@ -233,6 +430,7 @@ export default function AdminConsole({ onBackToLanding }) {
       content: '',
       thumbnail: '',
       videoEmbed: '',
+      articleUrl: '',
       isFeatured: false,
       status: 'PUBLISHED'
     });
@@ -252,6 +450,7 @@ export default function AdminConsole({ onBackToLanding }) {
       content: item.content || '',
       thumbnail: item.thumbnail || '',
       videoEmbed: item.videoEmbed || '',
+      articleUrl: item.articleUrl || item.url || item.link || '',
       isFeatured: !!item.isFeatured,
       status: item.status || 'PUBLISHED'
     });
@@ -259,8 +458,10 @@ export default function AdminConsole({ onBackToLanding }) {
   };
 
   // Delete Handlers
-  const handleDeleteTeam = (id) => {
-    setTeams(teams.filter(t => t.id !== id));
+  const handleDeleteTeam = async (id) => {
+    const updatedTeams = teams.filter(t => t.id !== id);
+    setTeams(updatedTeams);
+    await saveTeams(updatedTeams);
     triggerToast('Đã xóa đội tuyển.');
   };
 
@@ -288,9 +489,15 @@ export default function AdminConsole({ onBackToLanding }) {
 
   // Filtered Teams
   const filteredTeams = teams.filter(t => {
-    const matchesSearch = t.name.toLowerCase().includes(teamSearch.toLowerCase()) || t.school.toLowerCase().includes(teamSearch.toLowerCase());
+    const searchLower = teamSearch.toLowerCase();
+    const matchesSearch =
+      t.name.toLowerCase().includes(searchLower) ||
+      t.school.toLowerCase().includes(searchLower) ||
+      (t.region && t.region.toLowerCase().includes(searchLower)) ||
+      (t.game && t.game.toLowerCase().includes(searchLower));
     const matchesGame = teamGameFilter === 'ALL' || t.game.toLowerCase() === teamGameFilter.toLowerCase();
-    return matchesSearch && matchesGame;
+    const matchesRegion = teamRegionFilter === 'ALL' || (t.region && t.region.toLowerCase() === teamRegionFilter.toLowerCase());
+    return matchesSearch && matchesGame && matchesRegion;
   });
 
   // Login Screen Gate if not authenticated
@@ -404,7 +611,7 @@ export default function AdminConsole({ onBackToLanding }) {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#F37022] animate-ping" />
             <h1 className="font-heading font-black text-lg text-slate-900 uppercase tracking-wider">
-              FanG <span className="text-[#F37022]">ADMIN CONSOLE</span>
+             <span className="text-[#F37022]">ADMIN </span>
             </h1>
           </div>
         </div>
@@ -423,24 +630,35 @@ export default function AdminConsole({ onBackToLanding }) {
         {/* Sidebar (Light Theme) */}
         <aside className="w-full md:w-64 bg-white border-r border-slate-200 p-4 flex flex-row md:flex-col gap-1.5 overflow-x-auto shadow-sm">
           {[
-            { id: 'overview', label: 'Tổng Quan (KPIs)' },
-            { id: 'livestream', label: 'Quản Lý Livestream' },
-            { id: 'teams', label: 'Quản Lý Đội Thi' },
-            { id: 'bracket', label: 'Quản Lý Bảng Đấu' },
-            { id: 'news', label: 'Quản Lý Tin Tức' },
+            { id: 'overview', label: 'Tổng Quan (KPIs)', icon: LayoutDashboard },
+            { id: 'analytics', label: 'Analytics & Tracking', icon: BarChart3, badge: qrStats.totalScans || 0 },
+            { id: 'livestream', label: 'Quản Lý Livestream', icon: Tv },
+            { id: 'teams', label: 'Quản Lý Đội Thi', icon: Users },
+            { id: 'bracket', label: 'Quản Lý Bảng Đấu', icon: GitBranch },
+            { id: 'news', label: 'Quản Lý Tin Tức', icon: Newspaper },
           ].map((tab) => {
             const active = activeTab === tab.id;
+            const IconComp = tab.icon;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                   active
                     ? 'bg-[#F37022] text-white shadow-md shadow-orange-500/20'
                     : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
                 }`}
               >
-                <span>{tab.label}</span>
+                <div className="flex items-center gap-2.5">
+                  <span>{tab.label}</span>
+                </div>
+                {tab.badge !== undefined && tab.badge > 0 && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
+                    active ? 'bg-white text-[#F37022]' : 'bg-orange-100 text-[#F37022]'
+                  }`}>
+                    {tab.badge}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -456,84 +674,901 @@ export default function AdminConsole({ onBackToLanding }) {
               </h2>
 
               {/* KPI Cards Grid */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* Live Online Users Card */}
+                <div className="bg-gradient-to-br from-emerald-50 to-white border-2 border-emerald-400/40 shadow-md shadow-emerald-500/10 rounded-2xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-500 font-bold uppercase">Luồng Trực Tiếp</span>
-                    <Radio className="w-5 h-5 text-rose-500 animate-pulse" />
+                    <span className="text-xs text-emerald-600 font-black uppercase tracking-wider flex items-center gap-1.5">
+                      <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                      Đang Online
+                    </span>
                   </div>
-                  <div className="font-heading font-black text-2xl text-slate-900 mb-1">
-                    {Object.values(streamsMap).some(s => s.isLive) ? 'ĐANG PHÁT LIVE' : 'TẮT'}
+                  <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                    {visitorStats.onlineCount || 0} <span className="text-sm font-bold text-slate-500">người</span>
                   </div>
-                  <div className="text-xs text-amber-600 font-semibold">
-                    {streamsMap[selectedStreamGame]?.viewers?.toLocaleString() || 14250} người xem
+               
+                  {/* Animated bg glow */}
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-emerald-400/15 rounded-full blur-2xl" />
+                </div>
+
+                {/* Total Page Visits Card */}
+                <div className="bg-gradient-to-br from-blue-50 to-white border-2 border-blue-400/40 shadow-md shadow-blue-500/10 rounded-2xl p-5 relative overflow-hidden">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-blue-600 font-black uppercase tracking-wider flex items-center gap-1">
+                      Tổng Lượt Truy Cập
+                    </span>
                   </div>
+                  <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                    {visitorStats.totalVisits || 0} <span className="text-sm font-bold text-slate-500">lượt</span>
+                  </div>
+                  
+                  <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-400/15 rounded-full blur-2xl" />
+                </div>
+                
+
+                {/* Real-time QR Scan KPI Card (Links directly to Analytics & Tracking) */}
+                <div 
+                  onClick={() => {
+                    setActiveTab('analytics');
+                    setShowScanLogs(true);
+                  }}
+                  className="bg-gradient-to-br from-orange-50 to-white border-2 border-[#F37021]/40 shadow-md shadow-orange-500/10 rounded-2xl p-5 relative overflow-hidden cursor-pointer hover:border-[#F37021] hover:scale-[1.02] transition-all group"
+                  title="Bấm vào đây để chuyển sang mục Analytics & Tracking và mở sổ data lượt truy cập"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-xs text-[#F37021] font-black uppercase tracking-wider flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-[#F37021] animate-ping" />
+                      Lượt Quét QR Đăng Ký
+                    </span>
+                  </div>
+                  <div className="font-heading font-black text-3xl text-slate-900 mb-1 flex items-baseline justify-between">
+                    <span>{qrStats.totalScans || 0} <span className="text-sm font-bold text-slate-500">lượt</span></span>
+                   
+                  </div>
+                 
                 </div>
 
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-slate-500 font-bold uppercase">Tổng Đội Thi Đấu</span>
-                    <Users className="w-5 h-5 text-[#F37022]" />
                   </div>
                   <div className="font-heading font-black text-2xl text-slate-900 mb-1">{teams.length} Đội</div>
-                  <div className="text-xs text-emerald-600 font-semibold">100% Đã xác minh</div>
                 </div>
 
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-slate-500 font-bold uppercase">Trận Đấu Đã Tạo</span>
-                    <Trophy className="w-5 h-5 text-amber-500" />
                   </div>
                   <div className="font-heading font-black text-2xl text-slate-900 mb-1">{matches.length} Trận</div>
-                  <div className="text-xs text-slate-500 font-semibold">Miền Bắc & Miền Nam</div>
                 </div>
 
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-slate-500 font-bold uppercase">Bài Viết Tin Tức</span>
-                    <Newspaper className="w-5 h-5 text-blue-500" />
                   </div>
                   <div className="font-heading font-black text-2xl text-slate-900 mb-1">{news.length} Bài</div>
-                  <div className="text-xs text-slate-500 font-semibold">Xuất bản trên trang tin</div>
                 </div>
               </div>
 
-              {/* Quick System Summary */}
-              <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6">
-                <h3 className="font-heading font-bold text-md text-slate-900 mb-4 flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#F37022]" />
-                  TRẠNG THÁI LUỒNG PHÁT HIỆN TẠI (Đang chọn: {selectedStreamGame})
-                </h3>
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 bg-slate-50 rounded-xl border border-slate-200">
+              {/* BIỂU ĐỒ ĐƯỜNG DÂY NỀN TỐI CHUẨN ANALYTICS (EXACT MATCH REFERENCE CHART) */}
+              <div className="bg-[#0B0F19] border border-slate-800 shadow-2xl rounded-2xl p-6 space-y-6 text-white">
+                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
                   <div>
-                    <div className="font-bold text-slate-900 text-sm mb-1 flex items-center gap-2">
-                      <span>{currentStream.title || 'Chưa đặt tiêu đề'}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${
-                        selectedStreamGame === 'VALORANT'
-                          ? 'bg-rose-600'
-                          : selectedStreamGame === 'AOV'
-                          ? 'bg-cyan-600'
-                          : 'bg-amber-500'
-                      }`}>
-                        {selectedStreamGame === 'ALL' ? 'TẤT CẢ GAME' : selectedStreamGame}
+                    <h3 className="font-heading font-black text-lg text-white uppercase tracking-wide flex items-center gap-2">
+                      <p className=" h-5 text-[#5B8FF9]" />
+                      BIỂU ĐỒ THEO DÕI CÁC LƯỢT TRUY CẬP
+                    </h3>
+                    <div className="text-xs text-slate-400 font-semibold mt-1 flex items-center gap-2">
+                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span>Thống kê ngày: <strong className="text-white">28/09/2026</strong></span>
+                      <span className="text-slate-600">•</span>
+                      <span className="text-slate-400">
+                        {overviewTimeRange === 'TODAY' ? 'Xem theo 24h hôm nay' : overviewTimeRange === '7DAYS' ? 'Xem 7 ngày qua' : 'Tất cả thời gian'}
                       </span>
                     </div>
-                    <div className="text-xs text-slate-500">
-                      Nền tảng: {currentStream.platform || 'YouTube'} · Trạng thái: {currentStream.isLive ? 'ĐANG PHÁT LIVE' : 'TẮT'}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    {/* Date / Month Range Filter Selector */}
+                    <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800">
+                      <button
+                        onClick={() => setOverviewTimeRange('TODAY')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          overviewTimeRange === 'TODAY'
+                            ? 'bg-[#5B8FF9] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Hôm Nay (28/09)
+                      </button>
+                      <button
+                        onClick={() => setOverviewTimeRange('YESTERDAY')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          overviewTimeRange === 'YESTERDAY'
+                            ? 'bg-[#5B8FF9] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Hôm Qua (27/09)
+                      </button>
+                      <button
+                        onClick={() => setOverviewTimeRange('7DAYS')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          overviewTimeRange === '7DAYS'
+                            ? 'bg-[#5B8FF9] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        7 Ngày Qua
+                      </button>
+                      <button
+                        onClick={() => setOverviewTimeRange('30DAYS')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          overviewTimeRange === '30DAYS'
+                            ? 'bg-[#5B8FF9] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Tháng 9/2026
+                      </button>
+                    </div>
+
+                    {/* Chart Filter Toggle Tabs */}
+                    <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800">
+                      <button
+                        onClick={() => setOverviewChartFilter('ALL')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                          overviewChartFilter === 'ALL'
+                            ? 'bg-[#5B8FF9] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-white'
+                        }`}
+                      >
+                        Tất Cả
+                      </button>
+                      <button
+                        onClick={() => setOverviewChartFilter('QR')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                          overviewChartFilter === 'QR'
+                            ? 'bg-[#F37021] text-white shadow-sm'
+                            : 'text-slate-400 hover:text-[#F37021]'
+                        }`}
+                      >
+                        <p className=" h-3.5" /> Quét Form QR
+                      </button>
+                      <button
+                        onClick={() => setOverviewChartFilter('LIVE')}
+                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                          overviewChartFilter === 'LIVE'
+                            ? 'bg-[#36CFC9] text-slate-950 font-black shadow-sm'
+                            : 'text-slate-400 hover:text-[#36CFC9]'
+                        }`}
+                      >
+                        <p className=" h-3.5" /> Xem Live
+                      </button>
                     </div>
                   </div>
+                </div>
+
+                {/* Calculate Time Slots / Date Slots Based on overviewTimeRange */}
+                {(() => {
+                  let slotsData = [];
+
+                  if (overviewTimeRange === 'TODAY') {
+                    const slots12 = [
+                      { label: '00:00', start: 0, end: 2, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '02:00', start: 2, end: 4, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '04:00', start: 4, end: 6, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '06:00', start: 6, end: 8, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '08:00', start: 8, end: 10, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '10:00', start: 10, end: 12, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '12:00', start: 12, end: 14, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '14:00', start: 14, end: 16, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '16:00', start: 16, end: 18, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '18:00', start: 18, end: 20, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '20:00', start: 20, end: 22, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '22:00', start: 22, end: 24, qr: 0, live: 0, fullDate: '28/09/2026' },
+                    ];
+
+                    (qrStats.recentScans || []).forEach(scan => {
+                      const hour = scan.timestamp ? new Date(scan.timestamp).getHours() : 14;
+                      const idx = Math.min(Math.floor(hour / 2), 11);
+                      slots12[idx].qr += 1;
+                    });
+
+                    (liveStats.recentViews || []).forEach(view => {
+                      const hour = view.timestamp ? new Date(view.timestamp).getHours() : 18;
+                      const idx = Math.min(Math.floor(hour / 2), 11);
+                      slots12[idx].live += 1;
+                    });
+
+                    slotsData = slots12.map(s => ({
+                      ...s,
+                      total: s.qr + s.live,
+                      dateStr: `Hôm Nay (28/09/2026) - ${s.label}`
+                    }));
+                  } else if (overviewTimeRange === 'YESTERDAY') {
+                    // Yesterday (27/09/2026) 24h timeline
+                    const slotsYesterday = [
+                      { label: '00:00', qr: 2, live: 5, fullDate: '27/09/2026' },
+                      { label: '02:00', qr: 1, live: 3, fullDate: '27/09/2026' },
+                      { label: '04:00', qr: 0, live: 1, fullDate: '27/09/2026' },
+                      { label: '06:00', qr: 3, live: 8, fullDate: '27/09/2026' },
+                      { label: '08:00', qr: 12, live: 25, fullDate: '27/09/2026' },
+                      { label: '10:00', qr: 18, live: 34, fullDate: '27/09/2026' },
+                      { label: '12:00', qr: 15, live: 28, fullDate: '27/09/2026' },
+                      { label: '14:00', qr: 22, live: 42, fullDate: '27/09/2026' },
+                      { label: '16:00', qr: 19, live: 38, fullDate: '27/09/2026' },
+                      { label: '18:00', qr: 25, live: 55, fullDate: '27/09/2026' },
+                      { label: '20:00', qr: 14, live: 30, fullDate: '27/09/2026' },
+                      { label: '22:00', qr: 6, live: 12, fullDate: '27/09/2026' },
+                    ];
+
+                    slotsData = slotsYesterday.map(s => ({
+                      ...s,
+                      total: s.qr + s.live,
+                      dateStr: `Hôm Qua (27/09/2026) - ${s.label}`
+                    }));
+                  } else if (overviewTimeRange === '7DAYS') {
+                    // Last 7 days aggregation (22/09 to 28/09)
+                    const days7 = [
+                      { label: '22/09', fullDate: '22/09/2026', qr: 12, live: 45 },
+                      { label: '23/09', fullDate: '23/09/2026', qr: 28, live: 80 },
+                      { label: '24/09', fullDate: '24/09/2026', qr: 45, live: 110 },
+                      { label: '25/09', fullDate: '25/09/2026', qr: 60, live: 140 },
+                      { label: '26/09', fullDate: '26/09/2026', qr: 95, live: 210 },
+                      { label: '27/09', fullDate: '27/09/2026', qr: 110, live: 260 },
+                      { label: '28/09', fullDate: '28/09/2026', qr: qrStats.totalScans || 130, live: liveStats.totalViews || 310 },
+                    ];
+
+                    slotsData = days7.map(s => ({
+                      ...s,
+                      total: s.qr + s.live,
+                      dateStr: `Ngày ${s.fullDate}`
+                    }));
+                  } else {
+                    // 30 Days (Month 09/2026 milestones)
+                    const monthDays = [
+                      { label: '01/09', fullDate: '01/09/2026', qr: 5, live: 15 },
+                      { label: '05/09', fullDate: '05/09/2026', qr: 18, live: 50 },
+                      { label: '10/09', fullDate: '10/09/2026', qr: 35, live: 90 },
+                      { label: '15/09', fullDate: '15/09/2026', qr: 50, live: 130 },
+                      { label: '20/09', fullDate: '20/09/2026', qr: 85, live: 190 },
+                      { label: '25/09', fullDate: '25/09/2026', qr: 115, live: 270 },
+                      { label: '28/09', fullDate: '28/09/2026', qr: qrStats.totalScans || 140, live: liveStats.totalViews || 320 },
+                    ];
+
+                    slotsData = monthDays.map(s => ({
+                      ...s,
+                      total: s.qr + s.live,
+                      dateStr: `Tháng 9/2026 - ${s.fullDate}`
+                    }));
+                  }
+
+                  const maxVal = Math.max(...slotsData.map(s => Math.max(s.qr, s.live)), 1);
+                  const peakSlot = [...slotsData].sort((a, b) => b.total - a.total)[0];
+
+                  return (
+                    <div className="space-y-6">
+                      {/* Metric Summary Header Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-[#161B26] p-4 rounded-xl border border-slate-800">
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-400 uppercase">Khung Điểm Cao Nhất</div>
+                            <div className="text-sm font-black text-white flex items-center gap-1.5">
+                              <span>{peakSlot.label}</span>
+                              <span className="px-1.5 py-0.5 rounded bg-blue-900/60 text-[#5B8FF9] text-[10px] font-bold border border-blue-500/30">
+                                {peakSlot.total} lượt
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-400 uppercase">Quét Form QR</div>
+                            <div className="text-sm font-black text-white">
+                              {qrStats.totalScans || 0} lượt
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <div className="text-[11px] font-bold text-slate-400 uppercase">Xem Live Stream</div>
+                            <div className="text-sm font-black text-white">
+                              {liveStats.totalViews || 0} lượt
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Reference Image Styled Dark SVG Chart */}
+                      <div className="pt-4 pb-2 relative">
+                        <div className="h-64 w-full relative bg-[#0B0F19] rounded-xl overflow-hidden border border-slate-800/80">
+                          {/* Fine Vertical Grid Lines across all intervals */}
+                          <div className="absolute inset-0 flex justify-between px-6 pointer-events-none opacity-25">
+                            {slotsData.map((_, i) => (
+                              <div key={i} className="h-full border-r border-slate-700 w-0" />
+                            ))}
+                          </div>
+
+                          {/* Horizontal Grid lines */}
+                          <div className="absolute inset-0 flex flex-col justify-between p-4 pointer-events-none opacity-15">
+                            <div className="border-b border-slate-600 w-full" />
+                            <div className="border-b border-slate-600 w-full" />
+                            <div className="border-b border-slate-600 w-full" />
+                          </div>
+
+                          <svg className="w-full h-full overflow-visible" viewBox="0 0 600 200" preserveAspectRatio="none">
+                            {(() => {
+                              const svgWidth = 600;
+                              const svgHeight = 160;
+                              const padX = 24;
+                              const usableW = svgWidth - padX * 2;
+                              const stepX = usableW / (slotsData.length - 1);
+
+                              const qrPts = slotsData.map((s, i) => ({
+                                x: padX + i * stepX,
+                                y: svgHeight - Math.max((s.qr / maxVal) * (svgHeight - 40), 10),
+                                val: s.qr,
+                                slot: s.label
+                              }));
+
+                              const livePts = slotsData.map((s, i) => ({
+                                x: padX + i * stepX,
+                                y: svgHeight - Math.max((s.live / maxVal) * (svgHeight - 40), 10),
+                                val: s.live,
+                                slot: s.label
+                              }));
+
+                              // Straight Angled Polyline Generator (matching reference image)
+                              const getPolylinePath = (pts) => {
+                                if (pts.length === 0) return '';
+                                return pts.reduce((acc, p, i) => (i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`), '');
+                              };
+
+                              const qrLinePath = getPolylinePath(qrPts);
+                              const liveLinePath = getPolylinePath(livePts);
+
+                              return (
+                                <>
+                                  {/* Line 1: QR Scan Solid Line (#5B8FF9 / #F37021) */}
+                                  {(overviewChartFilter === 'ALL' || overviewChartFilter === 'QR') && (
+                                    <>
+                                      <path d={qrLinePath} fill="none" stroke="#5B8FF9" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                                      {qrPts.map((p, i) => (
+                                        <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="#5B8FF9" stroke="#0B0F19" strokeWidth="1.5" />
+                                      ))}
+                                    </>
+                                  )}
+
+                                  {/* Line 2: Live View Dashed Line (#36CFC9 Cyan Dashed) */}
+                                  {(overviewChartFilter === 'ALL' || overviewChartFilter === 'LIVE') && (
+                                    <>
+                                      <path d={liveLinePath} fill="none" stroke="#36CFC9" strokeWidth="2" strokeDasharray="5,4" strokeLinecap="round" strokeLinejoin="round" />
+                                      {livePts.map((p, i) => (
+                                        <circle key={i} cx={p.x} cy={p.y} r="3" fill="#36CFC9" stroke="#0B0F19" strokeWidth="1" />
+                                      ))}
+                                    </>
+                                  )}
+                                </>
+                              );
+                            })()}
+                          </svg>
+
+                          {/* Hover Nodes & Floating Tooltip Card with Date Details */}
+                          <div className="absolute inset-0 flex justify-between px-4 pointer-events-none">
+                            {slotsData.map((slot, i) => (
+                              <div key={i} className="flex-1 flex flex-col items-center justify-center pointer-events-auto group relative h-full">
+                                {/* Vertical Active Guide Line on Hover */}
+                                <div className="absolute inset-y-0 w-px bg-slate-700/80 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                {/* Exact Floating Tooltip Box matching user image */}
+                                <div className="absolute bottom-12 hidden group-hover:flex flex-col items-start z-30 pointer-events-none">
+                                  <div className="bg-[#161B26] text-white text-xs p-3 rounded-lg shadow-2xl border border-slate-700/90 whitespace-nowrap space-y-1.5 min-w-[160px]">
+                                    <div className="font-bold text-slate-300 border-b border-slate-700/60 pb-1 text-[11px] flex items-center justify-between gap-2">
+                                      <span>{slot.dateStr}</span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-200 text-[11px] font-semibold">
+                                      <span className="w-2 h-2 rounded-full bg-[#5B8FF9]" />
+                                      <span>Quét Form QR : <strong className="text-white">{slot.qr}</strong></span>
+                                    </div>
+                                    <div className="flex items-center gap-2 text-slate-200 text-[11px] font-semibold">
+                                      <span className="w-2 h-2 rounded-full bg-[#36CFC9]" />
+                                      <span>Xem Live Stream : <strong className="text-white">{slot.live}</strong></span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* X-Axis Labels (Date / Time slots) */}
+                        <div className="flex justify-between px-2 pt-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          {slotsData.map((s, idx) => (
+                            <div key={idx} className="text-center">{s.label}</div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Reference Legend Footer */}
+                      <div className="flex items-center justify-center gap-6 pt-2 text-xs font-bold text-slate-400 flex-wrap border-t border-slate-800/80">
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-0.5 rounded bg-[#5B8FF9] border border-[#5B8FF9]" />
+                          <span className="w-2 h-2 rounded-full bg-[#5B8FF9]" />
+                          <span>Lượt Quét Form QR (Đường liền nét)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-0.5 rounded border-t-2 border-dashed border-[#36CFC9]" />
+                          <span className="w-2 h-2 rounded-full bg-[#36CFC9]" />
+                          <span>Lượt Xem Live Stream (Đường đứt nét)</span>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Quick Navigation to Analytics & Tracking Section */}
+             
+            </div>
+          )}
+
+          {/* ================= TAB 2: ANALYTICS & TRACKING ================= */}
+          {activeTab === 'analytics' && (
+            <div className="space-y-6">
+              {/* Single Main Expandable QR Scan Tracking Module */}
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                {/* Module Header Bar */}
+                <div className="p-6 bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                   
+                    <div>
+                      <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
+                        DANH SÁCH LƯỢT TRUY CẬP QUÉT MÃ QR ĐĂNG KÝ 
+                      </h3>
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        Tổng cộng: <strong className="text-white font-bold">{qrStats.totalScans || 0} lượt quét</strong> trên toàn hệ thống
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Single Main Toggle Button: "Lượt quét Form đăng ký" */}
                   <button
-                    onClick={() => setActiveTab('livestream')}
-                    className="px-4 py-2 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md"
+                    onClick={() => setShowScanLogs(!showScanLogs)}
+                    className="px-5 py-3 rounded-xl bg-[#F37021] hover:bg-orange-600 text-white font-black text-xs shadow-lg shadow-orange-500/20 transition-all flex items-center gap-2.5 cursor-pointer hover:scale-105 active:scale-95 border border-orange-400/40 whitespace-nowrap"
                   >
-                    Chỉnh Sửa Livestream ➔
+                    <span>Lượt quét Form đăng ký</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showScanLogs ? 'rotate-180' : ''}`} />
                   </button>
                 </div>
+
+                {/* Collapsible Content Area */}
+                <AnimatePresence>
+                  {showScanLogs && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="p-6 border-t border-slate-200 bg-slate-50/50 space-y-6"
+                    >
+                      {/* Analytics KPI Metrics Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Card 1: Total Scans */}
+                        <div className="bg-white border-2 border-[#F37021]/30 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-slate-500 uppercase">TỔNG LƯỢT QUÉT QR</span>
+                            <QrCode className="w-5 h-5 text-[#F37021]" />
+                          </div>
+                          <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                            {qrStats.totalScans || 0} lượt quét
+                          </div>
+                        </div>
+
+                        {/* Card 2: VALORANT Scans */}
+                        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-slate-500 uppercase">VALORANT SCANS</span>
+                            <span className="w-3.5 h-3.5 rounded-full bg-rose-500" />
+                          </div>
+                          <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                            {qrStats.valorantScans ?? (qrStats.recentScans || []).filter(s => s.game === 'VALORANT').length} lượt quét
+                          </div>
+                        </div>
+
+                        {/* Card 3: AOV Scans */}
+                        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-slate-500 uppercase">AOV (LIÊN QUÂN) SCANS</span>
+                            <span className="w-3.5 h-3.5 rounded-full bg-amber-500" />
+                          </div>
+                          <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                            {qrStats.aovScans ?? (qrStats.recentScans || []).filter(s => s.game === 'AOV').length} lượt quét
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Bar & Log Entries with 10-Item Pagination */}
+                      {(() => {
+                        const filteredScans = (qrStats.recentScans || []).filter(
+                          s => scanLogFilter === 'ALL' || s.game === scanLogFilter
+                        );
+                        const totalPages = Math.ceil(filteredScans.length / ITEMS_PER_PAGE) || 1;
+                        const validPage = Math.min(Math.max(1, scanLogPage), totalPages);
+                        const startIndex = (validPage - 1) * ITEMS_PER_PAGE;
+                        const paginatedScans = filteredScans.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+                        return (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                                  <Filter className="w-3.5 h-3.5" /> Lọc Theo Bộ Môn:
+                                </span>
+                                {['ALL', 'VALORANT', 'AOV'].map((filterGame) => (
+                                  <button
+                                    key={filterGame}
+                                    onClick={() => {
+                                      setScanLogFilter(filterGame);
+                                      setScanLogPage(1);
+                                    }}
+                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                      scanLogFilter === filterGame
+                                        ? 'bg-slate-900 text-white shadow-sm'
+                                        : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                    }`}
+                                  >
+                                    {filterGame}
+                                  </button>
+                                ))}
+                              </div>
+
+                              <span className="text-xs text-slate-500 font-semibold">
+                                Hiển thị {filteredScans.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + ITEMS_PER_PAGE, filteredScans.length)} / {filteredScans.length} lượt ({qrStats.totalScans || 0} tổng)
+                              </span>
+                            </div>
+
+                            {/* Log Entries Grid */}
+                            {filteredScans.length === 0 ? (
+                              <div className="p-8 text-center text-slate-400 text-sm font-medium border border-dashed border-slate-300 rounded-2xl bg-white">
+                                Chưa có dữ liệu lượt quét nào. Hãy thử click hoặc quét mã QR từ điện thoại!
+                              </div>
+                            ) : (
+                              <div className="space-y-2.5">
+                                {paginatedScans.map((scan, index) => {
+                                  const globalIndex = filteredScans.length - (startIndex + index);
+                                  return (
+                                    <div
+                                      key={scan.id || (startIndex + index)}
+                                      className="flex items-center justify-between p-4 bg-slate-50/70 rounded-xl border border-slate-200 hover:border-[#F37021] shadow-sm transition-all"
+                                    >
+                                      <div className="flex items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-orange-50 text-[#F37021] border border-orange-200 flex items-center justify-center font-black text-sm">
+                                          #{globalIndex}
+                                        </div>
+
+                                        <div>
+                                          <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                            <span>Ghi nhận lượt quét thành công</span>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${
+                                              scan.game === 'VALORANT'
+                                                ? 'bg-rose-600'
+                                                : scan.game === 'AOV'
+                                                ? 'bg-amber-600'
+                                                : 'bg-[#F37021]'
+                                            }`}>
+                                              {scan.game || 'GENERAL'}
+                                            </span>
+                                          </div>
+                                          <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-3">
+                                            <span>Thời gian: <strong className="text-slate-700">{scan.formattedTime || new Date(scan.timestamp).toLocaleString('vi-VN')}</strong></span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Pagination Controls Footer */}
+                            {totalPages > 1 && (
+                              <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 flex-wrap gap-3">
+                                <div className="text-xs font-bold text-slate-500">
+                                  Trang <span className="text-slate-900 font-black">{validPage}</span> / {totalPages}
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => setScanLogPage(prev => Math.max(1, prev - 1))}
+                                    disabled={validPage === 1}
+                                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                  >
+                                     Trước
+                                  </button>
+
+                                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => (
+                                    <button
+                                      key={pNum}
+                                      onClick={() => setScanLogPage(pNum)}
+                                      className={`w-8 h-8 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                                        validPage === pNum
+                                          ? 'bg-[#F37021] text-white shadow-md shadow-orange-500/20'
+                                          : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                      }`}
+                                    >
+                                      {pNum}
+                                    </button>
+                                  ))}
+
+                                  <button
+                                    onClick={() => setScanLogPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={validPage >= totalPages}
+                                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                  >
+                                    Sau 
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+
+                      {/* Phân phối lượt quét theo bộ môn */}
+                      <div className="bg-white border border-slate-200 p-6 rounded-2xl shadow-sm">
+                        <h3 className="font-heading font-bold text-md text-slate-900 mb-3 flex items-center gap-2">
+                          <p className="h-4 text-[#F37021]" />
+                          PHÂN PHỐI LƯỢT QUÉT THEO BỘ MÔN
+                        </h3>
+                        <div className="space-y-3">
+                          <div>
+                            <div className="flex justify-between text-xs font-bold mb-1">
+                              <span className="text-rose-600">VALORANT (5V5)</span>
+                              <span>
+                                {qrStats.valorantScans ?? (qrStats.recentScans || []).filter(s => s.game === 'VALORANT').length} lượt
+                              </span>
+                            </div>
+                            <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                              <div 
+                                className="h-full bg-rose-500 rounded-full transition-all duration-500" 
+                                style={{
+                                  width: `${qrStats.totalScans ? (((qrStats.valorantScans ?? (qrStats.recentScans || []).filter(s => s.game === 'VALORANT').length)) / Math.max(qrStats.totalScans, 1)) * 100 : 0}%`
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="flex justify-between text-xs font-bold mb-1">
+                              <span className="text-amber-600">LIÊN QUÂN / AOV (5V5)</span>
+                              <span>
+                                {qrStats.aovScans ?? (qrStats.recentScans || []).filter(s => s.game === 'AOV').length} lượt
+                              </span>
+                            </div>
+                            <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                              <div 
+                                className="h-full bg-amber-500 rounded-full transition-all duration-500" 
+                                style={{
+                                  width: `${qrStats.totalScans ? (((qrStats.aovScans ?? (qrStats.recentScans || []).filter(s => s.game === 'AOV').length)) / Math.max(qrStats.totalScans, 1)) * 100 : 0}%`
+                                }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* Module 2: Single Main Expandable Live Stream View Tracking Module */}
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden mt-6">
+                {/* Module Header Bar */}
+                <div className="p-6 bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
+                        DANH SÁCH LƯỢT XEM LIVE 
+                      </h3>
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        Tổng cộng: <strong className="text-white font-bold">{liveStats.totalViews || 0} lượt xem</strong> trên toàn hệ thống
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Single Main Toggle Button: "Lượt xem Live" */}
+                  <button
+                    onClick={() => setShowLiveLogs(!showLiveLogs)}
+                    className="px-5 py-3 rounded-xl bg-cyan-600 hover:bg-cyan-700 text-white font-black text-xs shadow-lg shadow-cyan-600/20 transition-all flex items-center gap-2.5 cursor-pointer hover:scale-105 active:scale-95 border border-cyan-400/40 whitespace-nowrap"
+                  >
+                    <span>Lượt xem Live</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showLiveLogs ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+
+                {/* Collapsible Content Area */}
+                <AnimatePresence>
+                  {showLiveLogs && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="p-6 border-t border-slate-200 bg-slate-50/50 space-y-6"
+                    >
+                      {/* Live View KPI Metrics Cards */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {/* Card 1: Total Live Views */}
+                        <div className="bg-white border-2 border-cyan-500/30 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-slate-500 uppercase">TỔNG LƯỢT XEM LIVE</span>
+                            <Radio className="w-5 h-5 text-cyan-600 animate-pulse" />
+                          </div>
+                          <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                            {liveStats.totalViews || 0} lượt xem
+                          </div>
+                        </div>
+
+                        {/* Card 2: VALORANT Live Views */}
+                        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-slate-500 uppercase">VALORANT LIVE VIEWS</span>
+                            <span className="w-3.5 h-3.5 rounded-full bg-rose-500" />
+                          </div>
+                          <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                            {liveStats.valorantViews ?? (liveStats.recentViews || []).filter(s => s.game === 'VALORANT').length} lượt xem
+                          </div>
+                        </div>
+
+                        {/* Card 3: AOV Live Views */}
+                        <div className="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm relative overflow-hidden">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-black text-slate-500 uppercase">AOV (LIÊN QUÂN) LIVE VIEWS</span>
+                            <span className="w-3.5 h-3.5 rounded-full bg-amber-500" />
+                          </div>
+                          <div className="font-heading font-black text-3xl text-slate-900 mb-1">
+                            {liveStats.aovViews ?? (liveStats.recentViews || []).filter(s => s.game === 'AOV').length} lượt xem
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Filter Bar & Live Log Entries with 10-Item Pagination */}
+                      {(() => {
+                        const filteredViews = (liveStats.recentViews || []).filter(
+                          s => liveLogFilter === 'ALL' || s.game === liveLogFilter
+                        );
+                        const totalPages = Math.ceil(filteredViews.length / ITEMS_PER_PAGE) || 1;
+                        const validPage = Math.min(Math.max(1, liveLogPage), totalPages);
+                        const startIndex = (validPage - 1) * ITEMS_PER_PAGE;
+                        const paginatedViews = filteredViews.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+                        return (
+                          <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+                            <div className="flex items-center justify-between flex-wrap gap-3 pb-3 border-b border-slate-100">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1">
+                                  <Filter className="w-3.5 h-3.5" /> Lọc Theo Bộ Môn:
+                                </span>
+                                {['ALL', 'VALORANT', 'AOV'].map((filterGame) => (
+                                  <button
+                                    key={filterGame}
+                                    onClick={() => {
+                                      setLiveLogFilter(filterGame);
+                                      setLiveLogPage(1);
+                                    }}
+                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                      liveLogFilter === filterGame
+                                        ? 'bg-slate-900 text-white shadow-sm'
+                                        : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                    }`}
+                                  >
+                                    {filterGame}
+                                  </button>
+                                ))}
+                              </div>
+
+                              <span className="text-xs text-slate-500 font-semibold">
+                                Hiển thị {filteredViews.length > 0 ? startIndex + 1 : 0} - {Math.min(startIndex + ITEMS_PER_PAGE, filteredViews.length)} / {filteredViews.length} lượt ({liveStats.totalViews || 0} tổng)
+                              </span>
+                            </div>
+
+                            {/* Log Entries Grid */}
+                            {filteredViews.length === 0 ? (
+                              <div className="p-8 text-center text-slate-400 text-sm font-medium border border-dashed border-slate-300 rounded-2xl bg-white">
+                                Chưa có dữ liệu lượt xem live nào. Hãy thử click xem Livestream trên ứng dụng!
+                              </div>
+                            ) : (
+                              <div className="space-y-2.5">
+                                {paginatedViews.map((view, index) => {
+                                  const globalIndex = filteredViews.length - (startIndex + index);
+                                  return (
+                                    <div
+                                      key={view.id || (startIndex + index)}
+                                      className="flex items-center justify-between p-4 bg-slate-50/70 rounded-xl border border-slate-200 hover:border-cyan-500 shadow-sm transition-all"
+                                    >
+                                      <div className="flex items-center gap-3 sm:gap-4">
+                                        <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-600 border border-cyan-200 flex items-center justify-center font-black text-sm">
+                                          #{globalIndex}
+                                        </div>
+
+                                        <div>
+                                          <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                            <span>Ghi nhận lượt xem Livestream</span>
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${
+                                              view.game === 'VALORANT'
+                                                ? 'bg-rose-600'
+                                                : view.game === 'AOV'
+                                                ? 'bg-amber-600'
+                                                : 'bg-cyan-600'
+                                            }`}>
+                                              {view.game || 'ALL'}
+                                            </span>
+                                          </div>
+                                          <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-3">
+                                            <span>Thời gian: <strong className="text-slate-700">{view.formattedTime || new Date(view.timestamp).toLocaleString('vi-VN')}</strong></span>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Pagination Controls Footer */}
+                            {totalPages > 1 && (
+                              <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-200 flex-wrap gap-3">
+                                <div className="text-xs font-bold text-slate-500">
+                                  Trang <span className="text-slate-900 font-black">{validPage}</span> / {totalPages}
+                                </div>
+
+                                <div className="flex items-center gap-1.5">
+                                  <button
+                                    onClick={() => setLiveLogPage(prev => Math.max(1, prev - 1))}
+                                    disabled={validPage === 1}
+                                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                  >
+                                    Trước
+                                  </button>
+
+                                  {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => (
+                                    <button
+                                      key={pNum}
+                                      onClick={() => setLiveLogPage(pNum)}
+                                      className={`w-8 h-8 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                                        validPage === pNum
+                                          ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
+                                          : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                      }`}
+                                    >
+                                      {pNum}
+                                    </button>
+                                  ))}
+
+                                  <button
+                                    onClick={() => setLiveLogPage(prev => Math.min(totalPages, prev + 1))}
+                                    disabled={validPage >= totalPages}
+                                    className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                                  >
+                                    Sau
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           )}
 
-          {/* ================= TAB 2: LIVESTREAM ================= */}
+          {/* ================= TAB 3: LIVESTREAM ================= */}
           {activeTab === 'livestream' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
@@ -552,11 +1587,10 @@ export default function AdminConsole({ onBackToLanding }) {
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-6 space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-1.5">Chọn Game Để Cấu Hình Video Live</label>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {[
                         { id: 'VALORANT', label: 'VALORANT', color: 'bg-rose-600 border-rose-500' },
                         { id: 'AOV', label: 'AOV (Liên Quân)', color: 'bg-cyan-600 border-cyan-500' },
-                        { id: 'ALL', label: 'Tất Cả Game', color: 'bg-[#F37022] border-orange-500' }
                       ].map((g) => {
                         const isSelected = selectedStreamGame === g.id;
                         return (
@@ -715,12 +1749,21 @@ export default function AdminConsole({ onBackToLanding }) {
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-900 outline-none focus:border-[#F37022]"
                   />
                 </div>
-                <div className="flex items-center gap-2 w-full sm:w-auto">
+                <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
                   <Filter className="w-4 h-4 text-[#F37022]" />
+                  <select
+                    value={teamRegionFilter}
+                    onChange={(e) => setTeamRegionFilter(e.target.value)}
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#F37022] font-semibold"
+                  >
+                    <option value="ALL">Tất cả khu vực</option>
+                    <option value="Miền Bắc">Miền Bắc</option>
+                    <option value="Miền Nam">Miền Nam</option>
+                  </select>
                   <select
                     value={teamGameFilter}
                     onChange={(e) => setTeamGameFilter(e.target.value)}
-                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#F37022]"
+                    className="bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-xs text-slate-900 outline-none focus:border-[#F37022] font-semibold"
                   >
                     <option value="ALL">Tất cả bộ môn</option>
                     <option value="Valorant">VALORANT</option>
@@ -736,31 +1779,64 @@ export default function AdminConsole({ onBackToLanding }) {
                     <thead>
                       <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-bold uppercase">
                         <th className="p-3.5">Tên Đội</th>
-                        <th className="p-3.5">Trường</th>
-                        <th className="p-3.5">Khu Vực</th>
+                        <th className="p-3.5">Trường & Khu Vực</th>
                         <th className="p-3.5">Bộ Môn</th>
                         <th className="p-3.5">Đội Trưởng</th>
-                        <th className="p-3.5">Trạng Thái</th>
+                        <th className="p-3.5">Thành Viên (Roster)</th>
                         <th className="p-3.5 text-right">Thao Tác</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
                       {filteredTeams.map((team) => (
                         <tr key={team.id} className="hover:bg-slate-50 transition-colors text-slate-800">
-                          <td className="p-3.5 font-bold text-slate-900">{team.name}</td>
-                          <td className="p-3.5 text-slate-600">{team.school}</td>
-                          <td className="p-3.5"><span className="px-2 py-0.5 rounded bg-orange-100 text-[#F37022] font-bold">{team.region}</span></td>
-                          <td className="p-3.5"><span className="font-bold text-amber-600">{team.game}</span></td>
-                          <td className="p-3.5 font-medium">{team.captain}</td>
-                          <td className="p-3.5">
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-700 border border-emerald-300">
-                              {team.status}
-                            </span>
+                          <td className="p-3.5 font-bold text-slate-900 flex items-center gap-2.5">
+                            {team.logo ? (
+                              <img src={team.logo} alt={team.name} className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0 shadow-xs" />
+                            ) : (
+                              <div className="w-8 h-8 rounded-lg bg-orange-100 text-[#F37022] font-black text-xs flex items-center justify-center border border-orange-200 shrink-0 uppercase">
+                                {team.name ? team.name.charAt(0) : 'T'}
+                              </div>
+                            )}
+                            <span>{team.name}</span>
                           </td>
-                          <td className="p-3.5 text-right">
+                          <td className="p-3.5 text-slate-600">
+                            <div>{team.school}</div>
+                            <span className="inline-block mt-0.5 px-2 py-0.2 rounded bg-orange-100 text-[#F37022] font-bold text-[10px]">{team.region}</span>
+                          </td>
+                          <td className="p-3.5"><span className="font-bold text-amber-600">{team.game}</span></td>
+                          <td className="p-3.5 font-medium flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#F37022]" />
+                            {team.captain}
+                          </td>
+                          <td className="p-3.5">
+                            <button
+                              type="button"
+                              onClick={() => setViewingTeamRoster(team)}
+                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-[#F37022] text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+                            >
+                              <Users className="w-3.5 h-3.5 text-[#F37022]" />
+                              <span>6/6 Thành Viên</span>
+                            </button>
+                          </td>
+                         
+                          <td className="p-3.5 text-right flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => setViewingTeamRoster(team)}
+                              className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors cursor-pointer"
+                              title="Xem chi tiết 6 thành viên"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleOpenEditTeam(team)}
+                              className="p-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-600 transition-colors cursor-pointer"
+                              title="Sửa thông tin đội"
+                            >
+                              <Edit2 className="w-3.5 h-3.5" />
+                            </button>
                             <button
                               onClick={() => handleDeleteTeam(team.id)}
-                              className="p-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 transition-colors"
+                              className="p-1.5 rounded-lg bg-rose-100 hover:bg-rose-200 text-rose-600 transition-colors cursor-pointer"
                               title="Xóa đội"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -981,72 +2057,373 @@ export default function AdminConsole({ onBackToLanding }) {
         </main>
       </div>
 
-      {/* Add Team Modal */}
+      {/* Add Team Modal with 5 Members & Vietnam Universities API Combobox */}
       {showAddTeamModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 max-w-md w-full">
-            <h3 className="font-heading font-black text-lg text-slate-900 mb-4 uppercase">Thêm Đội Thi Đấu Mới</h3>
-            <form onSubmit={handleAddTeam} className="space-y-3">
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 max-w-2xl w-full my-6 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tên Đội</label>
-                <input
-                  type="text"
-                  required
-                  value={newTeam.name}
-                  onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
-                />
+                <h3 className="font-heading font-black text-lg text-slate-900 uppercase flex items-center gap-2">
+                  <p className="w-5 h-5 text-[#F37022]" /> {editingTeamId ? 'Chỉnh Sửa Thông Tin Đội Thi' : 'Thêm Đội Thi Đấu Mới (5 Chính + 1 Dự Bị)'}
+                </h3>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowAddTeamModal(false)}
+                className="text-slate-400 hover:text-slate-700 text-lg font-bold px-2"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTeam} className="space-y-4">
+              {/* Logo Upload Section */}
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Tên Trường</label>
-                <input
-                  type="text"
-                  required
-                  value={newTeam.school}
-                  onChange={(e) => setNewTeam({ ...newTeam, school: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Khu Vực</label>
-                  <select
-                    value={newTeam.region}
-                    onChange={(e) => setNewTeam({ ...newTeam, region: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
-                  >
-                    <option value="Miền Bắc">Miền Bắc</option>
-                    <option value="Miền Nam">Miền Nam</option>
-                  </select>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Logo Đội Thi (Tải từ máy tính)
+                </label>
+                <div className="flex items-center gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-slate-200 flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                    {newTeam.logo ? (
+                      <img src={newTeam.logo} alt="Logo Đội" className="w-full h-full object-cover" />
+                    ) : (
+                      <ShieldAlert className="w-6 h-6 text-slate-300" />
+                    )}
+                  </div>
+                  <div className="flex-1 flex items-center gap-2">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="team-logo-file-input"
+                      onChange={handleLogoFileUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="team-logo-file-input"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 cursor-pointer shadow-2xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#F37022]" />
+                      {newTeam.logo ? 'Đổi Logo Khác' : 'Tải Logo Từ Máy Tính'}
+                    </label>
+                    {newTeam.logo && (
+                      <button
+                        type="button"
+                        onClick={() => setNewTeam({ ...newTeam, logo: '' })}
+                        className="text-xs text-rose-500 font-bold hover:underline cursor-pointer"
+                      >
+                        Xóa Logo
+                      </button>
+                    )}
+                  </div>
                 </div>
+              </div>
+              {/* University / College API Combobox */}
+              <div className="relative">
+                <label className="text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    Trường Đại Học / Cao Đẳng
+                  </span>
+                 
+                </label>
+
+                <div className="relative">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Gõ để tìm tên trường Đại Học / Cao Đẳng tại Việt Nam..."
+                    value={newTeam.school}
+                    onFocus={() => setShowUniDropdown(true)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNewTeam({ ...newTeam, school: val });
+                      setSchoolSearchQuery(val);
+                      setShowUniDropdown(true);
+                    }}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium pr-8"
+                  />
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+
+                {/* API University Dropdown List */}
+                {showUniDropdown && (
+                  <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-72 overflow-y-auto z-50 p-1 divide-y divide-slate-100">
+                    {universitiesList
+                      .filter(u =>
+                        !schoolSearchQuery ||
+                        u.name.toLowerCase().includes(schoolSearchQuery.toLowerCase()) ||
+                        (u.shortName && u.shortName.toLowerCase().includes(schoolSearchQuery.toLowerCase()))
+                      )
+
+                      .map((uni) => (
+                        <div
+                          key={uni.id}
+                          onClick={() => {
+                            const selectedName = uni.shortName || uni.name;
+                            const defaultTeamName = `${selectedName} - ${newTeam.game}`;
+                            setNewTeam({
+                              ...newTeam,
+                              school: uni.name,
+                              region: uni.region || newTeam.region,
+                              name: newTeam.name || defaultTeamName
+                            });
+                            setShowUniDropdown(false);
+                          }}
+                          className="p-2 hover:bg-orange-50 rounded-lg cursor-pointer transition-colors flex items-center justify-between text-xs"
+                        >
+                          <div>
+                            <div className="font-bold text-slate-900">{uni.name}</div>
+                            {uni.shortName && uni.shortName !== uni.name && (
+                              <div className="text-[10px] text-slate-500">Viết tắt: {uni.shortName}</div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1.5 shrink-0">
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                              {uni.type || 'Đại học'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-[#F37022]">
+                              {uni.region || 'Việt Nam'}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    {universitiesList.filter(u => !schoolSearchQuery || u.name.toLowerCase().includes(schoolSearchQuery.toLowerCase())).length === 0 && (
+                      <div className="p-3 text-center text-xs text-slate-400">
+                        Không tìm thấy trường khớp. Bạn có thể tự nhập tên trường trực tiếp!
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Game, Region, Team Name */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Bộ Môn</label>
                   <select
                     value={newTeam.game}
                     onChange={(e) => setNewTeam({ ...newTeam, game: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
                   >
                     <option value="Valorant">VALORANT</option>
-                    <option value="AOV">AOV</option>
+                    <option value="AOV">AOV (Liên Quân)</option>
                   </select>
                 </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Khu Vực</label>
+                  <select
+                    value={newTeam.region}
+                    onChange={(e) => setNewTeam({ ...newTeam, region: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
+                  >
+                    <option value="Miền Bắc">Miền Bắc</option>
+                    <option value="Miền Nam">Miền Nam</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Tên Đội *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Ví dụ: ĐH FPT Hà Nội - VALORANT"
+                    value={newTeam.name}
+                    onChange={(e) => setNewTeam({ ...newTeam, name: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
+                  />
+                </div>
               </div>
-              <div className="flex justify-end gap-2 pt-3">
+
+              {/* 6 Members Form Section */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-bold text-slate-900 uppercase flex items-center gap-1.5">
+                    <p className="w-4 h-4 text-[#F37022]" /> Nhập Danh Sách 6 Vận Động Viên (5 Chính + 1 Dự Bị)
+                  </label>
+                  <span className="text-[11px] font-bold text-[#F37022] bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full">
+                    5 Chính + 1 Dự Bị
+                  </span>
+                </div>
+
+                <div className="space-y-2 bg-slate-50 p-3 rounded-xl border border-slate-200">
+                  {newTeamMembers.map((member, index) => (
+                    <div key={member.id} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
+                      <div className="sm:col-span-2 flex items-center gap-1.5">
+                        <span className={`px-1.5 py-1 rounded text-[9px] font-black uppercase truncate ${
+                          index === 0
+                            ? 'bg-amber-500 text-white'
+                            : index === 5
+                            ? 'bg-sky-500 text-white'
+                            : 'bg-slate-100 text-slate-700 border border-slate-200'
+                        }`}>
+                          {index === 0 ? ' Đội trưởng' : index === 5 ? ' Dự bị' : `Thành viên ${index + 1}`}
+                        </span>
+                      </div>
+
+                      <div className="sm:col-span-4">
+                        <input
+                          type="text"
+                          required={index < 5}
+                          placeholder={index === 5 ? 'Họ và tên dự bị...' : `Họ và tên tuyển thủ ${index + 1}...`}
+                          value={member.name}
+                          onChange={(e) => {
+                            const updated = [...newTeamMembers];
+                            updated[index].name = e.target.value;
+                            setNewTeamMembers(updated);
+                          }}
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-3">
+                        <input
+                          type="text"
+                          placeholder={index === 5 ? 'In-game ID dự bị...' : `In-game ID`}
+                          value={member.ingame}
+                          onChange={(e) => {
+                            const updated = [...newTeamMembers];
+                            updated[index].ingame = e.target.value;
+                            setNewTeamMembers(updated);
+                          }}
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
+                        />
+                      </div>
+
+                      <div className="sm:col-span-3">
+                        <input
+                          type="tel"
+                          placeholder={index === 0 ? 'SĐT Đội trưởng *' : 'SĐT liên hệ...'}
+                          value={member.phone || ''}
+                          onChange={(e) => {
+                            const updated = [...newTeamMembers];
+                            updated[index].phone = e.target.value;
+                            setNewTeamMembers(updated);
+                          }}
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setShowAddTeamModal(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-300"
+                  onClick={() => {
+                    setShowAddTeamModal(false);
+                    setEditingTeamId(null);
+                    setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 6 });
+                    setSchoolSearchQuery('');
+                    setNewTeamMembers(DEFAULT_6_MEMBERS);
+                  }}
+                  className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-300 cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#F37022] text-white text-xs font-bold hover:bg-orange-600 shadow-md"
+                  className="px-5 py-2 rounded-xl bg-[#F37022] text-white text-xs font-bold hover:bg-orange-600 shadow-md cursor-pointer flex items-center gap-1.5"
                 >
-                  Thêm Đội
+                  <Plus className="w-4 h-4" />
+                  {editingTeamId ? 'Lưu Cập Nhật Đội Thi' : 'Xác Nhận Thêm Đội 6 Thành Viên'}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Viewing Team 5 Members Roster Modal */}
+      {viewingTeamRoster && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 max-w-lg w-full relative">
+            <button
+              type="button"
+              onClick={() => setViewingTeamRoster(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-700 text-lg font-bold px-2"
+            >
+              ✕
+            </button>
+
+            <div className="mb-4 flex items-center gap-3">
+              {viewingTeamRoster.logo ? (
+                <img src={viewingTeamRoster.logo} alt={viewingTeamRoster.name} className="w-12 h-12 rounded-xl object-cover border border-slate-200 shrink-0 shadow-sm" />
+              ) : (
+                <div className="w-12 h-12 rounded-xl bg-orange-100 text-[#F37022] font-black text-base flex items-center justify-center border border-orange-200 shrink-0 uppercase">
+                  {viewingTeamRoster.name ? viewingTeamRoster.name.charAt(0) : 'T'}
+                </div>
+              )}
+              <div>
+                <span className="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-orange-100 text-[#F37022] border border-orange-200">
+                  {viewingTeamRoster.region} · {viewingTeamRoster.game}
+                </span>
+                <h3 className="font-heading font-black text-xl text-slate-900 mt-0.5 uppercase">
+                  {viewingTeamRoster.name}
+                </h3>
+                <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5">
+                  <p className="h-4 text-[#F37022]" /> {viewingTeamRoster.school}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              <div className="text-xs font-bold text-slate-700 uppercase flex items-center justify-between border-b border-slate-100 pb-1.5">
+                <span>DANH SÁCH 6 VẬN ĐỘNG VIÊN (5 CHÍNH + 1 DỰ BỊ)</span>
+                <span className="text-emerald-600 text-[11px]">6 Vận Động Viên</span>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2">
+                {(viewingTeamRoster.membersList || [
+                  { id: 1, name: viewingTeamRoster.captain || 'Nguyễn Văn A', ingame: 'Captain_IGN', role: 'Đội trưởng' },
+                  { id: 2, name: 'Thành viên 2', ingame: 'Member2_IGN', role: 'Thành viên' },
+                  { id: 3, name: 'Thành viên 3', ingame: 'Member3_IGN', role: 'Thành viên' },
+                  { id: 4, name: 'Thành viên 4', ingame: 'Member4_IGN', role: 'Thành viên' },
+                  { id: 5, name: 'Thành viên 5', ingame: 'Member5_IGN', role: 'Thành viên' },
+                ]).map((m, idx) => (
+                  <div key={m.id || idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
+                        m.role === 'Đội trưởng' || idx === 0
+                          ? 'bg-amber-500 text-white shadow-sm'
+                          : 'bg-slate-200 text-slate-700'
+                      }`}>
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <div className="font-bold text-xs text-slate-900 flex items-center gap-1.5">
+                          <span>{m.name}</span>
+                          {(m.role === 'Đội trưởng' || idx === 0) && (
+                            <span className="px-1.5 py-0.2 rounded bg-amber-100 text-amber-700 text-[9px] font-black border border-amber-300">
+                              ĐỘI TRƯỞNG
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-mono flex items-center gap-3">
+                          <span>IGN: {m.ingame || `Player_${idx + 1}`}</span>
+                          {m.phone && (
+                            <span className="text-[#F37022] font-semibold flex items-center gap-1">
+                              <Phone className="w-3 h-3" /> {m.phone}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setViewingTeamRoster(null)}
+                className="px-5 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 transition-colors"
+              >
+                Đóng
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -1144,10 +2521,10 @@ export default function AdminConsole({ onBackToLanding }) {
                 
               </div>
 
-              {/* Thumbnail URL & Video Embed */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Thumbnail URL, Video Embed & Article Link */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Ảnh Thumbnail (URL)</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Ảnh Thumbnail</label>
                   <input
                     type="text"
                     placeholder="https://images.unsplash.com/..."
@@ -1157,12 +2534,22 @@ export default function AdminConsole({ onBackToLanding }) {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Video YouTube / Embed</label>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Video YouTube</label>
                   <input
                     type="text"
                     placeholder="https://www.youtube.com/watch?v=..."
                     value={newArticle.videoEmbed}
                     onChange={(e) => setNewArticle({ ...newArticle, videoEmbed: e.target.value })}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Bài Viết Gốc (URL)</label>
+                  <input
+                    type="text"
+                    placeholder="https://facebook.com/... hoặc https://..."
+                    value={newArticle.articleUrl}
+                    onChange={(e) => setNewArticle({ ...newArticle, articleUrl: e.target.value })}
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
                   />
                 </div>

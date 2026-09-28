@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, X, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import { subscribeVideoLivestream, parseYouTubeEmbed, INITIAL_LIVESTREAM_STREAMS } from '../config/firebase';
+import { subscribeVideoLivestream, parseYouTubeEmbed, INITIAL_LIVESTREAM_STREAMS, recordLiveView } from '../config/firebase';
 
 export default function LivestreamBanner({ selectedGame }) {
   const [isVisible, setIsVisible] = useState(true);
@@ -36,6 +36,15 @@ export default function LivestreamBanner({ selectedGame }) {
   const embedUrl = parseYouTubeEmbed(activeStream.embedUrl || activeStream.url) + '?autoplay=1';
   const watchUrl = activeStream.url || activeStream.embedUrl || 'https://www.youtube.com';
 
+  const handleToggleExpand = () => {
+    const nextExpanded = !isExpanded;
+    setIsExpanded(nextExpanded);
+    if (nextExpanded) {
+      // Record +1 event in Analytics & Tracking for LIVE VIEWS
+      recordLiveView(streamGame);
+    }
+  };
+
   return (
     <motion.div
       initial={{ y: -100, opacity: 0 }}
@@ -45,28 +54,23 @@ export default function LivestreamBanner({ selectedGame }) {
       <div className="bg-gradient-to-r from-orange-950/60 via-[#1e130d]/60 to-orange-950/60 backdrop-blur-sm border-b border-[#F37022]/20">
         {/* Compact Bar */}
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <div 
+            onClick={handleToggleExpand}
+            className="flex items-center gap-2.5 cursor-pointer group"
+          >
             <span className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#F37022] text-white text-xs font-black animate-pulse shadow-md shadow-orange-900/40">
               <Radio className="w-3 h-3" />
               LIVE
             </span>
-            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white shadow-sm ${
-              streamGame === 'VALORANT'
-                ? 'bg-rose-600'
-                : streamGame === 'AOV'
-                ? 'bg-cyan-600'
-                : 'bg-amber-500'
-            }`}>
-              {streamGame === 'ALL' ? 'TẤT CẢ GAME' : streamGame}
-            </span>
-            <span className="text-sm font-semibold text-white/95 truncate">
+           
+            <span className="text-sm font-semibold text-white/95 truncate group-hover:text-[#F37022] transition-colors">
               {activeStream.title || 'Xem trực tiếp ngay!'}
             </span>
           </div>
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setIsExpanded(!isExpanded)}
+              onClick={handleToggleExpand}
               className="p-1.5 rounded-lg hover:bg-white/10 text-white/80 transition-colors cursor-pointer"
               title={isExpanded ? 'Thu gọn' : 'Xem trực tiếp'}
             >
@@ -99,6 +103,7 @@ export default function LivestreamBanner({ selectedGame }) {
                   href={watchUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => recordLiveView(streamGame)}
                   className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-gradient-to-r from-[#F37022] to-amber-500 text-white text-sm font-bold shadow-lg shadow-orange-900/30 hover:opacity-95 transition-all"
                 >
                   <ExternalLink className="w-4 h-4" />

@@ -1,7 +1,9 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { QrCode, ExternalLink, Smartphone, ArrowRight } from 'lucide-react';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { QrCode, ExternalLink, Smartphone, ArrowRight, CheckCircle, X, Maximize2, Download } from 'lucide-react';
 import bg3Img from '../../assets/background/background3.jpg';
+import qrCodeImg from '../../assets/QRCodeDangKy/qrcode_406435144_6ae891fd1e64bae13b998f1a9c098065.png';
+import { recordQrScan } from '../../config/firebase';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -12,6 +14,27 @@ const fadeInUp = {
 
 export default function Registration({ selectedGame }) {
   const REGISTRATION_URL = 'https://fang.vn/register';
+  const [scannedToast, setScannedToast] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleOpenQrModal = async () => {
+    setIsModalOpen(true);
+    try {
+      await recordQrScan('AOV');
+      setScannedToast(true);
+      setTimeout(() => setScannedToast(false), 4000);
+    } catch (err) {
+      console.warn('Scan record error:', err);
+    }
+  };
+
+  const handleDirectClick = async () => {
+    try {
+      await recordQrScan('AOV');
+    } catch (err) {
+      console.warn('Scan record error:', err);
+    }
+  };
 
   return (
     <section id="registration" className="section-padding relative overflow-hidden">
@@ -41,54 +64,142 @@ export default function Registration({ selectedGame }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
               {/* Left: Text & CTA */}
               <div>
-             
+                
                 <h2 className="font-heading font-bold text-3xl sm:text-4xl text-white mb-3">
                   Sẵn sàng xưng bá?
                 </h2>
                 <p className="text-slate-300 text-base mb-6">
-                  Đăng ký tham gia bộ môn <strong className={selectedGame === 'valorant' ? 'text-[#ff4655]' : 'text-[#f39c12]'}>
-                    {selectedGame === 'valorant' ? 'VALORANT' : 'AOV (LIÊN QUÂN)'}
-                  </strong> qua FanG ID. Quét mã QR hoặc bấm nút bên dưới để xác nhận suất thi đấu!
+                  Đăng ký tham gia bộ môn <strong className="text-[#f39c12]">AOV (LIÊN QUÂN 5V5)</strong> qua FanG ID. Bấm vào mã QR bên dưới để mở mã nét và quét xuất thi đấu!
                 </p>
 
                 <div className="flex flex-col gap-3">
+                  <button
+                    onClick={handleOpenQrModal}
+                    className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#f39c12] hover:bg-[#f5ab35] text-slate-950 font-black text-base shadow-xl shadow-amber-950/40 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
+                  >
+                    <QrCode className="w-5 h-5 text-slate-950 animate-pulse" />
+                    Hiển Thị Mã QR LIÊN QUÂN
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  </button>
+
                   <a
                     href={REGISTRATION_URL}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#F37021] hover:bg-[#ff8235] text-white font-black text-base shadow-xl shadow-orange-950/40 transition-all hover:scale-[1.02] active:scale-95"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                    Đăng ký qua FanG ID
-                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                  </a>
-
-                  <a
-                    href={REGISTRATION_URL}
+                    onClick={handleDirectClick}
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl border border-slate-700 bg-white/5 text-slate-300 font-semibold text-sm hover:bg-white/10 hover:border-slate-500 transition-all"
                   >
-                    <Smartphone className="w-4 h-4 text-[#F37021]" />
-                    Mở ứng dụng FanG Mobile
+                    <ExternalLink className="w-4 h-4 text-[#f39c12]" />
+                    Mở trang Đăng Ký FanG ID
                   </a>
                 </div>
               </div>
 
-              {/* Right: QR Code */}
-              <div className="flex justify-center">
-                <div className="relative">
-                  <div className="w-48 h-48 sm:w-56 sm:h-56 rounded-3xl bg-white p-4 shadow-2xl shadow-orange-950/40 border-2 border-[#F37021]">
-                    <div className="w-full h-full rounded-2xl bg-slate-50 flex items-center justify-center border border-slate-200">
-                      <QrCode className="w-20 h-20 text-slate-900" />
+              {/* Right: Blurred QR Code Preview Card */}
+              <div className="flex flex-col items-center justify-center">
+                <div 
+                  onClick={handleOpenQrModal}
+                  className="relative group cursor-pointer transition-transform hover:scale-105 flex flex-col items-center"
+                  title="Bấm vào đây để mở mã QR Code rõ nét và quét thi đấu AOV!"
+                >
+                  <div className="w-52 h-52 sm:w-60 sm:h-60 rounded-3xl bg-slate-950/80 p-3 shadow-2xl shadow-amber-950/60 border-2 border-[#f39c12] relative overflow-hidden flex items-center justify-center">
+                    
+                    {/* Blurred QR Code Image */}
+                    <img 
+                      src={qrCodeImg} 
+                      alt="Mã QR Đăng Ký AOV" 
+                      className="w-full h-full object-cover rounded-2xl filter blur-[7px] group-hover:blur-[4px] transition-all opacity-80"
+                    />
+                    
+                    {/* Center Overlay CTA Button */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-3 text-center bg-slate-950/40 backdrop-blur-[2px] rounded-2xl">
+                     
+                      <span className="bg-slate-900/90 text-white text-xs font-black px-3.5 py-1.5 rounded-xl shadow-xl border border-[#f39c12]/50 tracking-wider uppercase flex items-center gap-1.5">
+                        <p className="h-3.5 text-[#f39c12]" /> Bấm Để Mở QR Code
+                      </span>
                     </div>
                   </div>
-                  {/* Floating FPT badge */}
+
+                  {/* Scan Badge & Download Button */}
+                  <div className="mt-3 text-center flex flex-col items-center gap-2">
                  
+
+                    <a
+                      href={qrCodeImg}
+                      download="FanG_AOV_QRCode.png"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#f39c12]/20 hover:bg-[#f39c12] text-[#f39c12] hover:text-slate-950 font-bold text-xs border border-[#f39c12]/50 transition-all cursor-pointer shadow-md"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      Tải về QR Code AOV
+                    </a>
+                  </div>
                 </div>
+
+                {scannedToast && (
+                  <motion.div 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0 }}
+                    className="mt-3 px-4 py-2 rounded-xl bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-lg"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Đã ghi nhận 1 lượt quét QR AOV!
+                  </motion.div>
+                )}
               </div>
             </div>
           </div>
         </motion.div>
       </div>
+
+      {/* Pop-up QR Code Modal */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.25 }}
+              className="relative w-full max-w-sm rounded-3xl bg-[#0f1222] border-2 border-[#f39c12] shadow-[0_0_80px_rgba(243,156,18,0.5)] p-6 text-center overflow-hidden flex flex-col items-center"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                title="Đóng modal"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+             
+
+              {/* High Resolution Sharp QR Code Image */}
+              <div className="w-60 h-60 rounded-2xl bg-white p-3 shadow-2xl border-2 border-[#f39c12] flex items-center justify-center my-3">
+                <img 
+                  src={qrCodeImg} 
+                  alt="Mã QR Đăng Ký AOV Rõ Nét" 
+                  className="w-full h-full object-cover rounded-xl"
+                />
+              </div>
+
+              <div className="w-full space-y-2.5">
+                <a
+                  href={qrCodeImg}
+                  download="FanG_AOV_QRCode.png"
+                  className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#f39c12] hover:bg-[#f5ab35] text-slate-950 font-black text-xs shadow-lg transition-all border border-amber-400/40"
+                >
+                  <Download className="w-4 h-4" />
+                  Tải Về Mã QR
+                </a>
+
+                
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

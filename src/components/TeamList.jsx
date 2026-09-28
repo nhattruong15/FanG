@@ -1,21 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Users, School, ChevronDown, ChevronUp } from 'lucide-react';
-
-const MOCK_TEAMS = [
-  { school: 'ĐH FPT Hà Nội', region: 'bac', game: 'Valorant', players: ['Kiên TT', 'Dũng NH', 'Tùng PV', 'Bình HS', 'Lâm QT', 'Khoa DM'] },
-  { school: 'ĐH FPT Hà Nội', region: 'bac', game: 'AOV', players: ['Sơn ĐN', 'Hiếu LT', 'Trung VH', 'Đạt NQ', 'Hải PM', 'Cường TT'] },
-  { school: 'ĐH FPT TP.HCM', region: 'nam', game: 'Valorant', players: ['Alex TN', 'Brian LP', 'Chris HV', 'David NM', 'Eric TA', 'Frank PH'] },
-  { school: 'ĐH FPT TP.HCM', region: 'nam', game: 'AOV', players: ['Gary VT', 'Henry DQ', 'Ivan NK', 'Jack MT', 'Ken LH', 'Leo PC'] },
-  { school: 'ĐH Bách Khoa HN', region: 'bac', game: 'Valorant', players: ['Minh PL', 'Hoàng VT', 'Đức TN', 'Hùng NM', 'Long ĐV', 'Tuấn AK'] },
-  { school: 'ĐH Bách Khoa HN', region: 'bac', game: 'AOV', players: ['Nam DT', 'Quang HN', 'Thắng LM', 'Việt NP', 'Khải TC', 'Phong BQ'] },
-  { school: 'ĐH Tôn Đức Thắng', region: 'nam', game: 'Valorant', players: ['An NV', 'Bảo TH', 'Cường LM', 'Duy PQ', 'Em TN', 'Phát HV'] },
-  { school: 'ĐH Tôn Đức Thắng', region: 'nam', game: 'AOV', players: ['Gia BN', 'Hào TV', 'Khanh DL', 'Linh PN', 'Minh TQ', 'Ngọc HM'] },
-  { school: 'ĐH Kinh Tế QD', region: 'bac', game: 'Valorant', players: ['Tú NM', 'Nguyên PH', 'Trường LQ', 'Thành NV', 'Vinh ĐT', 'Anh KN'] },
-  { school: 'ĐH Kinh Tế QD', region: 'bac', game: 'AOV', players: ['Hưng TM', 'Quân VP', 'Sỹ NL', 'Tài HĐ', 'Uy TV', 'Vũ PQ'] },
-  { school: 'ĐH Công Nghệ SG', region: 'nam', game: 'Valorant', players: ['Bình NQ', 'Châu LM', 'Đại TV', 'Giang PH', 'Hòa NM', 'Kha TV'] },
-  { school: 'ĐH Công Nghệ SG', region: 'nam', game: 'AOV', players: ['Lam PQ', 'Nghĩa TH', 'Phúc NV', 'Quý LĐ', 'Sang TM', 'Thịnh HN'] },
-];
+import { Search, Users, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { subscribeTeams, INITIAL_TEAMS } from '../config/firebase';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -24,28 +10,58 @@ const fadeInUp = {
   transition: { duration: 0.5 },
 };
 
-export default function TeamList({ selectedGame }) {
+export default function TeamList({ selectedGame = 'valorant' }) {
   const [search, setSearch] = useState('');
   const [regionFilter, setRegionFilter] = useState('all');
-  const [gameFilter, setGameFilter] = useState(() => {
-    if (selectedGame === 'valorant') return 'Valorant';
-    if (selectedGame === 'aov') return 'AOV';
-    return 'all';
-  });
+  const [teams, setTeams] = useState(INITIAL_TEAMS);
   const [expandedTeam, setExpandedTeam] = useState(null);
 
-  const filteredTeams = MOCK_TEAMS.filter((team) => {
-    const matchSearch = team.school.toLowerCase().includes(search.toLowerCase()) ||
-      team.players.some(p => p.toLowerCase().includes(search.toLowerCase()));
-    const matchRegion = regionFilter === 'all' || team.region === regionFilter;
-    const matchGame = gameFilter === 'all' || team.game === gameFilter;
-    return matchSearch && matchRegion && matchGame;
+  // Real-time synchronization from Firestore / LocalStorage
+  useEffect(() => {
+    const unsub = subscribeTeams((data) => {
+      if (Array.isArray(data) && data.length > 0) {
+        setTeams(data);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  // Determine active game target based on selectedGame prop
+  const activeGame = selectedGame
+    ? (selectedGame.toLowerCase() === 'valorant' ? 'Valorant' : selectedGame.toLowerCase() === 'aov' ? 'AOV' : selectedGame)
+    : 'Valorant';
+
+  const filteredTeams = teams.filter((team) => {
+    // Game Filter: Strictly match selectedGame
+    const matchGame = !activeGame || team.game.toLowerCase() === activeGame.toLowerCase();
+
+    // Region Filter: Match Miền Bắc / Miền Nam / bac / nam
+    const teamRegionLower = (team.region || '').toLowerCase();
+    const matchRegion =
+      regionFilter === 'all' ||
+      (regionFilter === 'bac' && (teamRegionLower.includes('bắc') || teamRegionLower === 'bac')) ||
+      (regionFilter === 'nam' && (teamRegionLower.includes('nam') || teamRegionLower === 'nam'));
+
+    // Search Filter: Match school name or player names
+    const searchLower = search.toLowerCase();
+    const membersArray = team.membersList
+      ? team.membersList.map(m => typeof m === 'object' ? m.name : m)
+      : (team.players || []);
+    const matchSearch =
+      !search ||
+      (team.school && team.school.toLowerCase().includes(searchLower)) ||
+      (team.name && team.name.toLowerCase().includes(searchLower)) ||
+      membersArray.some(p => p && p.toLowerCase().includes(searchLower));
+
+    return matchGame && matchRegion && matchSearch;
   });
 
+  // Group teams by school name
   const schoolGroups = {};
-  filteredTeams.forEach(team => {
-    if (!schoolGroups[team.school]) schoolGroups[team.school] = [];
-    schoolGroups[team.school].push(team);
+  filteredTeams.forEach((team) => {
+    const schoolName = team.school || team.name;
+    if (!schoolGroups[schoolName]) schoolGroups[schoolName] = [];
+    schoolGroups[schoolName].push(team);
   });
 
   return (
@@ -74,7 +90,7 @@ export default function TeamList({ selectedGame }) {
           </div>
         </motion.div>
 
-        {/* Filters */}
+        {/* Search & Region Filters */}
         <motion.div {...fadeInUp} className="flex flex-col sm:flex-row gap-3 mb-8">
           {/* Search Input */}
           <div className="relative flex-1">
@@ -112,7 +128,7 @@ export default function TeamList({ selectedGame }) {
 
         {/* Team Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(schoolGroups).map(([school, teams], idx) => (
+          {Object.entries(schoolGroups).map(([school, teamList], idx) => (
             <motion.div
               key={school}
               {...fadeInUp}
@@ -125,11 +141,25 @@ export default function TeamList({ selectedGame }) {
                 className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                 
+                  {teamList[0]?.logo ? (
+                    <img src={teamList[0].logo} alt={school} className="w-10 h-10 rounded-xl object-cover border border-white/20 shrink-0 shadow-md" />
+                  ) : (
+                    <div className="w-10 h-10 rounded-xl bg-[#F37021]/20 text-[#F37021] font-black text-sm flex items-center justify-center border border-[#F37021]/30 shrink-0 uppercase">
+                      {school ? school.charAt(0) : 'T'}
+                    </div>
+                  )}
                   <div className="text-left">
                     <div className="font-bold text-white text-sm sm:text-base">{school}</div>
-                    <div className="text-xs text-slate-400">
-                      {teams.map(t => t.game).join(' & ')} · {teams[0].region === 'bac' ? 'Miền Bắc' : 'Miền Nam'}
+                    <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+                      <span className={`font-bold ${activeGame === 'Valorant' ? 'text-rose-400' : 'text-amber-400'}`}>
+                        {activeGame}
+                      </span>
+                      <span>·</span>
+                      <span>
+                        {teamList[0]?.region?.toLowerCase().includes('bắc') || teamList[0]?.region === 'bac'
+                          ? 'Miền Bắc'
+                          : 'Miền Nam'}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -140,26 +170,79 @@ export default function TeamList({ selectedGame }) {
                 )}
               </button>
 
-              {/* Expanded Roster */}
+              {/* Expanded Roster View */}
               {expandedTeam === school && (
                 <div className="px-4 pb-4 space-y-3 border-t border-slate-800/60">
-                  {teams.map((team, tIdx) => (
-                    <div key={tIdx} className="mt-3">
-                      <div className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-bold mb-2 ${
-                        team.game === 'Valorant' ? 'bg-rose-500/15 text-rose-400' : 'bg-[#F37021]/15 text-[#F37021]'
-                      }`}>
-                        {team.game}
-                      </div>
-                      <div className="grid grid-cols-3 gap-1.5">
-                        {team.players.map((player, pIdx) => (
-                          <div key={pIdx} className="flex items-center gap-1.5 px-2 py-1.5 rounded-lg bg-white/5 text-xs text-slate-300">
-                            <Users className="w-3 h-3 text-[#F37021] flex-shrink-0" />
-                            <span className="truncate font-medium">{player}</span>
+                  {teamList.map((tItem, tIdx) => {
+                    const members = tItem.membersList || (tItem.players || []).map((p, i) => ({
+                      id: i + 1,
+                      name: p,
+                      role: i === 0 ? 'Đội trưởng' : i === 5 ? 'Dự bị' : 'Thành viên',
+                      ingame: `Player_${i + 1}`
+                    }));
+
+                    return (
+                      <div key={tIdx} className="mt-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                           
+                            <span
+                              className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-bold ${
+                                tItem.game === 'Valorant' ? 'bg-rose-500/15 text-rose-400' : 'bg-[#F37021]/15 text-[#F37021]'
+                              }`}
+                            >
+                              {tItem.name || tItem.game}
+                            </span>
                           </div>
-                        ))}
+                         
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                          {members.map((mObj, mIdx) => {
+                            const name = typeof mObj === 'object' ? mObj.name : mObj;
+                            const ingame = typeof mObj === 'object' ? mObj.ingame : '';
+                            const isCaptain = typeof mObj === 'object'
+                              ? (mObj.role === 'Đội trưởng' || name.includes('(C)'))
+                              : mIdx === 0;
+                            const isSub = typeof mObj === 'object'
+                              ? (mObj.role === 'Dự bị' || name.toLowerCase().includes('sub') || name.toLowerCase().includes('dự bị'))
+                              : mIdx === 5;
+
+                            return (
+                              <div
+                                key={mIdx}
+                                className={`px-2.5 py-2 rounded-xl border transition-all ${
+                                  isCaptain
+                                    ? 'bg-orange-500/10 border-orange-500/30 text-white'
+                                    : isSub
+                                    ? 'bg-sky-500/10 border-sky-500/30 text-white'
+                                    : 'bg-white/5 border-slate-800 text-slate-300'
+                                }`}
+                              >
+                                <div className="flex items-center justify-between gap-1">
+                                  <span className="text-xs font-bold truncate">{name}</span>
+                                  {isCaptain && (
+                                    <span className="text-[9px] font-black bg-[#F37021] text-white px-1.5 py-0.2 rounded shrink-0">
+                                      C
+                                    </span>
+                                  )}
+                                  {isSub && (
+                                    <span className="text-[9px] font-black bg-sky-500 text-white px-1.5 py-0.2 rounded shrink-0 uppercase">
+                                      SUB
+                                    </span>
+                                  )}
+                                </div>
+                                {ingame && (
+                                  <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                                    {ingame}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </motion.div>
@@ -167,8 +250,8 @@ export default function TeamList({ selectedGame }) {
         </div>
 
         {filteredTeams.length === 0 && (
-          <div className="text-center py-12 text-slate-500">
-            Không tìm thấy đội nào phù hợp
+          <div className="text-center py-12 text-slate-500 font-medium">
+            Chưa có đội thi đấu nào cho bộ môn <strong className="text-white uppercase">{activeGame}</strong> phù hợp với bộ lọc.
           </div>
         )}
       </div>

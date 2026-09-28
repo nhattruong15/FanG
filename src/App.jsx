@@ -26,13 +26,81 @@ import WorkshopAov from './components/aov/Workshop';
 import GameSelector from './components/GameSelector';
 import AdminConsole from './components/admin/AdminConsole';
 import { Gamepad2 } from 'lucide-react';
+import { recordQrScan, recordPageVisit, updatePresenceHeartbeat, removePresenceSession } from './config/firebase';
 
 export default function App() {
   const [selectedGame, setSelectedGame] = useState(() => {
     return localStorage.getItem('fang_selected_game') || null;
   });
 
-  const [isAdminView, setIsAdminView] = useState(false);
+  const [isAdminView, setIsAdminView] = useState(() => {
+    return localStorage.getItem('fang_is_admin_view') === 'true' || window.location.hash === '#admin';
+  });
+
+  const handleOpenAdmin = () => {
+    setIsAdminView(true);
+    localStorage.setItem('fang_is_admin_view', 'true');
+    window.location.hash = 'admin';
+  };
+
+  const handleCloseAdmin = () => {
+    setIsAdminView(false);
+    localStorage.setItem('fang_is_admin_view', 'false');
+    if (window.location.hash === '#admin') {
+      window.history.pushState('', document.title, window.location.pathname + window.location.search);
+    }
+  };
+
+  // Auto-record QR scan event on page load when accessed via QR link (e.g. Zalo / Camera scan)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const isQrAccess = 
+        params.get('src') === 'qr_scan' || 
+        params.get('scan') === 'qr' || 
+        params.get('scan') === 'true' || 
+        params.get('qr') === '1' ||
+        params.get('ref') === 'qr' ||
+        params.get('from') === 'qr';
+
+      if (isQrAccess) {
+        // Prevent double counting within same session on page refresh
+        const sessionTrackedKey = `fang_qr_tracked_${window.location.search}`;
+        if (!sessionStorage.getItem(sessionTrackedKey)) {
+          const gameParam = params.get('game')?.toUpperCase() || 'GENERAL';
+          recordQrScan(gameParam);
+          sessionStorage.setItem(sessionTrackedKey, 'true');
+        }
+      }
+    } catch (err) {
+      console.warn('QR auto scan detection error:', err);
+    }
+  }, []);
+
+  // Record page visit once per session + heartbeat presence every 30s
+  useEffect(() => {
+    const visitTrackedKey = 'fang_visit_tracked_session';
+    if (!sessionStorage.getItem(visitTrackedKey)) {
+      recordPageVisit();
+      sessionStorage.setItem(visitTrackedKey, 'true');
+    }
+
+    // Heartbeat presence every 30 seconds
+    const heartbeatInterval = setInterval(() => {
+      updatePresenceHeartbeat();
+    }, 30000);
+
+    // Remove session on page unload
+    const handleUnload = () => {
+      removePresenceSession();
+    };
+    window.addEventListener('beforeunload', handleUnload);
+
+    return () => {
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('beforeunload', handleUnload);
+    };
+  }, []);
 
   const handleSelectGame = (game) => {
     setSelectedGame(game);
@@ -42,6 +110,11 @@ export default function App() {
   const handleChangeGame = () => {
     setSelectedGame(null);
   };
+
+  // Conditional early returns (MUST be placed after all Hooks)
+  if (isAdminView) {
+    return <AdminConsole onBackToLanding={handleCloseAdmin} />;
+  }
 
   if (!selectedGame) {
     return <GameSelector onSelectGame={handleSelectGame} />;
@@ -60,14 +133,14 @@ export default function App() {
   const Workshop = isValorant ? WorkshopValorant : WorkshopAov;
 
   if (isAdminView) {
-    return <AdminConsole onBackToLanding={() => setIsAdminView(false)} />;
+    return <AdminConsole onBackToLanding={handleCloseAdmin} />;
   }
 
   return (
     <div className="h-screen overflow-x-hidden overflow-y-auto lg:snap-y lg:snap-proximity scroll-smooth bg-[#0e0906] text-slate-100 selection:bg-[#F37021] selection:text-white relative">
       {/* Header Container (Navbar + Livestream Banner) */}
       <header className="fixed top-0 left-0 right-0 z-50">
-        <Navbar selectedGame={selectedGame} onChangeGame={handleChangeGame} onOpenAdmin={() => setIsAdminView(true)} />
+        <Navbar selectedGame={selectedGame} onChangeGame={handleChangeGame} onOpenAdmin={handleOpenAdmin} />
         <LivestreamBanner selectedGame={selectedGame} />
       </header>
 
@@ -116,7 +189,7 @@ export default function App() {
           <div className="flex items-center gap-2.5">
             <div>
               <button
-                onClick={() => setIsAdminView(true)}
+                onClick={handleOpenAdmin}
                 title="Truy cập Admin Console"
                 className="font-heading font-black text-sm text-white hover:text-[#F37022] transition-colors cursor-pointer inline-flex items-center gap-1 group"
               >

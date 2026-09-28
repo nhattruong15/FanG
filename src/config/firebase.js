@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
+import { getFirestore, doc, setDoc, getDoc, onSnapshot, increment } from 'firebase/firestore';
 
 // Real Firebase Project Configuration provided by user (fang-58ac3)
 export const FIREBASE_CONFIG = {
@@ -326,3 +326,652 @@ export function subscribeVideoLivestream(callback) {
   }
 }
 
+/**
+ * Initial Default Teams list with 5-member rosters for Valorant and AOV
+ */
+export const INITIAL_TEAMS = [
+  {
+    id: 'team_1',
+    name: 'ĐH FPT Hà Nội - Valorant',
+    school: 'Trường Đại học FPT Hà Nội',
+    region: 'Miền Bắc',
+    game: 'Valorant',
+    captain: 'Nguyễn Văn A',
+    membersCount: 6,
+    membersList: [
+      { id: 1, name: 'Nguyễn Văn A', ingame: 'FPT_Alpha#101', role: 'Đội trưởng' },
+      { id: 2, name: 'Trần Văn B', ingame: 'FPT_Bravo#102', role: 'Thành viên' },
+      { id: 3, name: 'Lê Hoàng C', ingame: 'FPT_Charlie#103', role: 'Thành viên' },
+      { id: 4, name: 'Phạm Minh D', ingame: 'FPT_Delta#104', role: 'Thành viên' },
+      { id: 5, name: 'Vũ Quốc E', ingame: 'FPT_Echo#105', role: 'Thành viên' },
+      { id: 6, name: 'Khoa DM', ingame: 'FPT_Sub#106', role: 'Dự bị' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_2',
+    name: 'ĐH FPT TP.HCM - Valorant',
+    school: 'Trường Đại học FPT TP.HCM',
+    region: 'Miền Nam',
+    game: 'Valorant',
+    captain: 'Trần Văn B',
+    membersCount: 6,
+    membersList: [
+      { id: 1, name: 'Trần Văn B', ingame: 'FPT_Leader#201', role: 'Đội trưởng' },
+      { id: 2, name: 'Alex TN', ingame: 'FPT_Alex#202', role: 'Thành viên' },
+      { id: 3, name: 'Brian LP', ingame: 'FPT_Brian#203', role: 'Thành viên' },
+      { id: 4, name: 'Chris HV', ingame: 'FPT_Chris#204', role: 'Thành viên' },
+      { id: 5, name: 'David NM', ingame: 'FPT_David#205', role: 'Thành viên' },
+      { id: 6, name: 'Eric TA', ingame: 'FPT_Sub#206', role: 'Dự bị' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_3',
+    name: 'ĐH FPT Hà Nội - AOV',
+    school: 'Trường Đại học FPT Hà Nội',
+    region: 'Miền Bắc',
+    game: 'AOV',
+    captain: 'Sơn ĐN',
+    membersCount: 6,
+    membersList: [
+      { id: 1, name: 'Sơn ĐN', ingame: 'FPT_Son#301', role: 'Đội trưởng' },
+      { id: 2, name: 'Hiếu LT', ingame: 'FPT_Hieu#302', role: 'Thành viên' },
+      { id: 3, name: 'Trung VH', ingame: 'FPT_Trung#303', role: 'Thành viên' },
+      { id: 4, name: 'Đạt NQ', ingame: 'FPT_Dat#304', role: 'Thành viên' },
+      { id: 5, name: 'Hải PM', ingame: 'FPT_Hai#305', role: 'Thành viên' },
+      { id: 6, name: 'Cường TT', ingame: 'FPT_Sub#306', role: 'Dự bị' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_4',
+    name: 'ĐH FPT TP.HCM - AOV',
+    school: 'Trường Đại học FPT TP.HCM',
+    region: 'Miền Nam',
+    game: 'AOV',
+    captain: 'Gary VT',
+    membersCount: 6,
+    membersList: [
+      { id: 1, name: 'Gary VT', ingame: 'FPT_Gary#401', role: 'Đội trưởng' },
+      { id: 2, name: 'Henry DQ', ingame: 'FPT_Henry#402', role: 'Thành viên' },
+      { id: 3, name: 'Ivan NK', ingame: 'FPT_Ivan#403', role: 'Thành viên' },
+      { id: 4, name: 'Jack MT', ingame: 'FPT_Jack#404', role: 'Thành viên' },
+      { id: 5, name: 'Ken LH', ingame: 'FPT_Ken#405', role: 'Thành viên' },
+      { id: 6, name: 'Leo PC', ingame: 'FPT_Sub#406', role: 'Dự bị' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_5',
+    name: 'ĐH Bách Khoa HN - Valorant',
+    school: 'Trường Đại học Bách Khoa Hà Nội',
+    region: 'Miền Bắc',
+    game: 'Valorant',
+    captain: 'Minh PL',
+    membersCount: 5,
+    membersList: [
+      { id: 1, name: 'Minh PL', ingame: 'BKA_Minh#501', role: 'Đội trưởng' },
+      { id: 2, name: 'Hoàng VT', ingame: 'BKA_Hoang#502', role: 'Thành viên' },
+      { id: 3, name: 'Đức TN', ingame: 'BKA_Duc#503', role: 'Thành viên' },
+      { id: 4, name: 'Hùng NM', ingame: 'BKA_Hung#504', role: 'Thành viên' },
+      { id: 5, name: 'Long ĐV', ingame: 'BKA_Long#505', role: 'Thành viên' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_6',
+    name: 'ĐH Bách Khoa HN - AOV',
+    school: 'Trường Đại học Bách Khoa Hà Nội',
+    region: 'Miền Bắc',
+    game: 'AOV',
+    captain: 'Lê Hoàng C',
+    membersCount: 5,
+    membersList: [
+      { id: 1, name: 'Lê Hoàng C', ingame: 'BKA_Cap#601', role: 'Đội trưởng' },
+      { id: 2, name: 'Nam DT', ingame: 'BKA_Nam#602', role: 'Thành viên' },
+      { id: 3, name: 'Quang HN', ingame: 'BKA_Quang#603', role: 'Thành viên' },
+      { id: 4, name: 'Thắng LM', ingame: 'BKA_Thang#604', role: 'Thành viên' },
+      { id: 5, name: 'Việt NP', ingame: 'BKA_Viet#605', role: 'Thành viên' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_7',
+    name: 'ĐH Kinh Tế QD - Valorant',
+    school: 'Trường Đại học Kinh Tế Quốc Dân',
+    region: 'Miền Bắc',
+    game: 'Valorant',
+    captain: 'Vũ Quốc E',
+    membersCount: 5,
+    membersList: [
+      { id: 1, name: 'Vũ Quốc E', ingame: 'NEU_Cap#701', role: 'Đội trưởng' },
+      { id: 2, name: 'Tú NM', ingame: 'NEU_Tu#702', role: 'Thành viên' },
+      { id: 3, name: 'Nguyên PH', ingame: 'NEU_Nguyen#703', role: 'Thành viên' },
+      { id: 4, name: 'Trường LQ', ingame: 'NEU_Truong#704', role: 'Thành viên' },
+      { id: 5, name: 'Thành NV', ingame: 'NEU_Thanh#705', role: 'Thành viên' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_8',
+    name: 'ĐH Kinh Tế QD - AOV',
+    school: 'Trường Đại học Kinh Tế Quốc Dân',
+    region: 'Miền Bắc',
+    game: 'AOV',
+    captain: 'Hưng TM',
+    membersCount: 5,
+    membersList: [
+      { id: 1, name: 'Hưng TM', ingame: 'NEU_Hung#801', role: 'Đội trưởng' },
+      { id: 2, name: 'Quân VP', ingame: 'NEU_Quan#802', role: 'Thành viên' },
+      { id: 3, name: 'Sỹ NL', ingame: 'NEU_Sy#803', role: 'Thành viên' },
+      { id: 4, name: 'Tài HĐ', ingame: 'NEU_Tai#804', role: 'Thành viên' },
+      { id: 5, name: 'Uy TV', ingame: 'NEU_Uy#805', role: 'Thành viên' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_9',
+    name: 'ĐH Tôn Đức Thắng - Valorant',
+    school: 'Trường Đại học Tôn Đức Thắng',
+    region: 'Miền Nam',
+    game: 'Valorant',
+    captain: 'An NV',
+    membersCount: 5,
+    membersList: [
+      { id: 1, name: 'An NV', ingame: 'TDT_An#901', role: 'Đội trưởng' },
+      { id: 2, name: 'Bảo TH', ingame: 'TDT_Bao#902', role: 'Thành viên' },
+      { id: 3, name: 'Cường LM', ingame: 'TDT_Cuong#903', role: 'Thành viên' },
+      { id: 4, name: 'Duy PQ', ingame: 'TDT_Duy#904', role: 'Thành viên' },
+      { id: 5, name: 'Phát HV', ingame: 'TDT_Phat#905', role: 'Thành viên' },
+    ],
+    status: 'VERIFIED'
+  },
+  {
+    id: 'team_10',
+    name: 'ĐH Tôn Đức Thắng - AOV',
+    school: 'Trường Đại học Tôn Đức Thắng',
+    region: 'Miền Nam',
+    game: 'AOV',
+    captain: 'Gia BN',
+    membersCount: 5,
+    membersList: [
+      { id: 1, name: 'Gia BN', ingame: 'TDT_Gia#1001', role: 'Đội trưởng' },
+      { id: 2, name: 'Hào TV', ingame: 'TDT_Hao#1002', role: 'Thành viên' },
+      { id: 3, name: 'Khanh DL', ingame: 'TDT_Khanh#1003', role: 'Thành viên' },
+      { id: 4, name: 'Linh PN', ingame: 'TDT_Linh#1004', role: 'Thành viên' },
+      { id: 5, name: 'Minh TQ', ingame: 'TDT_Minh#1005', role: 'Thành viên' },
+    ],
+    status: 'VERIFIED'
+  }
+];
+
+/**
+ * Save / Update Teams list in Firestore collection "teams/teams_list"
+ */
+export async function saveTeams(teams) {
+  try {
+    const payload = {
+      items: teams,
+      updatedAt: new Date().toISOString()
+    };
+    const teamsDocRef = doc(db, 'teams', 'teams_list');
+    await setDoc(teamsDocRef, payload, { merge: true });
+    console.log('Successfully saved teams to Firestore teams/teams_list');
+    localStorage.setItem('fang_registered_teams', JSON.stringify(teams));
+    return { success: true, teams };
+  } catch (error) {
+    console.warn('Firestore teams write error:', error);
+    localStorage.setItem('fang_registered_teams', JSON.stringify(teams));
+    return { success: true, fallback: true, teams };
+  }
+}
+
+/**
+ * Subscribe to Real-time updates for "teams" collection
+ */
+export function subscribeTeams(callback) {
+  try {
+    const teamsDocRef = doc(db, 'teams', 'teams_list');
+    const unsubscribe = onSnapshot(teamsDocRef, (docSnap) => {
+      if (docSnap.exists() && Array.isArray(docSnap.data().items)) {
+        callback(docSnap.data().items);
+      } else {
+        saveTeams(INITIAL_TEAMS);
+        callback(INITIAL_TEAMS);
+      }
+    }, (err) => {
+      console.warn('Firestore teams subscription warning:', err);
+      const saved = localStorage.getItem('fang_registered_teams');
+      if (saved) callback(JSON.parse(saved));
+      else callback(INITIAL_TEAMS);
+    });
+    return unsubscribe;
+  } catch (e) {
+    console.warn('Firestore teams init error:', e);
+    const saved = localStorage.getItem('fang_registered_teams');
+    if (saved) callback(JSON.parse(saved));
+    else callback(INITIAL_TEAMS);
+    return () => {};
+  }
+}
+
+/**
+ * Initial Default QR Code Scan Statistics
+ */
+export const INITIAL_QR_STATS = {
+  totalScans: 0,
+  valorantScans: 0,
+  aovScans: 0,
+  lastScanTime: null,
+  lastScanGame: 'ALL',
+  recentScans: []
+};
+
+/**
+ * Record a QR Code Scan event in Firestore collection "qr_scans/stats"
+ */
+export async function recordQrScan(gameName = 'ALL') {
+  const newScanEntry = {
+    id: `scan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    game: gameName,
+    timestamp: new Date().toISOString(),
+    formattedTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  };
+
+  try {
+    const qrDocRef = doc(db, 'qr_scans', 'stats');
+    const docSnap = await getDoc(qrDocRef);
+
+    let currentTotal = 0;
+    let currentVal = 0;
+    let currentAov = 0;
+    let recent = [];
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      currentTotal = data.totalScans || 0;
+      recent = Array.isArray(data.recentScans) ? data.recentScans : [];
+      // Calculate or retrieve existing game counts
+      currentVal = data.valorantScans ?? recent.filter(s => s.game === 'VALORANT').length;
+      currentAov = data.aovScans ?? recent.filter(s => s.game === 'AOV').length;
+    }
+
+    const updatedTotal = currentTotal + 1;
+    const updatedVal = gameName === 'VALORANT' ? currentVal + 1 : currentVal;
+    const updatedAov = gameName === 'AOV' ? currentAov + 1 : currentAov;
+    const updatedRecent = [newScanEntry, ...recent].slice(0, 100);
+
+    const payload = {
+      totalScans: updatedTotal,
+      valorantScans: updatedVal,
+      aovScans: updatedAov,
+      lastScanTime: newScanEntry.timestamp,
+      lastScanGame: gameName,
+      recentScans: updatedRecent,
+      updatedAt: newScanEntry.timestamp
+    };
+
+    await setDoc(qrDocRef, payload, { merge: true });
+    console.log('[Firestore] QR scan recorded successfully. Total scans:', updatedTotal);
+    localStorage.setItem('fang_qr_stats', JSON.stringify(payload));
+    return { success: true, stats: payload, newScan: newScanEntry };
+  } catch (error) {
+    console.warn('[Firestore] QR scan record fallback:', error);
+    const saved = localStorage.getItem('fang_qr_stats');
+    let parsed = saved ? JSON.parse(saved) : INITIAL_QR_STATS;
+    const recentArr = [newScanEntry, ...(parsed.recentScans || [])].slice(0, 100);
+    const updatedVal = gameName === 'VALORANT' ? (parsed.valorantScans || 0) + 1 : (parsed.valorantScans || 0);
+    const updatedAov = gameName === 'AOV' ? (parsed.aovScans || 0) + 1 : (parsed.aovScans || 0);
+    const updatedStats = {
+      totalScans: (parsed.totalScans || 0) + 1,
+      valorantScans: updatedVal,
+      aovScans: updatedAov,
+      lastScanTime: newScanEntry.timestamp,
+      lastScanGame: gameName,
+      recentScans: recentArr,
+      updatedAt: newScanEntry.timestamp
+    };
+    localStorage.setItem('fang_qr_stats', JSON.stringify(updatedStats));
+    return { success: true, fallback: true, stats: updatedStats, newScan: newScanEntry };
+  }
+}
+
+/**
+ * Subscribe to Real-time QR Code Scan Updates from Firestore "qr_scans/stats"
+ */
+export function subscribeQrScans(callback) {
+  try {
+    const qrDocRef = doc(db, 'qr_scans', 'stats');
+    const unsubscribe = onSnapshot(qrDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data());
+      } else {
+        callback(INITIAL_QR_STATS);
+      }
+    }, (err) => {
+      console.warn('[Firestore] QR scans subscription error:', err);
+      const saved = localStorage.getItem('fang_qr_stats');
+      if (saved) callback(JSON.parse(saved));
+      else callback(INITIAL_QR_STATS);
+    });
+    return unsubscribe;
+  } catch (e) {
+    console.warn('[Firestore] QR scans init error:', e);
+    const saved = localStorage.getItem('fang_qr_stats');
+    if (saved) callback(JSON.parse(saved));
+    else callback(INITIAL_QR_STATS);
+    return () => {};
+  }
+}
+
+/**
+ * Initial Default Live Stream View Statistics
+ */
+export const INITIAL_LIVE_STATS = {
+  totalViews: 0,
+  valorantViews: 0,
+  aovViews: 0,
+  lastViewTime: null,
+  lastViewGame: 'ALL',
+  recentViews: []
+};
+
+/**
+ * Record a Live View event in Firestore collection "live_views/stats"
+ */
+export async function recordLiveView(gameName = 'ALL') {
+  const newViewEntry = {
+    id: `live_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
+    game: gameName,
+    timestamp: new Date().toISOString(),
+    formattedTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+  };
+
+  try {
+    const liveDocRef = doc(db, 'live_views', 'stats');
+    const docSnap = await getDoc(liveDocRef);
+
+    let currentTotal = 0;
+    let currentVal = 0;
+    let currentAov = 0;
+    let recent = [];
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      currentTotal = data.totalViews || 0;
+      recent = Array.isArray(data.recentViews) ? data.recentViews : [];
+      currentVal = data.valorantViews ?? recent.filter(s => s.game === 'VALORANT').length;
+      currentAov = data.aovViews ?? recent.filter(s => s.game === 'AOV').length;
+    }
+
+    const updatedTotal = currentTotal + 1;
+    const updatedVal = gameName === 'VALORANT' ? currentVal + 1 : currentVal;
+    const updatedAov = gameName === 'AOV' ? currentAov + 1 : currentAov;
+    const updatedRecent = [newViewEntry, ...recent].slice(0, 100);
+
+    const payload = {
+      totalViews: updatedTotal,
+      valorantViews: updatedVal,
+      aovViews: updatedAov,
+      lastViewTime: newViewEntry.timestamp,
+      lastViewGame: gameName,
+      recentViews: updatedRecent,
+      updatedAt: newViewEntry.timestamp
+    };
+
+    await setDoc(liveDocRef, payload, { merge: true });
+    console.log('[Firestore] Live view recorded. Total views:', updatedTotal);
+    localStorage.setItem('fang_live_stats', JSON.stringify(payload));
+    return { success: true, stats: payload, newView: newViewEntry };
+  } catch (error) {
+    console.warn('[Firestore] Live view record fallback:', error);
+    const saved = localStorage.getItem('fang_live_stats');
+    let parsed = saved ? JSON.parse(saved) : INITIAL_LIVE_STATS;
+    const recentArr = [newViewEntry, ...(parsed.recentViews || [])].slice(0, 100);
+    const updatedVal = gameName === 'VALORANT' ? (parsed.valorantViews || 0) + 1 : (parsed.valorantViews || 0);
+    const updatedAov = gameName === 'AOV' ? (parsed.aovViews || 0) + 1 : (parsed.aovViews || 0);
+    const updatedStats = {
+      totalViews: (parsed.totalViews || 0) + 1,
+      valorantViews: updatedVal,
+      aovViews: updatedAov,
+      lastViewTime: newViewEntry.timestamp,
+      lastViewGame: gameName,
+      recentViews: recentArr,
+      updatedAt: newViewEntry.timestamp
+    };
+    localStorage.setItem('fang_live_stats', JSON.stringify(updatedStats));
+    return { success: true, fallback: true, stats: updatedStats, newView: newViewEntry };
+  }
+}
+
+/**
+ * Subscribe to Real-time Live Stream View Updates from Firestore "live_views/stats"
+ */
+export function subscribeLiveViews(callback) {
+  try {
+    const liveDocRef = doc(db, 'live_views', 'stats');
+    const unsubscribe = onSnapshot(liveDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data());
+      } else {
+        callback(INITIAL_LIVE_STATS);
+      }
+    }, (err) => {
+      console.warn('[Firestore] Live views subscription error:', err);
+      const saved = localStorage.getItem('fang_live_stats');
+      if (saved) callback(JSON.parse(saved));
+      else callback(INITIAL_LIVE_STATS);
+    });
+    return unsubscribe;
+  } catch (e) {
+    console.warn('[Firestore] Live views init error:', e);
+    const saved = localStorage.getItem('fang_live_stats');
+    if (saved) callback(JSON.parse(saved));
+    else callback(INITIAL_LIVE_STATS);
+    return () => {};
+  }
+}
+
+/**
+ * =========================================================
+ * REAL-TIME VISITOR TRACKING & ONLINE PRESENCE SYSTEM
+ * =========================================================
+ * Uses Firestore heartbeat-based presence detection.
+ * - `site_analytics/visitors` stores totalVisits + active sessions array
+ * - Each session sends a heartbeat every 30s
+ * - Sessions older than 60s are pruned as "offline"
+ * =========================================================
+ */
+
+// Generate a unique session ID per browser tab
+const SESSION_ID = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+/**
+ * Initial Default Visitor Stats
+ */
+export const INITIAL_VISITOR_STATS = {
+  totalVisits: 0,
+  activeSessions: [],
+  lastVisitTime: null
+};
+
+/**
+ * Record a Page Visit (called once per session on page load)
+ * Uses atomic increment for totalVisits counter
+ */
+export async function recordPageVisit() {
+  const now = new Date().toISOString();
+  const sessionEntry = {
+    id: SESSION_ID,
+    startedAt: now,
+    lastSeen: now,
+    userAgent: navigator.userAgent?.substring(0, 80) || 'Unknown',
+    page: window.location.pathname + window.location.search
+  };
+
+  try {
+    const visitorDocRef = doc(db, 'site_analytics', 'visitors');
+    const docSnap = await getDoc(visitorDocRef);
+
+    let currentTotal = 0;
+    let activeSessions = [];
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      currentTotal = data.totalVisits || 0;
+      activeSessions = Array.isArray(data.activeSessions) ? data.activeSessions : [];
+    }
+
+    // Prune stale sessions (older than 90 seconds)
+    const cutoffMs = Date.now() - 90 * 1000;
+    activeSessions = activeSessions.filter(s => {
+      const lastSeenMs = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
+      return lastSeenMs > cutoffMs;
+    });
+
+    // Add current session
+    activeSessions = activeSessions.filter(s => s.id !== SESSION_ID);
+    activeSessions.push(sessionEntry);
+
+    const payload = {
+      totalVisits: currentTotal + 1,
+      activeSessions,
+      lastVisitTime: now,
+      updatedAt: now
+    };
+
+    await setDoc(visitorDocRef, payload, { merge: true });
+    console.log('[Visitor] Page visit recorded. Total:', currentTotal + 1, 'Active:', activeSessions.length);
+    localStorage.setItem('fang_visitor_stats', JSON.stringify(payload));
+    return { success: true, stats: payload };
+  } catch (error) {
+    console.warn('[Visitor] Record page visit fallback:', error);
+    const saved = localStorage.getItem('fang_visitor_stats');
+    const parsed = saved ? JSON.parse(saved) : INITIAL_VISITOR_STATS;
+    const updated = {
+      ...parsed,
+      totalVisits: (parsed.totalVisits || 0) + 1,
+      lastVisitTime: now
+    };
+    localStorage.setItem('fang_visitor_stats', JSON.stringify(updated));
+    return { success: true, fallback: true, stats: updated };
+  }
+}
+
+/**
+ * Update Presence Heartbeat (called every 30 seconds via setInterval)
+ * Refreshes the current session's lastSeen timestamp & prunes stale sessions
+ */
+export async function updatePresenceHeartbeat() {
+  const now = new Date().toISOString();
+
+  try {
+    const visitorDocRef = doc(db, 'site_analytics', 'visitors');
+    const docSnap = await getDoc(visitorDocRef);
+
+    if (!docSnap.exists()) return;
+
+    const data = docSnap.data();
+    let activeSessions = Array.isArray(data.activeSessions) ? data.activeSessions : [];
+
+    // Prune stale sessions (older than 90 seconds)
+    const cutoffMs = Date.now() - 90 * 1000;
+    activeSessions = activeSessions.filter(s => {
+      const lastSeenMs = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
+      return lastSeenMs > cutoffMs;
+    });
+
+    // Update current session's lastSeen
+    const idx = activeSessions.findIndex(s => s.id === SESSION_ID);
+    if (idx >= 0) {
+      activeSessions[idx].lastSeen = now;
+    } else {
+      // Session was pruned or never added, re-register
+      activeSessions.push({
+        id: SESSION_ID,
+        startedAt: now,
+        lastSeen: now,
+        userAgent: navigator.userAgent?.substring(0, 80) || 'Unknown',
+        page: window.location.pathname + window.location.search
+      });
+    }
+
+    await setDoc(visitorDocRef, {
+      activeSessions,
+      updatedAt: now
+    }, { merge: true });
+
+  } catch (error) {
+    console.warn('[Visitor] Heartbeat update error:', error);
+  }
+}
+
+/**
+ * Remove current session from active sessions on page unload
+ */
+export async function removePresenceSession() {
+  try {
+    const visitorDocRef = doc(db, 'site_analytics', 'visitors');
+    const docSnap = await getDoc(visitorDocRef);
+    if (!docSnap.exists()) return;
+
+    const data = docSnap.data();
+    let activeSessions = Array.isArray(data.activeSessions) ? data.activeSessions : [];
+    activeSessions = activeSessions.filter(s => s.id !== SESSION_ID);
+
+    await setDoc(visitorDocRef, {
+      activeSessions,
+      updatedAt: new Date().toISOString()
+    }, { merge: true });
+  } catch (e) {
+    console.warn('[Visitor] Remove session error:', e);
+  }
+}
+
+/**
+ * Subscribe to Real-time Visitor Stats from Firestore "site_analytics/visitors"
+ */
+export function subscribeVisitorStats(callback) {
+  try {
+    const visitorDocRef = doc(db, 'site_analytics', 'visitors');
+    const unsubscribe = onSnapshot(visitorDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        // Count only active sessions (seen within last 90 seconds)
+        const cutoffMs = Date.now() - 90 * 1000;
+        const activeSessions = (data.activeSessions || []).filter(s => {
+          const lastSeenMs = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
+          return lastSeenMs > cutoffMs;
+        });
+        callback({
+          totalVisits: data.totalVisits || 0,
+          onlineCount: activeSessions.length,
+          activeSessions,
+          lastVisitTime: data.lastVisitTime || null
+        });
+      } else {
+        callback({ totalVisits: 0, onlineCount: 0, activeSessions: [], lastVisitTime: null });
+      }
+    }, (err) => {
+      console.warn('[Visitor] Stats subscription error:', err);
+      const saved = localStorage.getItem('fang_visitor_stats');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        callback({
+          totalVisits: parsed.totalVisits || 0,
+          onlineCount: 0,
+          activeSessions: [],
+          lastVisitTime: parsed.lastVisitTime || null
+        });
+      } else {
+        callback({ totalVisits: 0, onlineCount: 0, activeSessions: [], lastVisitTime: null });
+      }
+    });
+    return unsubscribe;
+  } catch (e) {
+    console.warn('[Visitor] Stats init error:', e);
+    callback({ totalVisits: 0, onlineCount: 0, activeSessions: [], lastVisitTime: null });
+    return () => {};
+  }
+}
