@@ -73,6 +73,46 @@ import {
    ==================================================================== */
 const INITIAL_LIVESTREAM = INITIAL_LIVESTREAM_STREAMS;
 
+export const compressImageFile = (file, maxWidth = 800, maxHeight = 600, quality = 0.75) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type.startsWith('image/')) {
+      resolve('');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onerror = () => resolve('');
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => resolve('');
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        if (width > maxWidth) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        }
+        if (height > maxHeight) {
+          width = Math.round((width * maxHeight) / height);
+          height = maxHeight;
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataUrl);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+};
+
 /* ====================================================================
    CLEAN TEAM LABELS & SEARCHABLE COMBBOX SELECTOR
    ==================================================================== */
@@ -432,15 +472,24 @@ export default function AdminConsole({ onBackToLanding }) {
 
   // New Team Form State
   const [newTeam, setNewTeam] = useState({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 7, logo: '' });
-  
-  const handleLogoFileUpload = (e) => {
+
+  const handleLogoFileUpload = async (e) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setNewTeam(prev => ({ ...prev, logo: reader.result }));
-      };
-      reader.readAsDataURL(file);
+      const compressed = await compressImageFile(file, 400, 400, 0.8);
+      if (compressed) {
+        setNewTeam(prev => ({ ...prev, logo: compressed }));
+      }
+    }
+  };
+
+  const handleArticleThumbnailUpload = async (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const compressed = await compressImageFile(file, 800, 600, 0.75);
+      if (compressed) {
+        setNewArticle(prev => ({ ...prev, thumbnail: compressed }));
+      }
     }
   };
   
@@ -980,19 +1029,9 @@ export default function AdminConsole({ onBackToLanding }) {
                  
                 </div>
 
-                <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-500 font-bold uppercase">Tổng Đội Thi Đấu</span>
-                  </div>
-                  <div className="font-heading font-black text-2xl text-slate-900 mb-1">{teams.length} Đội</div>
-                </div>
+                
 
-                <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-xs text-slate-500 font-bold uppercase">Trận Đấu Đã Tạo</span>
-                  </div>
-                  <div className="font-heading font-black text-2xl text-slate-900 mb-1">{matches.length} Trận</div>
-                </div>
+               
 
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-2">
@@ -2185,7 +2224,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   </div>
 
                   {/* Reset All Matches Button */}
-                  <button
+                  {/* <button
                     type="button"
                     onClick={handleResetAllMatchesToEmpty}
                     className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
@@ -2193,7 +2232,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     Đặt lại -- Chọn Đội --
-                  </button>
+                  </button> */}
 
                   {/* Add National Final Button */}
                   <button
@@ -2202,8 +2241,8 @@ export default function AdminConsole({ onBackToLanding }) {
                     className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
                     title="Thêm trận Chung Kết Toàn Quốc (Miền Bắc vs Miền Nam)"
                   >
-                    <Trophy className="w-3.5 h-3.5" />
-                    + Chung Kết Toàn Quốc
+                    <p className=" h-3.5" />
+                    Chung Kết Toàn Quốc
                   </button>
                 </div>
               </div>
@@ -2528,7 +2567,7 @@ export default function AdminConsole({ onBackToLanding }) {
             <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-heading font-black text-lg text-slate-900 uppercase flex items-center gap-2">
-                  <p className="w-5 h-5 text-[#F37022]" /> {editingTeamId ? 'Chỉnh Sửa Thông Tin Đội Thi' : 'Thêm Đội Thi Đấu Mới (5 Chính + 1 Dự Bị)'}
+                  <p className="w-5 h-5 text-[#F37022]" /> {editingTeamId ? 'Chỉnh Sửa Thông Tin Đội Thi' : 'Thêm Đội Thi Đấu Mới (5 Chính + 2 Dự Bị)'}
                 </h3>
               </div>
               <button
@@ -2985,28 +3024,42 @@ export default function AdminConsole({ onBackToLanding }) {
                 
               </div>
 
-              {/* Thumbnail URL, Video Embed & Article Link */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {/* Thumbnail URL, File Upload & Article Link */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Ảnh Thumbnail</label>
-                  <input
-                    type="text"
-                    placeholder="https://images.unsplash.com/..."
-                    value={newArticle.thumbnail}
-                    onChange={(e) => setNewArticle({ ...newArticle, thumbnail: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
-                  />
+                  <label className="block text-xs font-bold text-slate-700 mb-1">Ảnh Thumbnail Bài Viết</label>
+                  <div className="flex items-center gap-2">
+                    {newArticle.thumbnail && (
+                      <img
+                        src={newArticle.thumbnail}
+                        alt="Preview"
+                        className="w-9 h-9 rounded-lg object-cover border border-slate-300 shrink-0 shadow-xs"
+                      />
+                    )}
+                    <input
+                      type="text"
+                      placeholder="Dán link https://... hoặc chọn ảnh"
+                      value={newArticle.thumbnail}
+                      onChange={(e) => setNewArticle({ ...newArticle, thumbnail: e.target.value })}
+                      className="flex-1 min-w-0 bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
+                    />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="article-thumbnail-file-input"
+                      onChange={handleArticleThumbnailUpload}
+                      className="hidden"
+                    />
+                    <label
+                      htmlFor="article-thumbnail-file-input"
+                      className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-100 hover:bg-orange-50 hover:text-[#F37022] border border-slate-300 text-slate-700 text-xs font-bold transition-all cursor-pointer shrink-0 shadow-2xs"
+                    >
+                      <Upload className="w-3.5 h-3.5 text-[#F37022]" />
+                      <span>Tải Máy Tính</span>
+                    </label>
+                  </div>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Link Video YouTube</label>
-                  <input
-                    type="text"
-                    placeholder="https://www.youtube.com/watch?v=..."
-                    value={newArticle.videoEmbed}
-                    onChange={(e) => setNewArticle({ ...newArticle, videoEmbed: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
-                  />
-                </div>
+                
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Link Bài Viết Gốc (URL)</label>
                   <input
@@ -3046,16 +3099,7 @@ export default function AdminConsole({ onBackToLanding }) {
               {/* Author & Featured Toggle */}
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="isFeatured"
-                    checked={newArticle.isFeatured}
-                    onChange={(e) => setNewArticle({ ...newArticle, isFeatured: e.target.checked })}
-                    className="w-4 h-4 text-[#F37022] rounded focus:ring-[#F37022]"
-                  />
-                  <label htmlFor="isFeatured" className="text-xs font-bold text-slate-700 cursor-pointer">
-                    ★ Đánh dấu là Bài Viết Nổi Bật
-                  </label>
+                  
                 </div>
 
                 <div className="flex justify-end gap-2">

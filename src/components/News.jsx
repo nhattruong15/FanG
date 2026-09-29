@@ -39,7 +39,7 @@ export default function News({ selectedGame, targetGame }) {
 
           <div className="flex items-center justify-center gap-3 sm:gap-6">
             <div className="hidden sm:flex items-center gap-1.5 opacity-80">
-              <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45" />
+              <div className="w-1.5 h-1.5 bg-[#F 37022] rotate-45" />
               <div className="w-12 sm:w-20 md:w-24 h-[2px] bg-gradient-to-r from-transparent via-[#F37022] to-[#F37022]" />
             </div>
 
@@ -146,21 +146,9 @@ export default function News({ selectedGame, targetGame }) {
               </button>
 
               <div className="relative aspect-video bg-black">
-                {selectedArticle.videoEmbed ? (
-                  <iframe
-                    className="w-full h-full"
-                    src={parseYouTubeEmbed(selectedArticle.videoEmbed)}
-                    title={selectedArticle.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                    allowFullScreen
-                  />
-                ) : selectedArticle.thumbnail ? (
+                
                   <img src={selectedArticle.thumbnail} alt={selectedArticle.title} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-[#1e130c] text-slate-500">
-                    <Newspaper className="w-16 h-16" />
-                  </div>
-                )}
+              
               </div>
 
               <div className="p-6 sm:p-8 space-y-4 max-h-[60vh] overflow-y-auto">

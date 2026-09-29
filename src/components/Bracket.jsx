@@ -648,7 +648,7 @@ export default function Bracket({ selectedGame: initialGame }) {
               }`}
             >
               <GitBranch className="w-4 h-4" />
-              Sơ Đồ 16 Đội
+              Sơ Đồ Các Đội
             </button>
             <button
               onClick={() => setViewMode('schedule')}
