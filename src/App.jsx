@@ -1,34 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import Navbar from './components/Navbar';
 import LivestreamBanner from './components/LivestreamBanner';
-// Valorant Components
-import HeroValorant from './components/valorant/Hero';
-import IntroductionValorant from './components/valorant/Introduction';
-import RulesValorant from './components/valorant/Rules';
-import RegistrationValorant from './components/valorant/Registration';
-import TeamListValorant from './components/valorant/TeamList';
-import BracketValorant from './components/valorant/Bracket';
-import SponsorValorant from './components/valorant/Sponsor';
-import NewsValorant from './components/valorant/News';
-import WorkshopValorant from './components/valorant/Workshop';
-
-// AOV Components
-import HeroAov from './components/aov/Hero';
-import IntroductionAov from './components/aov/Introduction';
-import RulesAov from './components/aov/Rules';
-import RegistrationAov from './components/aov/Registration';
-import TeamListAov from './components/aov/TeamList';
-import BracketAov from './components/aov/Bracket';
-import SponsorAov from './components/aov/Sponsor';
-import NewsAov from './components/aov/News';
-import WorkshopAov from './components/aov/Workshop';
-
+import Hero from './components/Hero';
+import Introduction from './components/Introduction';
+import Rules from './components/Rules';
+import Registration from './components/Registration';
+import TeamList from './components/TeamList';
+import Bracket from './components/Bracket';
+import Sponsor from './components/Sponsor';
+import News from './components/News';
+import Workshop from './components/Workshop';
 import GameSelector from './components/GameSelector';
 import AdminConsole from './components/admin/AdminConsole';
-import { Gamepad2 } from 'lucide-react';
+import QrRedirect from './components/QrRedirect';
 import { recordQrScan, recordPageVisit, updatePresenceHeartbeat, removePresenceSession } from './config/firebase';
 
 export default function App() {
+  // Kiểm tra xem trình duyệt có đang truy cập route ẩn /qr-register hay không
+  const isQrRedirectRoute =
+    window.location.pathname.toLowerCase().includes('/qr-register') ||
+    window.location.hash.toLowerCase().includes('qr-register') ||
+    window.location.search.toLowerCase().includes('qr-register') ||
+    window.location.search.toLowerCase().includes('qr_register');
+
+  if (isQrRedirectRoute) {
+    return <QrRedirect />;
+  }
+
   const [selectedGame, setSelectedGame] = useState(() => {
     return localStorage.getItem('fang_selected_game') || null;
   });
@@ -51,7 +49,6 @@ export default function App() {
     }
   };
 
-  // Auto-record QR scan event on page load when accessed via QR link (e.g. Zalo / Camera scan)
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -64,7 +61,6 @@ export default function App() {
         params.get('from') === 'qr';
 
       if (isQrAccess) {
-        // Prevent double counting within same session on page refresh
         const sessionTrackedKey = `fang_qr_tracked_${window.location.search}`;
         if (!sessionStorage.getItem(sessionTrackedKey)) {
           const gameParam = params.get('game')?.toUpperCase() || 'GENERAL';
@@ -77,20 +73,21 @@ export default function App() {
     }
   }, []);
 
-  // Record page visit once per session + heartbeat presence every 30s
   useEffect(() => {
+    const openTabsKey = 'fang_open_tabs_count';
+    const currentTabs = parseInt(localStorage.getItem(openTabsKey) || '0', 10);
+    localStorage.setItem(openTabsKey, (currentTabs + 1).toString());
+
     const visitTrackedKey = 'fang_visit_tracked_session';
     if (!sessionStorage.getItem(visitTrackedKey)) {
       recordPageVisit();
       sessionStorage.setItem(visitTrackedKey, 'true');
     }
 
-    // Heartbeat presence every 30 seconds
     const heartbeatInterval = setInterval(() => {
       updatePresenceHeartbeat();
     }, 30000);
 
-    // Remove session on page unload
     const handleUnload = () => {
       removePresenceSession();
     };
@@ -111,7 +108,6 @@ export default function App() {
     setSelectedGame(null);
   };
 
-  // Conditional early returns (MUST be placed after all Hooks)
   if (isAdminView) {
     return <AdminConsole onBackToLanding={handleCloseAdmin} />;
   }
@@ -120,38 +116,18 @@ export default function App() {
     return <GameSelector onSelectGame={handleSelectGame} />;
   }
 
-  const isValorant = selectedGame === 'valorant';
-
-  const Hero = isValorant ? HeroValorant : HeroAov;
-  const Introduction = isValorant ? IntroductionValorant : IntroductionAov;
-  const Rules = isValorant ? RulesValorant : RulesAov;
-  const Registration = isValorant ? RegistrationValorant : RegistrationAov;
-  const TeamList = isValorant ? TeamListValorant : TeamListAov;
-  const Bracket = isValorant ? BracketValorant : BracketAov;
-  const Sponsor = isValorant ? SponsorValorant : SponsorAov;
-  const News = isValorant ? NewsValorant : NewsAov;
-  const Workshop = isValorant ? WorkshopValorant : WorkshopAov;
-
-  if (isAdminView) {
-    return <AdminConsole onBackToLanding={handleCloseAdmin} />;
-  }
-
   return (
     <div className="h-screen overflow-x-hidden overflow-y-auto lg:snap-y lg:snap-proximity scroll-smooth bg-[#0e0906] text-slate-100 selection:bg-[#F37021] selection:text-white relative">
-      {/* Header Container (Navbar + Livestream Banner) */}
       <header className="fixed top-0 left-0 right-0 z-50">
         <Navbar selectedGame={selectedGame} onChangeGame={handleChangeGame} onOpenAdmin={handleOpenAdmin} />
         <LivestreamBanner selectedGame={selectedGame} />
       </header>
 
-      {/* Main Sections with Scroll Snap & Scroll Margin Top (Preventing Header Overlay) */}
       <div className="snap-start scroll-mt-24">
         <Hero selectedGame={selectedGame} onChangeGame={handleChangeGame} />
       </div>
 
       <div className="relative">
-        {/* FPT Signature Orange #F37021 Ambient Atmospheric Glows throughout the page */}
-        {/* Ambient glows — hidden on mobile for performance */}
         <div className="hidden md:block absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-[#F37021]/15 rounded-full blur-[180px] pointer-events-none" />
         <div className="hidden md:block absolute top-1/4 left-0 w-[500px] h-[500px] bg-[#F37021]/20 rounded-full blur-[160px] pointer-events-none" />
         <div className="hidden md:block absolute top-1/2 right-0 w-[600px] h-[600px] bg-[#F37021]/20 rounded-full blur-[170px] pointer-events-none" />
@@ -183,7 +159,6 @@ export default function App() {
         </div>
       </div>
 
-      {/* Footer */}
       <footer className="snap-start scroll-mt-28 border-t border-[#F37022]/20 bg-[#090503] py-8 px-4">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2.5">

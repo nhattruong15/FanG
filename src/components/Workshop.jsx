@@ -101,12 +101,9 @@ export default function Workshop() {
   return (
     <section id="workshop" className="section-padding relative">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Header — Cyber HUD Style */}
         <motion.div {...fadeInUp} className="text-center mb-8 sm:mb-14 relative">
-          {/* Ambient Glow */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-20 bg-[#F37022]/20 blur-[50px] pointer-events-none rounded-full" />
 
-          {/* Main Title with Flanking Cyber Accents */}
           <div className="flex items-center justify-center gap-3 sm:gap-6">
             <div className="hidden sm:flex items-center gap-1.5 opacity-70">
               <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
@@ -127,7 +124,6 @@ export default function Workshop() {
           </p>
         </motion.div>
 
-        {/* Desktop Controls */}
         <div className="hidden sm:flex justify-end gap-2 mb-4">
           <button
             onClick={() => scroll('left')}
@@ -143,7 +139,6 @@ export default function Workshop() {
           </button>
         </div>
 
-        {/* MOBILE VIEW: Cards with Thumbnails */}
         <div className="block sm:hidden space-y-4">
           {WORKSHOPS.map((ws, idx) => (
             <motion.div
@@ -152,7 +147,6 @@ export default function Workshop() {
               onClick={() => setSelectedWorkshop(ws)}
               className={`cursor-pointer overflow-hidden rounded-2xl bg-[#140c08] border ${ws.borderColor} shadow-lg hover:border-[#F37021] transition-all flex flex-col`}
             >
-              {/* Thumbnail Image */}
               <div className="relative h-36 w-full overflow-hidden">
                 <img
                   src={ws.thumbnail}
@@ -166,7 +160,6 @@ export default function Workshop() {
                 </div>
               </div>
 
-              {/* Card Content */}
               <div className="p-4 flex-1 flex flex-col justify-between">
                 <div>
                   <h3 className="font-heading font-bold text-white text-sm leading-snug mb-2">
@@ -178,7 +171,6 @@ export default function Workshop() {
                   </p>
                 </div>
 
-                {/* Metadata List */}
                 <div className="space-y-1.5 text-[11px] text-slate-400 pt-2.5 border-t border-slate-800/80">
                   <div className="flex items-center gap-2">
                     <Calendar className="w-3.5 h-3.5 text-[#F37021] flex-shrink-0" />
@@ -198,7 +190,6 @@ export default function Workshop() {
           ))}
         </div>
 
-        {/* DESKTOP VIEW: Horizontal Scroll Cards with Thumbnails */}
         <motion.div {...fadeInUp} className="hidden sm:block">
           <div
             ref={scrollRef}
@@ -210,7 +201,6 @@ export default function Workshop() {
                 onClick={() => setSelectedWorkshop(ws)}
                 className={`cursor-pointer flex-shrink-0 w-[340px] rounded-2xl bg-[#140c08] border ${ws.borderColor} overflow-hidden snap-start flex flex-col justify-between hover:scale-[1.02] hover:border-[#F37021] shadow-xl transition-all group`}
               >
-                {/* Thumbnail Image Header */}
                 <div className="relative h-44 w-full overflow-hidden bg-slate-900">
                   <img
                     src={ws.thumbnail}
@@ -219,7 +209,6 @@ export default function Workshop() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140c08] via-[#140c08]/50 to-transparent" />
 
-                  {/* Badge */}
                   <div className="absolute top-3 left-3 flex items-center gap-2">
                     <span className="inline-flex items-center justify-center px-3 py-1 rounded-xl bg-[#F37021] text-white font-heading font-black text-xs shadow-md">
                       BUỔI {idx + 1}
@@ -227,21 +216,17 @@ export default function Workshop() {
                   </div>
                 </div>
 
-                {/* Body Content */}
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
-                    {/* Tên Workshop */}
                     <h3 className="font-heading font-black text-white text-base mb-2.5 leading-snug group-hover:text-[#F37021] transition-colors line-clamp-2 min-h-[44px]">
                       {ws.title}
                     </h3>
 
-                    {/* Description ngắn */}
                     <p className="text-slate-300 text-xs mb-4 line-clamp-2 leading-relaxed">
                       {ws.description}
                     </p>
                   </div>
 
-                  {/* Metadata List */}
                   <div className="space-y-2 text-xs text-slate-400 pt-3 border-t border-slate-800/80">
                     <div className="flex items-center gap-2">
                       <Calendar className="w-3.5 h-3.5 text-[#F37021] flex-shrink-0" />
@@ -263,17 +248,14 @@ export default function Workshop() {
           </div>
         </motion.div>
 
-        {/* POPUP MODAL */}
         <AnimatePresence>
           {selectedWorkshop && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md">
-              {/* Backdrop Click */}
               <div
                 className="absolute inset-0"
                 onClick={() => setSelectedWorkshop(null)}
               />
 
-              {/* Modal Card */}
               <motion.div
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -281,7 +263,6 @@ export default function Workshop() {
                 transition={{ duration: 0.25, ease: 'easeOut' }}
                 className="relative z-10 w-full max-w-xl rounded-2xl bg-[#140c08] border border-[#F37021]/50 shadow-[0_0_50px_rgba(243,112,33,0.35)] overflow-hidden"
               >
-                {/* Modal Thumbnail Header Image */}
                 <div className="relative h-52 w-full overflow-hidden">
                   <img
                     src={selectedWorkshop.thumbnail}
@@ -290,7 +271,6 @@ export default function Workshop() {
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140c08] via-[#140c08]/60 to-transparent" />
 
-                  {/* Close Button */}
                   <button
                     onClick={() => setSelectedWorkshop(null)}
                     className="absolute top-4 right-4 p-2 rounded-full bg-black/60 hover:bg-[#F37021] text-white transition-all cursor-pointer z-20"
@@ -309,13 +289,11 @@ export default function Workshop() {
                 </div>
 
                 <div className="p-6 sm:p-8">
-                  {/* Description ngắn */}
                   <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 text-slate-200 text-xs sm:text-sm leading-relaxed">
                     <p className="font-semibold text-amber-300 text-xs mb-1 uppercase tracking-wider">Mô tả nội dung:</p>
                     <p>{selectedWorkshop.description}</p>
                   </div>
 
-                  {/* Details Grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm mb-6">
                     <div className="flex items-center gap-3 bg-white/5 p-3.5 rounded-xl border border-slate-800">
                       <Calendar className="w-5 h-5 text-[#F37021] flex-shrink-0" />
@@ -350,7 +328,6 @@ export default function Workshop() {
                     </div>
                   </div>
 
-                  {/* Action Footer */}
                   <div className="flex justify-end">
                     <button
                       onClick={() => setSelectedWorkshop(null)}

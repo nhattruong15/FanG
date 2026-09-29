@@ -105,14 +105,11 @@ const PRIZES = [
 
 export default function Rules() {
   return (
-    <section id="rules" className="section-padding relative bg-gradient-to-b from-transparent via-[#1e130d]/70 to-transparent">
+    <section id="rules" className="section-padding relative overflow-hidden">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Section Header — Cyber HUD Style */}
         <motion.div {...fadeInUp} className="text-center mb-10 sm:mb-14 relative">
-          {/* Ambient Glow */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-20 bg-[#F37022]/20 blur-[50px] pointer-events-none rounded-full" />
 
-          {/* Main Title with Flanking Cyber Accents */}
           <div className="flex items-center justify-center gap-3 sm:gap-6">
             <div className="hidden sm:flex items-center gap-1.5 opacity-70">
               <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
@@ -130,9 +127,7 @@ export default function Rules() {
           </div>
         </motion.div>
 
-        {/* Tournament Flow — Connected Cyber Roadmap Timeline */}
         <motion.div {...fadeInUp} className="mb-14 relative">
-          {/* Connected Laser Conduit Line (Desktop) */}
           <div className="hidden lg:block absolute top-[52px] left-[10%] right-[10%] h-[2px] bg-gradient-to-r from-[#F37022]/20 via-[#F37022] to-[#F37022]/20 z-0 pointer-events-none">
             <motion.div
               animate={{ x: ['0%', '100%', '0%'] }}
@@ -152,24 +147,19 @@ export default function Rules() {
                   whileHover={{ y: -8 }}
                   className="relative group flex flex-col h-full"
                 >
-                  {/* Outer Glowing Energy Border Container */}
-                  <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-b from-[#F37022]/40 via-transparent to-[#F37022]/20 opacity-40 group-hover:opacity-100 transition-opacity blur-xs pointer-events-none" />
+                  <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-b from-[#F37021]/40 via-transparent to-[#F37021]/20 opacity-40 group-hover:opacity-100 transition-opacity blur-xs pointer-events-none" />
 
-                  {/* Cyber HUD Angled Card */}
                   <div
                     className="relative p-5 text-center transition-all duration-300 h-full flex flex-col justify-between flex-1 bg-gradient-to-b from-[#1a100a]/90 via-[#120a06]/90 to-[#0a0503]/95 backdrop-blur-xl border border-[#F37022]/35 group-hover:border-[#F37022] group-hover:shadow-[0_0_35px_rgba(243,112,34,0.3)] overflow-hidden"
                     style={{ clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))' }}
                   >
-                    {/* Top Cyber Corner Flare */}
                     <div className="absolute top-0 right-0 w-6 h-6 bg-gradient-to-bl from-[#F37022]/60 to-transparent opacity-80" />
                     <div className="absolute top-0 left-0 w-8 h-[2px] bg-[#F37022]" />
                     <div className="absolute top-0 left-0 w-[2px] h-8 bg-[#F37022]" />
                     <div className="absolute bottom-0 right-0 w-8 h-[2px] bg-[#F37022]" />
                     <div className="absolute bottom-0 right-0 w-[2px] h-8 bg-[#F37022]" />
 
-                    {/* Top Section Header */}
                     <div>
-                      {/* Step Hexagon Badge & Icon Tag Row */}
                       <div className="flex items-center justify-between gap-2 mb-5">
                         <div className="flex items-center gap-2">
                           <div
@@ -194,13 +184,11 @@ export default function Rules() {
                         )}
                       </div>
 
-                      {/* Card Title */}
                       <div className="font-heading font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-amber-300 text-base sm:text-lg uppercase tracking-wider mb-4 min-h-12 flex items-center justify-center text-center drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                         {step.label}
                       </div>
                     </div>
 
-                    {/* Detail Bullets */}
                     <div className="pt-4 border-t border-[#F37022]/25 space-y-2.5 text-left flex-1 flex flex-col justify-start">
                       {step.details.map((detail, dIdx) => (
                         <div key={dIdx} className="flex items-start gap-2.5 text-xs text-slate-200 font-medium leading-relaxed">
@@ -210,7 +198,6 @@ export default function Rules() {
                       ))}
                     </div>
 
-                    {/* Arrow Connector Indicator for Next Step */}
                     {idx < FLOW_STEPS.length - 1 && (
                       <div className="hidden lg:flex absolute -right-3 top-1/2 -translate-y-1/2 z-30 w-6 h-6 rounded-full bg-[#1e110a] border border-[#F37022] items-center justify-center text-[#F37022] shadow-[0_0_12px_#F37022]">
                         <ArrowRight className="w-3.5 h-3.5" />
@@ -223,23 +210,16 @@ export default function Rules() {
           </div>
         </motion.div>
 
-        {/* Prize Structure — Sharp Esports Pyramid */}
         <motion.div {...fadeInUp} className="mt-16 sm:mt-20">
-          {/* Header */}
           <div className="text-center mb-10 relative">
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-20 bg-[#F37022]/20 blur-[50px] pointer-events-none rounded-full" />
-
-           
 
             <h3 className="font-heading font-black text-2xl sm:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-white via-amber-100 to-amber-400 py-1 drop-shadow-[0_0_25px_rgba(243,112,34,0.75)]">
              CƠ CẤU GIẢI THƯỞNG <span className="text-[#F37022]"></span>
             </h3>
           </div>
 
-          {/* Pyramid Container */}
           <div className="space-y-5">
-
-            {/* ════════ TIER 1: CHAMPION ══════════ */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               whileInView={{ opacity: 1, scale: 1, y: 0 }}
@@ -252,16 +232,13 @@ export default function Rules() {
                 className="relative p-6 sm:p-8 text-center backdrop-blur-md border-2 border-[#F37022] bg-gradient-to-b from-[#281409]/95 via-[#1a0f08]/95 to-[#120a05]/95 shadow-[0_0_50px_rgba(243,112,34,0.5)] overflow-hidden"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px))' }}
               >
-                {/* Corner Accents */}
                 <div className="absolute top-0 left-0 w-12 h-[3px] bg-gradient-to-r from-[#F37022] to-transparent" />
                 <div className="absolute top-0 left-0 w-[3px] h-12 bg-gradient-to-b from-[#F37022] to-transparent" />
                 <div className="absolute bottom-0 right-0 w-12 h-[3px] bg-gradient-to-l from-[#F37022] to-transparent" />
                 <div className="absolute bottom-0 right-0 w-[3px] h-12 bg-gradient-to-t from-[#F37022] to-transparent" />
 
-                {/* Gold Halo */}
                 <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-56 h-56 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                {/* Peak Badge */}
                 <div
                   className="inline-flex items-center gap-2 px-5 py-2 bg-gradient-to-r from-amber-500 via-[#F37022] to-amber-500 text-white font-black text-xs uppercase tracking-widest mb-5 shadow-[0_0_25px_rgba(243,112,34,0.8)] border border-amber-400/60"
                   style={{ clipPath: 'polygon(8px 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 8px 100%, 0 50%)' }}
@@ -269,10 +246,6 @@ export default function Rules() {
                   <span>TOP 1 — GIẢI QUÁN QUÂN</span>
                 </div>
 
-                {/* Crown Icon */}
-               
-
-                {/* Champion Amount */}
                 <div className="font-heading font-black text-4xl sm:text-5xl text-transparent bg-clip-text bg-gradient-to-r from-amber-200 via-amber-300 to-yellow-400 drop-shadow-[0_0_20px_rgba(243,112,34,0.9)] tracking-tight mb-1">
                   10.000.000 VNĐ
                 </div>
@@ -280,7 +253,6 @@ export default function Rules() {
                   NHÀ VÔ ĐỊCH TOÀN QUỐC
                 </div>
 
-                {/* Sub Details */}
                 <div className="pt-4 border-t border-[#F37022]/30 text-xs sm:text-sm text-slate-300 font-medium flex items-center justify-center gap-2 flex-wrap">
                   {['+ Quà vật phẩm'].map((item, i) => (
                     <span key={i} className="px-3 py-1 bg-[#F37022]/20 border border-[#F37022]/50 text-[#F37022] font-bold text-xs skew-x-[-4deg]">
@@ -291,7 +263,6 @@ export default function Rules() {
               </div>
             </motion.div>
 
-            {/* ══════════ TIER 2: 3 RUNNER-UP CARDS (Strict 3-Column Row on Mobile & Desktop) ═══════════ */}
             <div className="grid grid-cols-3 gap-1.5 sm:gap-4 max-w-5xl mx-auto">
               {[
                 { rank: '', label: 'TOP 2 — Á QUÂN', amount: '5.000.000đ', sub: 'Quà vật phẩm',  borderColor: 'border-slate-400/50', bgColor: 'bg-[#10121a]/90', glowColor: 'shadow-[0_0_25px_rgba(148,163,184,0.2)]', iconColor: 'text-slate-200', amountGradient: 'from-slate-100 via-slate-200 to-slate-400', accentColor: '#94a3b8', badgeBg: 'bg-slate-800/90 border-slate-400/50 text-slate-200' },
@@ -311,7 +282,6 @@ export default function Rules() {
                     className={`relative p-2 sm:p-5 text-center backdrop-blur-md border ${card.borderColor} ${card.bgColor} ${card.glowColor} hover:shadow-[0_0_35px_rgba(243,112,34,0.2)] transition-all h-full flex flex-col justify-between overflow-hidden`}
                     style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}
                   >
-                    {/* Corner Lines */}
                     <div className="absolute top-0 left-0 w-3 sm:w-6 h-[2px]" style={{ background: card.accentColor }} />
                     <div className="absolute top-0 left-0 w-[2px] h-3 sm:h-6" style={{ background: card.accentColor }} />
                     <div className="absolute bottom-0 right-0 w-3 sm:w-6 h-[2px]" style={{ background: card.accentColor }} />
@@ -321,8 +291,6 @@ export default function Rules() {
                       <span className={`inline-block px-1 sm:px-3 py-0.5 sm:py-1 border font-black text-[8px] sm:text-xs tracking-tight sm:tracking-wider mb-1.5 sm:mb-3 skew-x-[-6deg] max-w-full truncate ${card.badgeBg}`}>
                         <span className="skew-x-[6deg] inline-block">{card.label}</span>
                       </span>
-
-                      
 
                       <div className={`font-heading font-black text-xs xs:text-sm sm:text-3xl text-transparent bg-clip-text bg-gradient-to-r ${card.amountGradient} my-0.5 sm:my-1`}>
                         {card.amount}
@@ -337,7 +305,6 @@ export default function Rules() {
               ))}
             </div>
 
-            {/* ════════ TIER 3: SPECIAL AWARDS BAR (Bottom Row) ═══════ */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -350,7 +317,6 @@ export default function Rules() {
                 className="relative p-3 sm:p-5 backdrop-blur-md border border-orange-500/50 bg-[#180e08]/90 shadow-[0_0_30px_rgba(243,112,34,0.2)] flex flex-row items-center justify-between gap-2 sm:gap-4 overflow-hidden"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))' }}
               >
-                {/* Corner Accents */}
                 <div className="absolute top-0 left-0 w-6 sm:w-8 h-[2px] bg-[#F37022]" />
                 <div className="absolute top-0 left-0 w-[2px] h-6 sm:h-8 bg-[#F37022]" />
                 <div className="absolute bottom-0 right-0 w-6 sm:w-8 h-[2px] bg-[#F37022]" />

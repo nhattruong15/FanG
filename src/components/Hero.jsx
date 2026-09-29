@@ -6,16 +6,13 @@ import kvImage from '../assets/KV/hero-kv-final.png';
 export default function Hero() {
   return (
     <section id="hero" className="relative w-full bg-[#0e0906] pt-20 lg:pt-0 overflow-hidden">
-      {/* Edge-to-edge Full-width KV Banner */}
       <div className="relative w-full aspect-video lg:aspect-auto lg:h-screen overflow-hidden bg-[#0e0906]">
-        {/* Key Visual Image */}
         <img
           src={kvImage}
           alt="FanG Exports FPT Tournament Key Visual"
           className="w-full h-full object-cover object-center"
         />
 
-        {/* Positioned High-Contrast Eye-Catching Registration Button over KV */}
         <div className="absolute bottom-4 sm:bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 z-20 px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -23,7 +20,6 @@ export default function Hero() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="relative inline-block w-full"
           >
-            {/* Softened Multi-Layered Neon Energy Ring */}
             <motion.div
               animate={{
                 scale: [1, 1.05, 1],
@@ -37,7 +33,6 @@ export default function Hero() {
               className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-amber-400 via-[#F37022] to-amber-300 blur-md pointer-events-none opacity-60"
             />
 
-            {/* Vibrant FPT Orange Cyber Button Without Black Fill */}
             <motion.a
               href="#registration"
               whileHover={{ scale: 1.05 }}
@@ -58,7 +53,6 @@ export default function Hero() {
                 Đăng ký thi đấu ngay
               </span>
 
-              {/* Gentle Shimmer Light Streak Beam */}
               <motion.div
                 animate={{
                   x: ['-100%', '200%'],
@@ -75,7 +69,6 @@ export default function Hero() {
           </motion.div>
         </div>
 
-        {/* Scroll Indicator Overlay on bottom of KV */}
         <motion.div
           className="absolute bottom-1 left-1/2 -translate-x-1/2 z-20 hidden sm:flex justify-center cursor-pointer pointer-events-auto"
           animate={{ y: [0, 4, 0] }}

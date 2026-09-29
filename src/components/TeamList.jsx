@@ -16,7 +16,6 @@ export default function TeamList({ selectedGame = 'valorant' }) {
   const [teams, setTeams] = useState(INITIAL_TEAMS);
   const [expandedTeam, setExpandedTeam] = useState(null);
 
-  // Real-time synchronization from Firestore / LocalStorage
   useEffect(() => {
     const unsub = subscribeTeams((data) => {
       if (Array.isArray(data) && data.length > 0) {
@@ -26,23 +25,19 @@ export default function TeamList({ selectedGame = 'valorant' }) {
     return () => unsub();
   }, []);
 
-  // Determine active game target based on selectedGame prop
   const activeGame = selectedGame
     ? (selectedGame.toLowerCase() === 'valorant' ? 'Valorant' : selectedGame.toLowerCase() === 'aov' ? 'AOV' : selectedGame)
     : 'Valorant';
 
   const filteredTeams = teams.filter((team) => {
-    // Game Filter: Strictly match selectedGame
     const matchGame = !activeGame || team.game.toLowerCase() === activeGame.toLowerCase();
 
-    // Region Filter: Match Miền Bắc / Miền Nam / bac / nam
     const teamRegionLower = (team.region || '').toLowerCase();
     const matchRegion =
       regionFilter === 'all' ||
       (regionFilter === 'bac' && (teamRegionLower.includes('bắc') || teamRegionLower === 'bac')) ||
       (regionFilter === 'nam' && (teamRegionLower.includes('nam') || teamRegionLower === 'nam'));
 
-    // Search Filter: Match school name or player names
     const searchLower = search.toLowerCase();
     const membersArray = team.membersList
       ? team.membersList.map(m => typeof m === 'object' ? m.name : m)
@@ -56,7 +51,6 @@ export default function TeamList({ selectedGame = 'valorant' }) {
     return matchGame && matchRegion && matchSearch;
   });
 
-  // Group teams by school name
   const schoolGroups = {};
   filteredTeams.forEach((team) => {
     const schoolName = team.school || team.name;
@@ -67,12 +61,9 @@ export default function TeamList({ selectedGame = 'valorant' }) {
   return (
     <section id="teams" className="section-padding relative">
       <div className="max-w-6xl mx-auto">
-        {/* Header — Cyber HUD Style */}
         <motion.div {...fadeInUp} className="text-center mb-10 sm:mb-14 relative">
-          {/* Ambient Glow */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-20 bg-[#F37022]/20 blur-[50px] pointer-events-none rounded-full" />
 
-          {/* Main Title with Flanking Cyber Accents */}
           <div className="flex items-center justify-center gap-3 sm:gap-6">
             <div className="hidden sm:flex items-center gap-1.5 opacity-70">
               <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
@@ -90,9 +81,7 @@ export default function TeamList({ selectedGame = 'valorant' }) {
           </div>
         </motion.div>
 
-        {/* Search & Region Filters */}
         <motion.div {...fadeInUp} className="flex flex-col sm:flex-row gap-3 mb-8">
-          {/* Search Input */}
           <div className="relative flex-1">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#F37021]" />
             <input
@@ -104,7 +93,6 @@ export default function TeamList({ selectedGame = 'valorant' }) {
             />
           </div>
 
-          {/* Region Filter */}
           <div className="flex gap-1.5">
             {[
               { value: 'all', label: 'Tất cả' },
@@ -126,7 +114,6 @@ export default function TeamList({ selectedGame = 'valorant' }) {
           </div>
         </motion.div>
 
-        {/* Team Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Object.entries(schoolGroups).map(([school, teamList], idx) => (
             <motion.div
@@ -135,7 +122,6 @@ export default function TeamList({ selectedGame = 'valorant' }) {
               transition={{ duration: 0.4, delay: idx * 0.05 }}
               className="bg-glass rounded-2xl overflow-hidden border-glow"
             >
-              {/* School Header */}
               <button
                 onClick={() => setExpandedTeam(expandedTeam === school ? null : school)}
                 className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
@@ -170,7 +156,6 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                 )}
               </button>
 
-              {/* Expanded Roster View */}
               {expandedTeam === school && (
                 <div className="px-4 pb-4 space-y-3 border-t border-slate-800/60">
                   {teamList.map((tItem, tIdx) => {
@@ -200,6 +185,7 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                           {members.map((mObj, mIdx) => {
                             const name = typeof mObj === 'object' ? mObj.name : mObj;
                             const ingame = typeof mObj === 'object' ? mObj.ingame : '';
+                            const role = typeof mObj === 'object' ? (mObj.role || mObj.ingameRole || '') : '';
                             const isCaptain = typeof mObj === 'object'
                               ? (mObj.role === 'Đội trưởng' || name.includes('(C)'))
                               : mIdx === 0;
@@ -231,11 +217,14 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                                     </span>
                                   )}
                                 </div>
-                                {ingame && (
-                                  <div className="text-[10px] text-slate-400 font-mono truncate mt-0.5">
-                                    {ingame}
-                                  </div>
-                                )}
+                                <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono truncate mt-0.5 gap-1">
+                                  <span className="truncate">{ingame}</span>
+                                  {role && (
+                                    <span className="text-amber-300 font-sans font-semibold text-[9px] bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 shrink-0">
+                                      {role}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                             );
                           })}

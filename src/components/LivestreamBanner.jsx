@@ -19,7 +19,6 @@ export default function LivestreamBanner({ selectedGame }) {
 
   const activeGameKey = (selectedGame || 'VALORANT').toUpperCase();
 
-  // Find active live stream for current game or fallback to ALL
   let activeStream = null;
   if (streamData && streamData[activeGameKey] && streamData[activeGameKey].isLive) {
     activeStream = streamData[activeGameKey];
@@ -29,7 +28,6 @@ export default function LivestreamBanner({ selectedGame }) {
     activeStream = streamData;
   }
 
-  // Hide banner if user closed it or no active stream is live for selected game
   if (!isVisible || !activeStream || activeStream.isLive === false) return null;
 
   const streamGame = activeStream.game || activeGameKey;
@@ -40,7 +38,6 @@ export default function LivestreamBanner({ selectedGame }) {
     const nextExpanded = !isExpanded;
     setIsExpanded(nextExpanded);
     if (nextExpanded) {
-      // Record +1 event in Analytics & Tracking for LIVE VIEWS
       recordLiveView(streamGame);
     }
   };
@@ -52,7 +49,6 @@ export default function LivestreamBanner({ selectedGame }) {
       className="w-full relative z-40"
     >
       <div className="bg-gradient-to-r from-orange-950/60 via-[#1e130d]/60 to-orange-950/60 backdrop-blur-sm border-b border-[#F37022]/20">
-        {/* Compact Bar */}
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">
           <div 
             onClick={handleToggleExpand}
@@ -79,7 +75,6 @@ export default function LivestreamBanner({ selectedGame }) {
           </div>
         </div>
 
-        {/* Expanded Embed */}
         <AnimatePresence>
           {isExpanded && (
             <motion.div

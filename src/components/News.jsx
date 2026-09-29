@@ -10,9 +10,8 @@ const fadeInUp = {
   transition: { duration: 0.4 },
 };
 
-export default function News({ targetGame = 'ALL' }) {
+export default function News({ selectedGame, targetGame }) {
   const [newsList, setNewsList] = useState(INITIAL_NEWS_ARTICLES);
-  const [selectedGameFilter, setSelectedGameFilter] = useState(targetGame);
   const [selectedArticle, setSelectedArticle] = useState(null);
 
   useEffect(() => {
@@ -24,18 +23,18 @@ export default function News({ targetGame = 'ALL' }) {
     return () => unsub();
   }, []);
 
+  const activeGame = (selectedGame || targetGame || 'ALL').toUpperCase();
+
   const filteredNews = newsList.filter(item => {
-    if (selectedGameFilter === 'ALL') return true;
-    return item.game === selectedGameFilter || item.game === 'ALL' || !item.game;
+    if (activeGame === 'ALL') return true;
+    const itemGame = (item.game || 'ALL').toUpperCase();
+    return itemGame === activeGame || itemGame === 'ALL';
   });
 
   return (
     <section id="news" className="section-padding relative bg-[#090503] text-slate-100 py-16 sm:py-24">
       <div className="max-w-6xl mx-auto px-4 relative z-10">
-        
-        {/* Section Header */}
         <motion.div {...fadeInUp} className="text-center mb-10 sm:mb-14 relative">
-          {/* Subtle Ambient Glow */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-16 bg-[#F37022]/20 blur-[60px] pointer-events-none rounded-full" />
 
           <div className="flex items-center justify-center gap-3 sm:gap-6">
@@ -55,30 +54,6 @@ export default function News({ targetGame = 'ALL' }) {
           </div>
         </motion.div>
 
-        {/* Game Filter Buttons */}
-        {targetGame === 'ALL' && (
-          <div className="flex justify-center items-center gap-2 sm:gap-3 mb-10">
-            {[
-              { id: 'ALL', label: 'TẤT CẢ TIN TỨC' },
-              { id: 'VALORANT', label: '🔴 VALORANT' },
-              { id: 'AOV', label: '🔷 AOV (LIÊN QUÂN)' }
-            ].map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setSelectedGameFilter(tab.id)}
-                className={`px-4 py-2 sm:px-6 sm:py-2.5 rounded-full text-xs sm:text-sm font-heading font-black tracking-wider uppercase transition-all duration-300 cursor-pointer ${
-                  selectedGameFilter === tab.id
-                    ? 'bg-[#F37022] text-white shadow-lg shadow-[#F37022]/30 scale-105'
-                    : 'bg-[#18100a] text-slate-300 border border-[#F37022]/30 hover:border-[#F37022] hover:text-[#F37022]'
-                }`}
-              >
-                {tab.label}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* News Cards Grid: 2 columns on mobile (grid-cols-2), 3 on desktop */}
         {filteredNews.length === 0 ? (
           <div className="text-center py-12 text-slate-400 font-medium">Chưa có bài viết tin tức nào cho danh mục này.</div>
         ) : (
@@ -91,7 +66,6 @@ export default function News({ targetGame = 'ALL' }) {
                 className="bg-[#120b08] rounded-xl sm:rounded-2xl border border-[#F37022]/20 shadow-lg hover:shadow-2xl hover:shadow-[#F37022]/20 hover:border-[#F37022]/60 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between overflow-hidden"
               >
                 <div>
-                  {/* Thumbnail / Video Image Header */}
                   <div className="relative aspect-video bg-[#1e130c] overflow-hidden border-b border-[#F37022]/15">
                     {article.thumbnail ? (
                       <img
@@ -111,7 +85,6 @@ export default function News({ targetGame = 'ALL' }) {
                       </div>
                     )}
 
-                    {/* Game Badge Only */}
                     <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1">
                       <span className={`px-1.5 py-0.5 sm:px-2.5 sm:py-1 rounded text-[8px] sm:text-[10px] font-black uppercase tracking-wider shadow-sm ${
                         article.game === 'VALORANT'
@@ -125,7 +98,6 @@ export default function News({ targetGame = 'ALL' }) {
                     </div>
                   </div>
 
-                  {/* Content Area */}
                   <div className="p-3 sm:p-5 md:p-6">
                     <div className="flex items-center text-[10px] sm:text-xs text-[#F37022] font-bold mb-1.5 sm:mb-2.5">
                       <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
@@ -142,7 +114,6 @@ export default function News({ targetGame = 'ALL' }) {
                   </div>
                 </div>
 
-                {/* Footer Read Details Button */}
                 <div className="p-3 sm:p-5 md:p-6 pt-0">
                   <button
                     onClick={() => setSelectedArticle(article)}
@@ -158,7 +129,6 @@ export default function News({ targetGame = 'ALL' }) {
         )}
       </div>
 
-      {/* Dark-Themed Article Detail Modal */}
       <AnimatePresence>
         {selectedArticle && (
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
@@ -168,7 +138,6 @@ export default function News({ targetGame = 'ALL' }) {
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-[#120b08] border border-[#F37022]/40 shadow-2xl rounded-3xl max-w-2xl w-full overflow-hidden my-6 relative text-slate-100"
             >
-              {/* Close Button */}
               <button
                 onClick={() => setSelectedArticle(null)}
                 className="absolute top-4 right-4 z-10 p-2 rounded-full bg-black/70 hover:bg-[#F37022] text-white transition-colors cursor-pointer"
@@ -176,7 +145,6 @@ export default function News({ targetGame = 'ALL' }) {
                 <X className="w-5 h-5" />
               </button>
 
-              {/* Video or Thumbnail Header */}
               <div className="relative aspect-video bg-black">
                 {selectedArticle.videoEmbed ? (
                   <iframe
@@ -195,7 +163,6 @@ export default function News({ targetGame = 'ALL' }) {
                 )}
               </div>
 
-              {/* Modal Body */}
               <div className="p-6 sm:p-8 space-y-4 max-h-[60vh] overflow-y-auto">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`px-3 py-1 rounded-lg text-xs font-black uppercase ${

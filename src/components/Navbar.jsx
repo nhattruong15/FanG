@@ -46,14 +46,12 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
 
   return (
     <>
-      {/* Desktop & Mobile Top Bar */}
       <nav
         className={`w-full transition-all duration-300 ${
           scrolled ? 'bg-[#090503]/95 backdrop-blur-md border-b border-[#F37022]/20 shadow-lg shadow-orange-950/20' : 'bg-[#0e0906]'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          {/* Logo & Game Badge */}
           <div className="flex items-center gap-4">
             <button onClick={() => scrollTo('hero')} className="flex items-center gap-2.5 group text-left">
               <img
@@ -63,7 +61,6 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
               />
             </button>
 
-            {/* Active Selected Game Indicator & Switch Button */}
             {selectedGame && (
               <button
                 onClick={onChangeGame}
@@ -81,7 +78,6 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
             )}
           </div>
 
-          {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-1">
             {NAV_ITEMS.map((item) => (
               <button
@@ -98,7 +94,6 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
             ))}
           </div>
 
-          {/* Mobile Hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="lg:hidden p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors border border-slate-700"
@@ -108,7 +103,6 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
         </div>
       </nav>
 
-      {/* Mobile Bottom Sheet Drawer */}
       <AnimatePresence>
         {isOpen && (
           <>
@@ -126,7 +120,6 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-glass-strong rounded-t-3xl p-6 pb-8 border-t border-[#F37021]/30 max-h-[75vh] overflow-y-auto"
             >
-              {/* Drag Handle & Active Game Selector for Mobile */}
               <div className="flex flex-col items-center mb-5">
                 <div className="w-12 h-1.5 bg-[#F37021]/50 rounded-full mb-4" />
                 {selectedGame && (

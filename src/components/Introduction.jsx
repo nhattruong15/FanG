@@ -105,12 +105,10 @@ export default function Introduction({ selectedGame, onChangeGame }) {
       className=" pt-5 sm:pt-4 pb-16 md:pb-24 px-4 sm:px-6 relative bg-cover bg-center bg-no-repeat overflow-hidden"
       style={{ backgroundImage: `url(${bgIntroImg})` }}
     >
-      {/* Light dark overlay */}
       <div className="absolute inset-0 bg-[#0e0906]/65 pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-4">
         
-        {/* ===== TOURNAMENT BRANDING HEADER BANNER (Dynamic Motion & Ambient Effects) ===== */}
         <motion.div {...fadeInUp} className="mb-16">
           <motion.div 
             whileHover={{ scale: 1.01 }}
@@ -118,13 +116,10 @@ export default function Introduction({ selectedGame, onChangeGame }) {
             className=" mt-5 relative w-full rounded-3xl overflow-hidden bg-cover bg-center bg-no-repeat shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_20px_40px_-10px_rgba(243,112,34,0.4)] border border-[#F37022]/40 group"
             style={{ backgroundImage: `url(${bgImg})` }}
           >
-            {/* Ambient Animated Orange Radial Glow behind banner — desktop only */}
             <div className="hidden md:block absolute -top-24 -left-24 w-96 h-96 bg-[#F37022]/25 rounded-full blur-[90px] pointer-events-none" />
 
-            {/* Subtle Overlay confined inside banner */}
             <div className="absolute inset-0 bg-[#0e0906]/55 pointer-events-none" />
 
-            {/* Floating Energy Particles Overlay — hidden on mobile */}
             <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
               {[...Array(6)].map((_, i) => (
                 <motion.div
@@ -150,11 +145,9 @@ export default function Introduction({ selectedGame, onChangeGame }) {
               ))}
             </div>
 
-            {/* Banner Inner Content - Compact on mobile */}
             <div className="relative z-10 p-4 sm:p-8 md:p-16 lg:p-20">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-16 items-center">
                 
-                {/* LEFT COLUMN: Motion-Enhanced Logo (Smaller on mobile) */}
                 <div className="relative flex justify-center lg:justify-center">
                   <motion.div
                     initial={{ scale: 0.9, opacity: 0, y: 15 }}
@@ -163,10 +156,8 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     transition={{ duration: 0.6 }}
                     className="relative group cursor-pointer flex justify-center"
                   >
-                    {/* Ambient Pulsing Aura Glow Behind Logo */}
                     <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-[#F37022]/40 via-amber-500/40 to-[#F37022]/40 rounded-full blur-[70px] pointer-events-none" />
 
-                    {/* Logo Image */}
                     <img
                       src={logoImg}
                       alt="FanG Exports Logo"
@@ -175,7 +166,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   </motion.div>
                 </div>
 
-                {/* RIGHT COLUMN: Chamfered Octagon Description Card */}
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -183,28 +173,24 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="relative w-full p-0.5"
                 >
-                  {/* Outer Cut-Corner Border Frame with CSS shadow */}
                   <div 
                     className="relative p-[1.5px] bg-gradient-to-b from-[#F37022] via-[#ff8f3d] to-[#F37022] shadow-[0_0_30px_rgba(243,112,34,0.45)]"
                     style={{
                       clipPath: 'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
                     }}
                   >
-                    {/* Gap layer for double line frame */}
                     <div
                       className="p-0.5 bg-[#0e0906]"
                       style={{
                         clipPath: 'polygon(19px 0, calc(100% - 19px) 0, 100% 19px, 100% calc(100% - 19px), calc(100% - 19px) 100%, 19px 100%, 0 calc(100% - 19px), 0 19px)',
                       }}
                     >
-                      {/* Inner Cut-Corner Filled Card */}
                       <div 
                         className="relative overflow-hidden bg-gradient-to-b from-[#e04b00] via-[#c43c00] to-[#9e2c00] text-white p-4 sm:p-7 md:p-12 text-left leading-relaxed"
                         style={{
                           clipPath: 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)',
                         }}
                       >
-                        {/* Shimmer Light Streak Motion */}
                         <motion.div
                           animate={{
                             x: ['-100%', '200%'],
@@ -237,12 +223,9 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
    
 
-        {/* Game Cards — Esports Gamer Tech Style */}
         <div className="relative overflow-hidden mb-16 left-1/2 -translate-x-1/2 w-screen px-4 sm:px-8 lg:px-16 pt-4 sm:pt-6 pb-8 sm:pb-10">
-          {/* Section Header — Overlaid on Game Cards Background */}
           <motion.div {...fadeInUp} className="relative z-20 text-center mb-6 sm:mb-8 flex flex-col items-center">
             <div className="relative inline-flex items-center gap-3 sm:gap-6 px-6 sm:px-12 py-3 sm:py-4 bg-[#0c0805]/85 backdrop-blur-lg rounded-2xl border border-[#F37022]/50 shadow-[0_12px_40px_rgba(0,0,0,0.95),0_0_30px_rgba(243,112,34,0.3)]">
-              {/* Left Cyber Accent Line */}
               <div className="hidden sm:flex items-center gap-1.5 opacity-90">
                 <div className="w-2 h-2 bg-[#F37022] rotate-45 shadow-[0_0_10px_#F37022]" />
                 <div className="w-8 sm:w-16 h-[2px] bg-gradient-to-r from-transparent via-[#F37022] to-[#F37022]" />
@@ -257,14 +240,12 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                 </span>
               </h2>
 
-              {/* Right Cyber Accent Line */}
               <div className="hidden sm:flex items-center gap-1.5 opacity-90">
                 <div className="w-8 sm:w-16 h-[2px] bg-gradient-to-r from-[#F37022] via-[#F37022] to-transparent" />
                 <div className="w-2 h-2 bg-[#F37022] rotate-45 shadow-[0_0_10px_#F37022]" />
               </div>
             </div>
           </motion.div>
-          {/* Background Image */}
           <div className="absolute inset-0 z-0">
             <img src={bg2Img} alt="" className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-[#0a0705]/40" />
@@ -279,12 +260,10 @@ export default function Introduction({ selectedGame, onChangeGame }) {
               whileHover={{ y: -8, scale: 1.03 }}
               className="relative group cursor-pointer"
             >
-              {/* Dynamic Outer Aura Glow on Hover */}
               <div
                 className={`absolute -inset-1.5 rounded-3xl bg-gradient-to-r ${game.color} opacity-30 group-hover:opacity-100 blur-xl transition-all duration-500 pointer-events-none`}
               />
 
-              {/* Outer Glowing Border Frame */}
               <motion.div
                 animate={{
                   boxShadow: [
@@ -299,24 +278,20 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))',
                 }}
               >
-                {/* Gradient Border Layer */}
                 <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
 
-                {/* Inner Card — Square on mobile */}
                 <div
                   className="relative m-[1.5px] overflow-hidden bg-[#0a0705] flex flex-col aspect-square sm:aspect-auto sm:min-h-[420px] md:min-h-[480px] h-full"
                   style={{
                     clipPath: 'polygon(0 0, calc(100% - 17px) 0, 100% 17px, 100% 100%, 17px 100%, 0 calc(100% - 17px))',
                   }}
                 >
-                  {/* Shimmer Light Sweep Effect on Hover */}
                   <motion.div
                     animate={{ x: ['-150%', '250%'] }}
                     transition={{ duration: 3, repeat: Infinity, repeatDelay: 2.5, ease: 'easeInOut' }}
                     className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 pointer-events-none z-20"
                   />
 
-                  {/* Character Image — Full card background */}
                   <div className="absolute inset-0 overflow-hidden">
                     <img
                       src={game.bgCharacter}
@@ -325,7 +300,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-115 group-hover:brightness-110"
                     />
 
-                    {/* Floating Energy Particles */}
                     <div className="absolute inset-0 overflow-hidden pointer-events-none">
                       {[...Array(3)].map((_, i) => (
                         <motion.div
@@ -347,17 +321,14 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       ))}
                     </div>
 
-                    {/* Gradient overlays — stronger at bottom to ensure text readability */}
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0a0705] via-[#0a0705]/60 to-transparent" />
                     <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-10 group-hover:opacity-30 transition-opacity duration-500`} />
 
-                    {/* Top-right corner accent */}
                     <div
                       className={`absolute top-0 right-0 w-8 h-8 sm:w-16 sm:h-16 flex items-end justify-start p-1 sm:p-2.5 bg-gradient-to-bl ${game.color} text-white shadow-xl`}
                       style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
                     />
 
-                    {/* Animated scan line */}
                     <motion.div
                       animate={{ top: ['-10%', '110%'] }}
                       transition={{ duration: 3.5, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
@@ -365,10 +336,8 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     />
                   </div>
 
-                  {/* Bottom Info Section — overlaid at bottom */}
                   <div className="relative z-10 mt-auto p-2 sm:px-8 sm:pb-8 sm:pt-4 flex flex-col justify-end overflow-hidden">
                     <div>
-                      {/* Decorative accent line */}
                       <div className={`w-6 sm:w-12 h-0.5 sm:h-1 rounded-full bg-gradient-to-r ${game.color} mb-1 sm:mb-4 group-hover:w-20 transition-all duration-500 shadow-[0_0_10px_rgba(243,112,34,0.5)]`} />
 
                       <h3 className="font-heading font-black text-xs sm:text-2xl md:text-3xl text-white mb-0.5 sm:mb-2 tracking-wide uppercase leading-tight truncate group-hover:text-[#F37022] transition-colors duration-300" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
@@ -376,7 +345,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       </h3>
                     </div>
 
-                    {/* Stats badges row */}
                     <div className="flex flex-wrap items-center gap-1 sm:gap-2.5 mt-auto">
                       <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-4 sm:py-2 bg-gradient-to-r ${game.color} text-white text-[9px] sm:text-xs font-black tracking-wider uppercase shadow-lg group-hover:scale-105 transition-transform duration-300`}
                         style={{ clipPath: 'polygon(0 0, calc(100% - 5px) 0, 100% 50%, calc(100% - 5px) 100%, 0 100%, 5px 50%)' }}
@@ -391,7 +359,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     </div>
                   </div>
 
-                  {/* Bottom accent bar */}
                   <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r ${game.color} opacity-50 group-hover:opacity-100 transition-opacity duration-500 shadow-[0_0_10px_rgba(243,112,34,0.8)]`} />
                 </div>
               </motion.div>
@@ -399,7 +366,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
           ))}
           </div>
 
-          {/* Stats Row — Now Positioned Directly on the Background Image */}
           <motion.div
             {...fadeInUp}
             className="relative z-10 max-w-4xl mx-auto mt-6 sm:mt-10 p-1 sm:p-1.5 rounded-2xl bg-gradient-to-r from-orange-500/30 via-amber-500/50 to-orange-500/30 shadow-[0_0_50px_rgba(243,112,34,0.35)]"
@@ -410,10 +376,8 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                 clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
               }}
             >
-              {/* Background Cyber HUD Grid Pattern */}
               <div className="absolute inset-0 bg-[linear-gradient(to_right,#f3702110_1px,transparent_1px),linear-gradient(to_bottom,#f3702110_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
               
-              {/* Stat 1: Trường ĐH-CĐ */}
               <div className="relative z-10 text-center group flex-1 flex flex-col items-center">
                 <div className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-[#F37022] tracking-tight group-hover:scale-105 transition-transform duration-300" style={{ textShadow: '0 0 20px rgba(243,112,34,0.6)' }}>
                   32
@@ -424,14 +388,12 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                 </div>
               </div>
 
-              {/* Cyber Vertical Divider */}
               <div className="flex flex-col items-center h-10 sm:h-16 justify-between opacity-40">
                 <div className="w-1 h-1 bg-[#F37021] rounded-full shadow-[0_0_6px_#F37021]" />
                 <div className="w-px h-6 sm:h-10 bg-gradient-to-b from-transparent via-[#F37021] to-transparent" />
                 <div className="w-1 h-1 bg-[#F37021] rounded-full shadow-[0_0_6px_#F37021]" />
               </div>
 
-              {/* Stat 2: Đội tuyển */}
               <div className="relative z-10 text-center group flex-1 flex flex-col items-center">
                 <div className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-white tracking-tight group-hover:scale-105 transition-transform duration-300" style={{ textShadow: '0 0 20px rgba(255,255,255,0.5)' }}>
                   64
@@ -442,14 +404,12 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                 </div>
               </div>
 
-              {/* Cyber Vertical Divider */}
               <div className="flex flex-col items-center h-10 sm:h-16 justify-between opacity-40">
                 <div className="w-1 h-1 bg-[#F37021] rounded-full shadow-[0_0_6px_#F37021]" />
                 <div className="w-px h-6 sm:h-10 bg-gradient-to-b from-transparent via-[#F37021] to-transparent" />
                 <div className="w-1 h-1 bg-[#F37021] rounded-full shadow-[0_0_6px_#F37021]" />
               </div>
 
-              {/* Stat 3: Giải thưởng */}
               <div className="relative z-10 text-center group flex-1 flex flex-col items-center">
                 <div className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 tracking-tight group-hover:scale-105 transition-transform duration-300 drop-shadow-[0_0_20px_rgba(245,158,11,0.6)]">
                   40 Triệu
@@ -460,21 +420,16 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                 </div>
               </div>
 
-              {/* Corner Tech Badges */}
               <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#F37021] opacity-70 pointer-events-none" />
               <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#F37021] opacity-70 pointer-events-none" />
             </div>
           </motion.div>
         </div>
 
-        {/* Timeline / Roadmap — Gamer Cyber HUD Style (Mobile: Image 2 layout structure + Image 1 colors & cards) */}
         <motion.div {...fadeInUp} className="relative max-w-7xl mx-auto">
-          {/* Section Header — Cinematic Cyber HUD Style */}
           <div className="text-center mb-10 sm:mb-14 relative">
-            {/* Ambient Glow */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-20 bg-[#F37021]/20 blur-[50px] pointer-events-none rounded-full" />
 
-            {/* Main Big Title with Flanking Lines */}
             <div className="flex items-center justify-center gap-3 sm:gap-6">
               <div className="hidden sm:flex items-center gap-1.5 opacity-70">
                 <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
@@ -492,9 +447,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
             </div>
           </div>
 
-          {/* ===== MOBILE TIMELINE LAYOUT (lg:hidden) — IMAGE 2 STRUCTURE WITH IMAGE 1 STYLING ===== */}
           <div className="block lg:hidden relative px-2 sm:px-4 mb-8">
-            {/* Vertical Glowing Rail Line */}
             <div className="absolute top-4 bottom-4 left-[96px] xs:left-[112px] sm:left-[132px] w-0.5 bg-gradient-to-b from-[#F37021] via-amber-400 to-[#F37021] shadow-[0_0_12px_#F37021] z-0" />
 
             <div className="space-y-6 sm:space-y-8 relative z-10">
@@ -507,7 +460,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   transition={{ duration: 0.4, delay: idx * 0.1 }}
                   className="flex items-center gap-2.5 xs:gap-3 sm:gap-4 relative group"
                 >
-                  {/* Left: Date Badge */}
                   <div className="w-[88px] xs:w-[104px] sm:w-[120px] flex-shrink-0 flex justify-end items-center">
                     <div
                       className="px-2 py-1 xs:px-2.5 xs:py-1.5 text-[9px] xs:text-[10px] sm:text-xs font-black tracking-wider uppercase bg-gradient-to-r from-[#F37021] via-amber-500 to-[#F37021] text-white shadow-[0_0_15px_rgba(243,112,34,0.7)] border border-amber-300 text-center whitespace-nowrap"
@@ -519,7 +471,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     </div>
                   </div>
 
-                  {/* Center: Icon Node on Vertical Line */}
                   <div className="relative z-10 flex-shrink-0 flex items-center justify-center">
                     <div
                       className={`w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
@@ -532,7 +483,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     </div>
                   </div>
 
-                  {/* Right: Card */}
                   <div className="flex-1 min-w-0">
                     <div 
                       className="relative p-[1.5px] transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(243,112,34,0.6)]"
@@ -540,7 +490,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                         clipPath: 'polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))',
                       }}
                     >
-                      {/* Outer Frame Border */}
                       <div 
                         className={`absolute inset-0 transition-opacity duration-300 ${
                           item.active
@@ -549,7 +498,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                         }`}
                       />
 
-                      {/* Inner Card Frame */}
                       <div
                         className="relative p-3 xs:p-3.5 sm:p-4 bg-[#180f09]/95 backdrop-blur-md h-full flex flex-col justify-between text-left"
                         style={{
@@ -573,9 +521,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
             </div>
           </div>
 
-          {/* ===== DESKTOP TIMELINE LAYOUT (hidden lg:block) ===== */}
           <div className="hidden lg:block relative pb-8">
-            {/* Horizontal Connecting Rail Line spanning full width (desktop) */}
             <div className="absolute top-[52px] left-[8%] right-[8%] h-[3px] bg-gradient-to-r from-orange-500/20 via-[#F37021] to-orange-500/20 z-0">
               <motion.div
                 animate={{ x: ['-100%', '200%'] }}
@@ -584,7 +530,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
               />
             </div>
 
-            {/* Grid layout for 5 timeline nodes */}
             <div className="grid grid-cols-5 gap-4 relative z-10">
               {TIMELINE.map((item, idx) => (
                 <motion.div
@@ -596,7 +541,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   whileHover={{ y: -6 }}
                   className="relative flex flex-col items-center group cursor-pointer"
                 >
-                  {/* 1. TOP DATE BADGE (Image 1 style Hexagon / Cut-Corner) */}
                   <div
                     className="relative z-10 px-4 py-1.5 mb-3 transition-all duration-300 group-hover:scale-105 bg-gradient-to-r from-[#F37021] via-amber-500 to-[#F37021] text-white font-black shadow-[0_0_20px_rgba(243,112,34,0.8)] border border-amber-300"
                     style={{
@@ -608,7 +552,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     </span>
                   </div>
 
-                  {/* 2. NODE ICON BADGE (Sitting directly on the horizontal line) */}
                   <div className="relative mb-4 flex items-center justify-center">
                     <div
                       className={`w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
@@ -620,18 +563,15 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       {item.icon}
                     </div>
 
-                    {/* Small vertical connector line from icon to card */}
                     <div className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-4 bg-gradient-to-b from-[#F37021] to-transparent opacity-80" />
                   </div>
 
-                  {/* 3. VERTICAL HUD CARD (Image 1 double-line cut-corner framed card) */}
                   <div 
                     className="relative w-full p-[1.5px] transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(243,112,34,0.6)]"
                     style={{
                       clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
                     }}
                   >
-                    {/* Outer Frame Border */}
                     <div 
                       className={`absolute inset-0 transition-opacity duration-300 ${
                         item.active
@@ -640,7 +580,6 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       }`}
                     />
 
-                    {/* Inner Card Frame */}
                     <div
                       className="relative p-4 bg-[#180f09]/95 backdrop-blur-md h-full flex flex-col justify-between text-left"
                       style={{

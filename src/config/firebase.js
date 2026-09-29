@@ -332,7 +332,7 @@ export function subscribeVideoLivestream(callback) {
 export const INITIAL_TEAMS = [
   {
     id: 'team_1',
-    name: 'ĐH FPT Hà Nội - Valorant',
+    name: 'ĐH FPT Hà Nội',
     school: 'Trường Đại học FPT Hà Nội',
     region: 'Miền Bắc',
     game: 'Valorant',
@@ -350,7 +350,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_2',
-    name: 'ĐH FPT TP.HCM - Valorant',
+    name: 'ĐH FPT TP.HCM',
     school: 'Trường Đại học FPT TP.HCM',
     region: 'Miền Nam',
     game: 'Valorant',
@@ -368,7 +368,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_3',
-    name: 'ĐH FPT Hà Nội - AOV',
+    name: 'ĐH FPT Hà Nội',
     school: 'Trường Đại học FPT Hà Nội',
     region: 'Miền Bắc',
     game: 'AOV',
@@ -386,7 +386,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_4',
-    name: 'ĐH FPT TP.HCM - AOV',
+    name: 'ĐH FPT TP.HCM',
     school: 'Trường Đại học FPT TP.HCM',
     region: 'Miền Nam',
     game: 'AOV',
@@ -404,7 +404,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_5',
-    name: 'ĐH Bách Khoa HN - Valorant',
+    name: 'ĐH Bách Khoa HN',
     school: 'Trường Đại học Bách Khoa Hà Nội',
     region: 'Miền Bắc',
     game: 'Valorant',
@@ -421,7 +421,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_6',
-    name: 'ĐH Bách Khoa HN - AOV',
+    name: 'ĐH Bách Khoa HN',
     school: 'Trường Đại học Bách Khoa Hà Nội',
     region: 'Miền Bắc',
     game: 'AOV',
@@ -438,7 +438,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_7',
-    name: 'ĐH Kinh Tế QD - Valorant',
+    name: 'ĐH Kinh Tế QD',
     school: 'Trường Đại học Kinh Tế Quốc Dân',
     region: 'Miền Bắc',
     game: 'Valorant',
@@ -455,7 +455,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_8',
-    name: 'ĐH Kinh Tế QD - AOV',
+    name: 'ĐH Kinh Tế QD',
     school: 'Trường Đại học Kinh Tế Quốc Dân',
     region: 'Miền Bắc',
     game: 'AOV',
@@ -472,7 +472,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_9',
-    name: 'ĐH Tôn Đức Thắng - Valorant',
+    name: 'ĐH Tôn Đức Thắng',
     school: 'Trường Đại học Tôn Đức Thắng',
     region: 'Miền Nam',
     game: 'Valorant',
@@ -489,7 +489,7 @@ export const INITIAL_TEAMS = [
   },
   {
     id: 'team_10',
-    name: 'ĐH Tôn Đức Thắng - AOV',
+    name: 'ĐH Tôn Đức Thắng',
     school: 'Trường Đại học Tôn Đức Thắng',
     region: 'Miền Nam',
     game: 'AOV',
@@ -777,15 +777,29 @@ export function subscribeLiveViews(callback) {
  * =========================================================
  * REAL-TIME VISITOR TRACKING & ONLINE PRESENCE SYSTEM
  * =========================================================
- * Uses Firestore heartbeat-based presence detection.
- * - `site_analytics/visitors` stores totalVisits + active sessions array
- * - Each session sends a heartbeat every 30s
- * - Sessions older than 60s are pruned as "offline"
+ * Uses persistent browser VISITOR_ID stored in localStorage.
+ * - 1 Browser Device = 1 unique VISITOR_ID
+ * - Multiple open tabs in the same browser share the same VISITOR_ID
+ * - All tabs overwrite the same visitor record's lastSeen timestamp
+ * - 100 open tabs in 1 browser = exactly 1 active online visitor
  * =========================================================
  */
 
-// Generate a unique session ID per browser tab
-const SESSION_ID = `sess_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+/**
+ * Get or create a persistent Visitor ID for this browser device
+ */
+export function getOrCreateVisitorId() {
+  try {
+    let visitorId = localStorage.getItem('fang_device_visitor_id');
+    if (!visitorId) {
+      visitorId = `vis_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+      localStorage.setItem('fang_device_visitor_id', visitorId);
+    }
+    return visitorId;
+  } catch (err) {
+    return `vis_temp_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+  }
+}
 
 /**
  * Initial Default Visitor Stats
@@ -797,13 +811,21 @@ export const INITIAL_VISITOR_STATS = {
 };
 
 /**
- * Record a Page Visit (called once per session on page load)
- * Uses atomic increment for totalVisits counter
+ * Record a Page Visit (called on page load)
+ * Uses atomic/increment tracking per unique device visit
  */
 export async function recordPageVisit() {
+  const visitorId = getOrCreateVisitorId();
   const now = new Date().toISOString();
-  const sessionEntry = {
-    id: SESSION_ID,
+  
+  // Track if this device has ever visited before
+  const isFirstDeviceVisit = !localStorage.getItem('fang_device_visited');
+  if (isFirstDeviceVisit) {
+    localStorage.setItem('fang_device_visited', 'true');
+  }
+
+  const visitorEntry = {
+    id: visitorId,
     startedAt: now,
     lastSeen: now,
     userAgent: navigator.userAgent?.substring(0, 80) || 'Unknown',
@@ -830,19 +852,30 @@ export async function recordPageVisit() {
       return lastSeenMs > cutoffMs;
     });
 
-    // Add current session
-    activeSessions = activeSessions.filter(s => s.id !== SESSION_ID);
-    activeSessions.push(sessionEntry);
+    // Update or insert entry for this browser's VISITOR_ID
+    const existingIdx = activeSessions.findIndex(s => s.id === visitorId);
+    if (existingIdx >= 0) {
+      activeSessions[existingIdx] = {
+        ...activeSessions[existingIdx],
+        lastSeen: now,
+        page: window.location.pathname + window.location.search
+      };
+    } else {
+      activeSessions.push(visitorEntry);
+    }
+
+    // Only increment totalVisits counter if first visit for this device or new session
+    const updatedTotal = isFirstDeviceVisit ? currentTotal + 1 : currentTotal;
 
     const payload = {
-      totalVisits: currentTotal + 1,
+      totalVisits: updatedTotal,
       activeSessions,
       lastVisitTime: now,
       updatedAt: now
     };
 
     await setDoc(visitorDocRef, payload, { merge: true });
-    console.log('[Visitor] Page visit recorded. Total:', currentTotal + 1, 'Active:', activeSessions.length);
+    console.log('[Visitor] Browser visit recorded. VisitorId:', visitorId, 'Online Visitors:', activeSessions.length);
     localStorage.setItem('fang_visitor_stats', JSON.stringify(payload));
     return { success: true, stats: payload };
   } catch (error) {
@@ -851,7 +884,7 @@ export async function recordPageVisit() {
     const parsed = saved ? JSON.parse(saved) : INITIAL_VISITOR_STATS;
     const updated = {
       ...parsed,
-      totalVisits: (parsed.totalVisits || 0) + 1,
+      totalVisits: isFirstDeviceVisit ? (parsed.totalVisits || 0) + 1 : (parsed.totalVisits || 0),
       lastVisitTime: now
     };
     localStorage.setItem('fang_visitor_stats', JSON.stringify(updated));
@@ -861,9 +894,10 @@ export async function recordPageVisit() {
 
 /**
  * Update Presence Heartbeat (called every 30 seconds via setInterval)
- * Refreshes the current session's lastSeen timestamp & prunes stale sessions
+ * Overwrites the current browser's VISITOR_ID lastSeen timestamp in Firestore
  */
 export async function updatePresenceHeartbeat() {
+  const visitorId = getOrCreateVisitorId();
   const now = new Date().toISOString();
 
   try {
@@ -882,14 +916,14 @@ export async function updatePresenceHeartbeat() {
       return lastSeenMs > cutoffMs;
     });
 
-    // Update current session's lastSeen
-    const idx = activeSessions.findIndex(s => s.id === SESSION_ID);
+    // Update current browser VISITOR_ID's lastSeen
+    const idx = activeSessions.findIndex(s => s.id === visitorId);
     if (idx >= 0) {
       activeSessions[idx].lastSeen = now;
+      activeSessions[idx].page = window.location.pathname + window.location.search;
     } else {
-      // Session was pruned or never added, re-register
       activeSessions.push({
-        id: SESSION_ID,
+        id: visitorId,
         startedAt: now,
         lastSeen: now,
         userAgent: navigator.userAgent?.substring(0, 80) || 'Unknown',
@@ -908,17 +942,28 @@ export async function updatePresenceHeartbeat() {
 }
 
 /**
- * Remove current session from active sessions on page unload
+ * Remove current browser VISITOR_ID from active sessions on page unload
+ * Only removes if this is the last open tab in this browser
  */
 export async function removePresenceSession() {
+  const visitorId = getOrCreateVisitorId();
   try {
+    // Check if other tabs are still open in this browser
+    const openTabsKey = 'fang_open_tabs_count';
+    const count = parseInt(localStorage.getItem(openTabsKey) || '1', 10);
+    if (count > 1) {
+      localStorage.setItem(openTabsKey, (count - 1).toString());
+      return; // Other tabs are still open, keep visitor active!
+    }
+    localStorage.removeItem(openTabsKey);
+
     const visitorDocRef = doc(db, 'site_analytics', 'visitors');
     const docSnap = await getDoc(visitorDocRef);
     if (!docSnap.exists()) return;
 
     const data = docSnap.data();
     let activeSessions = Array.isArray(data.activeSessions) ? data.activeSessions : [];
-    activeSessions = activeSessions.filter(s => s.id !== SESSION_ID);
+    activeSessions = activeSessions.filter(s => s.id !== visitorId);
 
     await setDoc(visitorDocRef, {
       activeSessions,
@@ -938,15 +983,19 @@ export function subscribeVisitorStats(callback) {
     const unsubscribe = onSnapshot(visitorDocRef, (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
-        // Count only active sessions (seen within last 90 seconds)
+        // Count unique active browser VISITOR_IDs (seen within last 90 seconds)
         const cutoffMs = Date.now() - 90 * 1000;
         const activeSessions = (data.activeSessions || []).filter(s => {
           const lastSeenMs = s.lastSeen ? new Date(s.lastSeen).getTime() : 0;
           return lastSeenMs > cutoffMs;
         });
+
+        // Deduplicate by VISITOR_ID just in case
+        const uniqueVisitorIds = new Set(activeSessions.map(s => s.id));
+
         callback({
           totalVisits: data.totalVisits || 0,
-          onlineCount: activeSessions.length,
+          onlineCount: uniqueVisitorIds.size,
           activeSessions,
           lastVisitTime: data.lastVisitTime || null
         });
@@ -975,3 +1024,129 @@ export function subscribeVisitorStats(callback) {
     return () => {};
   }
 }
+
+/**
+ * Initial Bracket Matches Data (16 teams per region, Week 1 -> Week 2 progression)
+ */
+export const INITIAL_BRACKET_MATCHES = [
+  // ================= VALORANT - MIỀN BẮC =================
+  { id: 'VAL_MB_M1', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_M2', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'VAL_MB_M3', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_M4', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '18:30', status: 'UPCOMING' },
+  { id: 'VAL_MB_M5', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_M6', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'VAL_MB_M7', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_M8', game: 'VALORANT', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '18:30', status: 'UPCOMING' },
+
+  { id: 'VAL_MB_Q1', game: 'VALORANT', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_Q2', game: 'VALORANT', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '16:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_Q3', game: 'VALORANT', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_Q4', game: 'VALORANT', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '16:00', status: 'UPCOMING' },
+
+  { id: 'VAL_MB_S1', game: 'VALORANT', region: 'Miền Bắc', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '18/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_S2', game: 'VALORANT', region: 'Miền Bắc', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '18/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'VAL_MB_F', game: 'VALORANT', region: 'Miền Bắc', round: 'Chung Kết Miền Bắc', team1: '', team2: '', score1: null, score2: null, winner: null, date: '20/10/2026', time: '15:00', status: 'UPCOMING' },
+
+  // ================= VALORANT - MIỀN NAM =================
+  { id: 'VAL_MN_M1', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_M2', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'VAL_MN_M3', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_M4', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '18:30', status: 'UPCOMING' },
+  { id: 'VAL_MN_M5', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_M6', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'VAL_MN_M7', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_M8', game: 'VALORANT', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '18:30', status: 'UPCOMING' },
+
+  { id: 'VAL_MN_Q1', game: 'VALORANT', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_Q2', game: 'VALORANT', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '16:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_Q3', game: 'VALORANT', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_Q4', game: 'VALORANT', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '16:00', status: 'UPCOMING' },
+
+  { id: 'VAL_MN_S1', game: 'VALORANT', region: 'Miền Nam', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '19/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_S2', game: 'VALORANT', region: 'Miền Nam', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '19/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'VAL_MN_F', game: 'VALORANT', region: 'Miền Nam', round: 'Chung Kết Miền Nam', team1: '', team2: '', score1: null, score2: null, winner: null, date: '20/10/2026', time: '17:00', status: 'UPCOMING' },
+
+  // ================= AOV (LIÊN QUÂN) - MIỀN BẮC =================
+  { id: 'AOV_MB_M1', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_M2', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'AOV_MB_M3', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_M4', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '18:30', status: 'UPCOMING' },
+  { id: 'AOV_MB_Q1', game: 'AOV', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_Q2', game: 'AOV', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '16:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_F', game: 'AOV', region: 'Miền Bắc', round: 'Chung Kết Miền Bắc', team1: '', team2: '', score1: null, score2: null, winner: null, date: '20/10/2026', time: '16:00', status: 'UPCOMING' },
+
+  // ================= AOV (LIÊN QUÂN) - MIỀN NAM =================
+  { id: 'AOV_MN_M1', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_M2', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'AOV_MN_M3', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_M4', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '18:30', status: 'UPCOMING' },
+  { id: 'AOV_MN_Q1', game: 'AOV', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_Q2', game: 'AOV', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '16:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_F', game: 'AOV', region: 'Miền Nam', round: 'Chung Kết Miền Nam', team1: '', team2: '', score1: null, score2: null, winner: null, date: '20/10/2026', time: '18:00', status: 'UPCOMING' },
+];
+
+/**
+ * Save / Update Bracket Matches list in Firestore collection "bracket_matches/active_bracket"
+ */
+export async function saveMatches(matches) {
+  try {
+    const payload = {
+      items: matches,
+      updatedAt: new Date().toISOString()
+    };
+    const bracketDocRef = doc(db, 'bracket_matches', 'active_bracket');
+    await setDoc(bracketDocRef, payload, { merge: true });
+    console.log('Successfully saved matches to Firestore bracket_matches/active_bracket');
+    localStorage.setItem('fang_bracket_matches', JSON.stringify(matches));
+    window.dispatchEvent(new CustomEvent('fang_bracket_updated', { detail: matches }));
+    return { success: true, matches };
+  } catch (error) {
+    console.warn('Firestore matches write error:', error);
+    localStorage.setItem('fang_bracket_matches', JSON.stringify(matches));
+    window.dispatchEvent(new CustomEvent('fang_bracket_updated', { detail: matches }));
+    return { success: true, fallback: true, matches };
+  }
+}
+
+/**
+ * Subscribe to Real-time Bracket Matches Updates from Firestore "bracket_matches/active_bracket"
+ */
+export function subscribeMatches(callback) {
+  const handleCustomEvent = (e) => {
+    if (e.detail && Array.isArray(e.detail)) {
+      callback(e.detail);
+    }
+  };
+  window.addEventListener('fang_bracket_updated', handleCustomEvent);
+
+  try {
+    const bracketDocRef = doc(db, 'bracket_matches', 'active_bracket');
+    const unsubscribe = onSnapshot(bracketDocRef, (docSnap) => {
+      if (docSnap.exists() && Array.isArray(docSnap.data().items)) {
+        callback(docSnap.data().items);
+      } else {
+        saveMatches(INITIAL_BRACKET_MATCHES);
+        callback(INITIAL_BRACKET_MATCHES);
+      }
+    }, (err) => {
+      console.warn('[Firestore] Matches subscription error:', err);
+      const saved = localStorage.getItem('fang_bracket_matches');
+      if (saved) callback(JSON.parse(saved));
+      else callback(INITIAL_BRACKET_MATCHES);
+    });
+    return () => {
+      unsubscribe();
+      window.removeEventListener('fang_bracket_updated', handleCustomEvent);
+    };
+  } catch (e) {
+    console.warn('[Firestore] Matches init error:', e);
+    const saved = localStorage.getItem('fang_bracket_matches');
+    if (saved) callback(JSON.parse(saved));
+    else callback(INITIAL_BRACKET_MATCHES);
+    return () => {
+      window.removeEventListener('fang_bracket_updated', handleCustomEvent);
+    };
+  }
+}
+

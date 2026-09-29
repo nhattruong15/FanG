@@ -22,12 +22,9 @@ export default function Sponsor() {
   return (
     <section id="sponsors" className="section-padding relative overflow-hidden py-16 sm:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        {/* Header — Cyber HUD Style */}
         <motion.div {...fadeInUp} className="text-center mb-10 sm:mb-14 relative">
-          {/* Ambient Glow */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-20 bg-[#F37022]/20 blur-[50px] pointer-events-none rounded-full" />
 
-          {/* Main Title with Flanking Cyber Accents */}
           <div className="flex items-center justify-center gap-3 sm:gap-6">
             <div className="hidden sm:flex items-center gap-1.5 opacity-70">
               <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
@@ -45,7 +42,6 @@ export default function Sponsor() {
           </div>
         </motion.div>
 
-        {/* Horizontal Sponsor Logos Row */}
         <motion.div
           {...fadeInUp}
           transition={{ duration: 0.6, delay: 0.2 }}
@@ -57,10 +53,8 @@ export default function Sponsor() {
               whileHover={{ y: -6, scale: 1.05 }}
               className="relative group cursor-pointer"
             >
-              {/* Glow Effect on Hover */}
               <div className="absolute -inset-2 bg-gradient-to-r from-[#F37021]/30 to-amber-500/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
 
-              {/* Cyber Frame Container */}
               <div className="relative bg-[#0d0805]/80 border border-[#F37021]/30 group-hover:border-[#F37021] p-4 sm:p-6 rounded-2xl flex items-center justify-center min-w-[140px] sm:min-w-[200px] h-24 sm:h-32 backdrop-blur-md shadow-lg transition-all duration-300">
                 <img
                   src={sponsor.src}

@@ -37,6 +37,7 @@ import {
   PieChart,
   MousePointer,
   Share2,
+  RotateCcw,
 } from 'lucide-react';
 
 import {
@@ -57,6 +58,9 @@ import {
   subscribeLiveViews,
   INITIAL_LIVE_STATS,
   subscribeVisitorStats,
+  INITIAL_BRACKET_MATCHES,
+  saveMatches,
+  subscribeMatches,
 } from '../../config/firebase';
 
 import {
@@ -69,15 +73,157 @@ import {
    ==================================================================== */
 const INITIAL_LIVESTREAM = INITIAL_LIVESTREAM_STREAMS;
 
+/* ====================================================================
+   CLEAN TEAM LABELS & SEARCHABLE COMBBOX SELECTOR
+   ==================================================================== */
+export const cleanTeamName = (str) => {
+  if (!str) return '';
+  return str
+    .replace(/\s*-\s*(VALORANT|Valorant|AOV|Liên Quân|\(LIÊN QUÂN\)|\(Liên Quân\))\s*-\s*/gi, ' - ')
+    .replace(/\s*-\s*(VALORANT|Valorant|AOV|Liên Quân|\(LIÊN QUÂN\)|\(Liên Quân\))\s*/gi, '')
+    .replace(/\s*(VALORANT|Valorant|AOV|Liên Quân|\(LIÊN QUÂN\)|\(Liên Quân\))\s*-\s*/gi, '')
+    .replace(/\s*(VALORANT|Valorant|AOV|Liên Quân|\(LIÊN QUÂN\)|\(Liên Quân\))\s*/gi, '')
+    .replace(/\s+-\s+-+/g, ' -')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
 
+export const formatTeamLabel = (team) => {
+  if (!team) return '';
+  if (typeof team === 'string') {
+    return cleanTeamName(team);
+  }
+  const cleanName = cleanTeamName(team.name);
+  if (team.school) {
+    const cleanSchool = cleanTeamName(team.school);
+    if (cleanName && cleanSchool && cleanName.toLowerCase() !== cleanSchool.toLowerCase()) {
+      return `${cleanName} - ${cleanSchool}`;
+    }
+    return cleanSchool || cleanName;
+  }
+  return cleanName;
+};
 
-const INITIAL_BRACKET_MATCHES = [
-  { id: 'M1', region: 'Miền Bắc', round: 'Vòng 1/16', team1: 'ĐH FPT Hà Nội', team2: 'ĐH Bách Khoa HN', score1: 2, score2: 0, status: 'DONE', winner: 1 },
-  { id: 'M2', region: 'Miền Bắc', round: 'Vòng 1/16', team1: 'ĐH Kinh Tế QD', team2: 'ĐH Quốc Gia HN', score1: 2, score2: 1, status: 'DONE', winner: 1 },
-  { id: 'M3', region: 'Miền Bắc', round: 'Tứ Kết', team1: 'ĐH FPT Hà Nội', team2: 'ĐH Kinh Tế QD', score1: 2, score2: 0, status: 'DONE', winner: 1 },
-  { id: 'M4', region: 'Miền Bắc', round: 'Bán Kết', team1: 'ĐH FPT Hà Nội', team2: 'Học Viện Bưu Chính', score1: 3, score2: 1, status: 'DONE', winner: 1 },
-  { id: 'M5', region: 'Miền Nam', round: 'Chung Kết', team1: 'ĐH FPT TP.HCM', team2: 'ĐH HUTECH', score1: 0, score2: 0, status: 'UPCOMING', date: '20/10 - 17:00' },
-];
+function SearchableTeamSelect({ value, onChange, teams, isWinner, placeholder = '-- Chọn Đội --' }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const containerRef = React.useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const cleanCurrentValue = cleanTeamName(value);
+
+  const filteredTeams = teams.filter(t => {
+    if (!searchQuery) return true;
+    const label = formatTeamLabel(t).toLowerCase();
+    const query = searchQuery.toLowerCase();
+    return label.includes(query) || (t.school && t.school.toLowerCase().includes(query)) || (t.name && t.name.toLowerCase().includes(query));
+  });
+
+  return (
+    <div ref={containerRef} className="relative w-44 sm:w-56 shrink-0">
+      <button
+        type="button"
+        onClick={() => {
+          setIsOpen(!isOpen);
+          setSearchQuery('');
+        }}
+        className={`w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all text-left bg-slate-50 cursor-pointer shadow-2xs ${
+          isWinner ? 'text-[#F37022] font-black bg-orange-50 border-orange-300' : 'text-slate-800 border-slate-300 hover:border-[#F37022]'
+        }`}
+      >
+        <span className="truncate flex-1">
+          {cleanCurrentValue || placeholder}
+        </span>
+        <ChevronDown className={`w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform ${isOpen ? 'rotate-180 text-[#F37022]' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute left-0 top-full mt-1 w-64 sm:w-72 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 p-2 text-slate-900">
+          <div className="relative mb-2">
+            <Search className="w-3.5 h-3.5 text-[#F37022] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="text"
+              autoFocus
+              placeholder="Gõ để tìm tên đội / trường..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-slate-50 border border-slate-300 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
+            />
+          </div>
+
+          <div className="max-h-56 overflow-y-auto space-y-0.5 divide-y divide-slate-100">
+            <button
+              type="button"
+              onClick={() => {
+                onChange('');
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer"
+            >
+              -- Chọn Đội (Bỏ chọn) --
+            </button>
+
+            {filteredTeams.map((t) => {
+              const label = formatTeamLabel(t);
+              const isSelected = cleanCurrentValue === label || value === label || value === t.name;
+
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => {
+                    onChange(label);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                    isSelected
+                      ? 'bg-orange-50 text-[#F37022] border border-orange-200'
+                      : 'text-slate-800 hover:bg-slate-100'
+                  }`}
+                >
+                  <span className="truncate flex-1">{label}</span>
+                  {t.region && (
+                    <span className="text-[10px] text-slate-400 font-semibold shrink-0 bg-slate-100 px-1.5 py-0.5 rounded">
+                      {t.region}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+
+            {value && !filteredTeams.some(t => formatTeamLabel(t) === cleanCurrentValue) && (
+              <button
+                type="button"
+                onClick={() => {
+                  onChange(value);
+                  setIsOpen(false);
+                }}
+                className="w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold bg-orange-50 text-[#F37022]"
+              >
+                <span className="truncate">{cleanCurrentValue}</span>
+              </button>
+            )}
+
+            {filteredTeams.length === 0 && (
+              <div className="p-3 text-center text-xs text-slate-400 italic">
+                Không tìm thấy đội nào khớp với "{searchQuery}"
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 const INITIAL_NEWS = [
   { id: 1, title: 'Khai mạc giải đấu FanG Esports Tournament 2026 quy mô toàn quốc', category: 'Giải đấu', author: 'Admin', date: '25/09/2026', isFeatured: true, status: 'PUBLISHED' },
@@ -145,6 +291,9 @@ export default function AdminConsole({ onBackToLanding }) {
     const unsubTeams = subscribeTeams((data) => {
       if (Array.isArray(data)) setTeams(data);
     });
+    const unsubMatches = subscribeMatches((data) => {
+      if (Array.isArray(data)) setMatches(data);
+    });
     const unsubQr = subscribeQrScans((data) => {
       if (data) {
         setQrStats(prev => {
@@ -174,6 +323,7 @@ export default function AdminConsole({ onBackToLanding }) {
       unsubStream();
       unsubNews();
       unsubTeams();
+      unsubMatches();
       unsubQr();
       unsubLive();
       unsubVisitor();
@@ -193,7 +343,9 @@ export default function AdminConsole({ onBackToLanding }) {
   const [teamGameFilter, setTeamGameFilter] = useState('ALL');
   const [teamRegionFilter, setTeamRegionFilter] = useState('ALL');
   const [editingTeamId, setEditingTeamId] = useState(null);
-  const [bracketRegionFilter, setBracketRegionFilter] = useState('Miền Bắc');
+  const [selectedBracketGame, setSelectedBracketGame] = useState('VALORANT');
+  const [bracketRegionFilter, setBracketRegionFilter] = useState('ALL');
+  const [selectedBracketRound, setSelectedBracketRound] = useState('ALL');
   const [newsGameFilter, setNewsGameFilter] = useState('ALL');
 
   // Modals & Notifications
@@ -209,15 +361,16 @@ export default function AdminConsole({ onBackToLanding }) {
   const [showUniDropdown, setShowUniDropdown] = useState(false);
   const [viewingTeamRoster, setViewingTeamRoster] = useState(null);
 
-  const DEFAULT_6_MEMBERS = [
-    { id: 1, name: '', ingame: '', phone: '', role: 'Đội trưởng' },
-    { id: 2, name: '', ingame: '', phone: '', role: 'Thành viên' },
-    { id: 3, name: '', ingame: '', phone: '', role: 'Thành viên' },
-    { id: 4, name: '', ingame: '', role: 'Thành viên' },
-    { id: 5, name: '', ingame: '', role: 'Thành viên' },
-    { id: 6, name: '', ingame: '', phone: '', role: 'Dự bị' },
+  const DEFAULT_7_MEMBERS = [
+    { id: 1, name: '', ingame: '', phone: '', role: '' },
+    { id: 2, name: '', ingame: '', phone: '', role: '' },
+    { id: 3, name: '', ingame: '', phone: '', role: '' },
+    { id: 4, name: '', ingame: '', phone: '', role: '' },
+    { id: 5, name: '', ingame: '', phone: '', role: '' },
+    { id: 6, name: '', ingame: '', phone: '', role: '' },
+    { id: 7, name: '', ingame: '', phone: '', role: '' },
   ];
-  const [newTeamMembers, setNewTeamMembers] = useState(DEFAULT_6_MEMBERS);
+  const [newTeamMembers, setNewTeamMembers] = useState(DEFAULT_7_MEMBERS);
 
   // Fetch Vietnam Universities & Colleges API on mount
   useEffect(() => {
@@ -241,7 +394,7 @@ export default function AdminConsole({ onBackToLanding }) {
   }, []);
 
   // New Team Form State
-  const [newTeam, setNewTeam] = useState({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 6, logo: '' });
+  const [newTeam, setNewTeam] = useState({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 7, logo: '' });
   
   const handleLogoFileUpload = (e) => {
     const file = e.target.files && e.target.files[0];
@@ -310,39 +463,39 @@ export default function AdminConsole({ onBackToLanding }) {
       region: team.region || 'Miền Bắc',
       game: team.game || 'Valorant',
       captain: team.captain || '',
-      members: 6,
+      members: 7,
       logo: team.logo || ''
     });
     setSchoolSearchQuery(team.school || '');
     const existingMembers = team.membersList || [];
-    const filledMembers = Array.from({ length: 6 }).map((_, idx) => {
+    const filledMembers = Array.from({ length: 7 }).map((_, idx) => {
       const existing = existingMembers[idx] || {};
       return {
         id: idx + 1,
         name: existing.name || '',
         ingame: existing.ingame || '',
         phone: existing.phone || '',
-        role: existing.role || (idx === 0 ? 'Đội trưởng' : idx === 5 ? 'Dự bị' : 'Thành viên')
+        role: existing.role || ''
       };
     });
     setNewTeamMembers(filledMembers);
     setShowAddTeamModal(true);
   };
 
-  // Add / Edit Team Handler with 6 Members
+  // Add / Edit Team Handler with 7 Members
   const handleAddTeam = async (e) => {
     e.preventDefault();
     if (!newTeam.name || !newTeam.school) return;
 
-    const captainObj = newTeamMembers.find(m => m.role === 'Đội trưởng') || newTeamMembers[0];
-    const captainName = captainObj.name.trim() || newTeamMembers[0].name.trim() || 'Chưa đặt tên';
+    const captainObj = newTeamMembers[0];
+    const captainName = captainObj.name.trim() || 'Chưa đặt tên';
 
     const processedMembers = newTeamMembers.map((m, idx) => ({
       id: idx + 1,
-      name: m.name.trim() || (idx === 5 ? `Thành viên Dự bị` : `Thành viên ${idx + 1}`),
+      name: m.name.trim() || (idx >= 5 ? `Dự bị ${idx - 4}` : `Thành viên ${idx + 1}`),
       ingame: m.ingame.trim() || `Player_${idx + 1}`,
       phone: m.phone ? m.phone.trim() : '',
-      role: m.role || (idx === 0 ? 'Đội trưởng' : idx === 5 ? 'Dự bị' : 'Thành viên')
+      role: m.role ? m.role.trim() : (idx === 0 ? 'Đội trưởng' : idx >= 5 ? 'Dự bị' : 'Thành viên')
     }));
 
     let updatedTeams;
@@ -356,7 +509,7 @@ export default function AdminConsole({ onBackToLanding }) {
             region: newTeam.region || 'Miền Bắc',
             game: newTeam.game || 'Valorant',
             captain: captainName,
-            membersCount: 6,
+            membersCount: 7,
             membersList: processedMembers,
             logo: newTeam.logo || '',
           };
@@ -372,22 +525,22 @@ export default function AdminConsole({ onBackToLanding }) {
         region: newTeam.region || 'Miền Bắc',
         game: newTeam.game || 'Valorant',
         captain: captainName,
-        membersCount: 6,
+        membersCount: 7,
         membersList: processedMembers,
         logo: newTeam.logo || '',
         status: 'VERIFIED',
       };
       updatedTeams = [teamToAdd, ...teams];
-      triggerToast('Đã thêm đội tuyển 6 thành viên (5 chính + 1 dự bị) thành công!');
+      triggerToast('Đã thêm đội tuyển 7 thành viên (5 chính + 2 dự bị) thành công!');
     }
 
     setTeams(updatedTeams);
     await saveTeams(updatedTeams);
     setShowAddTeamModal(false);
     setEditingTeamId(null);
-    setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 6, logo: '' });
+    setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 7, logo: '' });
     setSchoolSearchQuery('');
-    setNewTeamMembers(DEFAULT_6_MEMBERS);
+    setNewTeamMembers(DEFAULT_7_MEMBERS);
   };
 
   // Add / Update Article Handler
@@ -472,19 +625,81 @@ export default function AdminConsole({ onBackToLanding }) {
     triggerToast('Đã xóa bài viết.');
   };
 
-  // Update Match Score
-  const handleScoreChange = (matchId, field, value) => {
-    setMatches(matches.map(m => {
+  // Update Match Details (Score, Teams, Date, Time)
+  const handleMatchUpdate = async (matchId, field, value) => {
+    const updated = matches.map(m => {
       if (m.id === matchId) {
-        const updated = { ...m, [field]: Number(value) };
-        if (updated.score1 > updated.score2) updated.winner = 1;
-        else if (updated.score2 > updated.score1) updated.winner = 2;
-        else updated.winner = null;
-        return updated;
+        const item = { ...m, [field]: (field === 'score1' || field === 'score2') ? (value === '' ? null : Number(value)) : value };
+        if (item.score1 !== null && item.score2 !== null) {
+          if (item.score1 > item.score2) item.winner = 1;
+          else if (item.score2 > item.score1) item.winner = 2;
+          else item.winner = null;
+        } else {
+          item.winner = null;
+        }
+        return item;
       }
       return m;
-    }));
-    triggerToast('Đã cập nhật tỷ số trận đấu!');
+    });
+    setMatches(updated);
+    await saveMatches(updated);
+    triggerToast('Đã lưu thay đổi trận đấu!');
+  };
+
+  // Delete a specific match
+  const handleDeleteMatch = async (matchId) => {
+    if (window.confirm('Bạn có chắc chắn muốn xóa trận đấu này không?')) {
+      const updated = matches.filter(m => m.id !== matchId);
+      setMatches(updated);
+      await saveMatches(updated);
+      triggerToast('Đã xóa trận đấu!');
+    }
+  };
+
+  // Reset all matches team1 and team2 to blank (-- Chọn Đội --)
+  const handleResetAllMatchesToEmpty = async () => {
+    if (window.confirm('Bạn có chắc chắn muốn đặt lại tất cả các trận đấu về "-- Chọn Đội --"?')) {
+      const resetList = matches.map(m => ({
+        ...m,
+        team1: '',
+        team2: '',
+        score1: null,
+        score2: null,
+        winner: null,
+        status: 'UPCOMING'
+      }));
+      setMatches(resetList);
+      await saveMatches(resetList);
+      triggerToast('Đã đặt lại tất cả các trận đấu về "-- Chọn Đội --"!');
+    }
+  };
+
+  // Add a National Final (Chung Kết Toàn Quốc) match between 2 region champions
+  const handleAddNationalFinal = async () => {
+    const alreadyExists = matches.some(
+      m => m.round && m.round.toLowerCase().includes('chung kết toàn quốc')
+    );
+    if (alreadyExists) {
+      if (!window.confirm('Trận Chung Kết Toàn Quốc đã tồn tại. Bạn có muốn thêm thêm một trận nữa không?')) return;
+    }
+    const finalMatch = {
+      id: `final_${Date.now()}`,
+      game: selectedBracketGame || 'VALORANT',
+      region: 'Toàn Quốc',
+      round: 'Chung Kết Toàn Quốc',
+      team1: '',
+      team2: '',
+      score1: null,
+      score2: null,
+      winner: null,
+      status: 'UPCOMING',
+      date: '',
+      time: '',
+    };
+    const updated = [...matches, finalMatch];
+    setMatches(updated);
+    await saveMatches(updated);
+    triggerToast('Đã thêm trận Chung Kết Toàn Quốc!');
   };
 
   // Filtered Teams
@@ -1809,21 +2024,29 @@ export default function AdminConsole({ onBackToLanding }) {
                             {team.captain}
                           </td>
                           <td className="p-3.5">
-                            <button
-                              type="button"
-                              onClick={() => setViewingTeamRoster(team)}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-[#F37022] text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer"
-                            >
-                              <Users className="w-3.5 h-3.5 text-[#F37022]" />
-                              <span>6/6 Thành Viên</span>
-                            </button>
+                            {(() => {
+                              const filledCount = team.membersList
+                                ? team.membersList.filter(m => m.name && m.name.trim() !== '' && !m.name.includes('Thành viên Dự bị')).length
+                                : (team.captain ? 6 : 0);
+                              const displayCount = filledCount > 0 ? filledCount : 7;
+                              return (
+                                <button
+                                  type="button"
+                                  onClick={() => setViewingTeamRoster(team)}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-orange-50 hover:text-[#F37022] text-slate-700 text-[11px] font-bold border border-slate-200 flex items-center gap-1.5 transition-colors cursor-pointer"
+                                >
+                                  <Users className="w-3.5 h-3.5 text-[#F37022]" />
+                                  <span>{displayCount}/7 Thành Viên</span>
+                                </button>
+                              );
+                            })()}
                           </td>
                          
                           <td className="p-3.5 text-right flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => setViewingTeamRoster(team)}
                               className="p-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-600 transition-colors cursor-pointer"
-                              title="Xem chi tiết 6 thành viên"
+                              title="Xem chi tiết 7 thành viên"
                             >
                               <Eye className="w-3.5 h-3.5" />
                             </button>
@@ -1854,65 +2077,268 @@ export default function AdminConsole({ onBackToLanding }) {
           {/* ================= TAB 4: BRACKET ================= */}
           {activeTab === 'bracket' && (
             <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider">
-                  QUẢN LÝ TỶ SỐ BẢNG ĐẤU 16 ĐỘI
-                </h2>
-                <div className="flex gap-2">
-                  {['Miền Bắc', 'Miền Nam'].map((reg) => (
-                    <button
-                      key={reg}
-                      onClick={() => setBracketRegionFilter(reg)}
-                      className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                        bracketRegionFilter === reg
-                          ? 'bg-[#F37022] text-white shadow-md'
-                          : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-100'
-                      }`}
+              {/* Header with Game Switcher, Region Filters & Round Dropdown */}
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
+                <div>
+                  <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                    QUẢN LÝ TỶ SỐ & LỊCH THI ĐẤU 
+                  </h2>
+                 
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  {/* Game Selector Buttons (VALORANT vs AOV) */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                    {[
+                      { id: 'VALORANT', label: 'VALORANT', color: 'bg-rose-600 text-white' },
+                      { id: 'AOV', label: 'AOV (LIÊN QUÂN)', color: 'bg-amber-500 text-white' }
+                    ].map((g) => (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setSelectedBracketGame(g.id)}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          selectedBracketGame === g.id
+                            ? `${g.color} shadow-sm`
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                        }`}
+                      >
+                        {g.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Region Selector Buttons (Miền Bắc vs Miền Nam) */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                    {[
+                      { id: 'Miền Bắc', label: ' MIỀN BẮC', activeClass: 'bg-red-600 text-white shadow-sm' },
+                      { id: 'Miền Nam', label: ' MIỀN NAM', activeClass: 'bg-blue-600 text-white shadow-sm' },
+                    ].map((r) => (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setBracketRegionFilter(r.id)}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
+                          bracketRegionFilter === r.id
+                            ? r.activeClass
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                        }`}
+                      >
+                        {r.label}
+                      </button>
+                    ))}
+                  </div>
+
+
+
+                  {/* Round Dropdown Filter */}
+                  <div className="flex items-center gap-1.5 bg-slate-100 p-1.5 rounded-xl border border-slate-200">
+                    <span className="text-xs font-bold text-slate-500 pl-1">Vòng:</span>
+                    <select
+                      value={selectedBracketRound}
+                      onChange={(e) => setSelectedBracketRound(e.target.value)}
+                      className="bg-white text-slate-800 font-bold text-xs px-2.5 py-1 rounded-lg border border-slate-300 outline-none focus:border-[#F37022] cursor-pointer"
                     >
-                      {reg}
-                    </button>
-                  ))}
+                      <option value="ALL"> Tất cả các vòng</option>
+                      <option value="Vòng 1/16">Vòng loại miền (Tuần 1)</option>
+                      <option value="Tứ Kết">Vòng loại miền (Tuần 2)</option>
+                      <option value="Bán Kết">Bán Kết Miền</option>
+                      <option value="Chung Kết">Chung Kết Miền</option>
+                    </select>
+                  </div>
+
+                  {/* Reset All Matches Button */}
+                  <button
+                    type="button"
+                    onClick={handleResetAllMatchesToEmpty}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                    title="Đặt lại tất cả các trận đấu về -- Chọn Đội --"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Đặt lại -- Chọn Đội --
+                  </button>
+
+                  {/* Add National Final Button */}
+                  <button
+                    type="button"
+                    onClick={handleAddNationalFinal}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
+                    title="Thêm trận Chung Kết Toàn Quốc (Miền Bắc vs Miền Nam)"
+                  >
+                    <Trophy className="w-3.5 h-3.5" />
+                    + Chung Kết Toàn Quốc
+                  </button>
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {matches.filter(m => m.region === bracketRegionFilter).map((match) => (
-                  <div key={match.id} className="bg-white border border-slate-200 shadow-sm rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <span className="px-2.5 py-1 rounded-md bg-orange-100 text-[#F37022] font-bold text-xs border border-orange-200">
-                        {match.round}
-                      </span>
-                      <span className="text-xs text-slate-500">Mã trận: <strong className="text-slate-900">{match.id}</strong></span>
-                    </div>
+              {/* Match Cards List */}
+              <div className="space-y-4">
+                {matches
+                  .filter(m => (m.game === selectedBracketGame || (!m.game && selectedBracketGame === 'VALORANT')) && (bracketRegionFilter === 'ALL' || m.region === bracketRegionFilter || m.region === 'Toàn Quốc'))
+                  .filter(m => selectedBracketRound === 'ALL' || (m.round && m.round.includes(selectedBracketRound)))
+                  .map((match) => {
+                    const matchRegion = (match.region || 'Miền Bắc').trim().toLowerCase();
+                    const currentBracketGame = (selectedBracketGame || 'VALORANT').trim().toLowerCase();
+                    const isNationalFinal = match.region === 'Toàn Quốc' || (match.round && match.round.toLowerCase().includes('chung kết toàn quốc'));
 
-                    {/* Interactive Match Score Editors */}
-                    <div className="flex items-center gap-3">
-                      <span className={`font-bold text-sm ${match.winner === 1 ? 'text-[#F37022]' : 'text-slate-800'}`}>{match.team1}</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="9"
-                        value={match.score1 ?? 0}
-                        onChange={(e) => handleScoreChange(match.id, 'score1', e.target.value)}
-                        className="w-10 text-center bg-slate-50 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
-                      />
-                      <span className="text-slate-400 font-bold text-xs">VS</span>
-                      <input
-                        type="number"
-                        min="0"
-                        max="9"
-                        value={match.score2 ?? 0}
-                        onChange={(e) => handleScoreChange(match.id, 'score2', e.target.value)}
-                        className="w-10 text-center bg-slate-50 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
-                      />
-                      <span className={`font-bold text-sm ${match.winner === 2 ? 'text-[#F37022]' : 'text-slate-800'}`}>{match.team2}</span>
-                    </div>
+                    // Strictly filter available teams created in Team Management
+                    // For National Final (Toàn Quốc), allow selection from ALL regions (Miền Bắc & Miền Nam)
+                    const teamsToRender = teams.filter(t => {
+                      const teamGame = (t.game || 'VALORANT').trim().toLowerCase();
+                      const matchesGame = teamGame === currentBracketGame || teamGame === 'all';
 
-                    <div className="text-xs text-emerald-600 font-bold">
-                      {match.winner ? `Đội Thắng: ${match.winner === 1 ? match.team1 : match.team2}` : 'Hòa / Đang chờ'}
-                    </div>
-                  </div>
-                ))}
+                      if (isNationalFinal) {
+                        return matchesGame;
+                      }
+
+                      const teamRegion = (t.region || '').trim().toLowerCase();
+                      const matchesRegion = teamRegion === matchRegion || teamRegion === 'all';
+
+                      return matchesGame && matchesRegion;
+                    });
+
+                    return (
+                      <div
+                        key={match.id}
+                        className={`rounded-2xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 transition-all relative ${
+                          isNationalFinal
+                            ? 'bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 border-2 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                            : 'bg-white border border-slate-200 shadow-sm hover:border-orange-300'
+                        }`}
+                      >
+                        {/* Left: Region Badge, Round & Match Info */}
+                        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                          {isNationalFinal ? (
+                            <span className="px-3 py-1 rounded-lg font-black text-xs bg-amber-500 text-white border border-amber-600 flex items-center gap-1 shadow-sm">
+                              <Trophy className="w-3.5 h-3.5" /> CHUNG KẾT TOÀN QUỐC
+                            </span>
+                          ) : (
+                            <>
+                              <span className={`px-2.5 py-1 rounded-lg font-extrabold text-xs border ${
+                                match.region === 'Miền Nam' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-red-50 text-red-700 border-red-200'
+                              }`}>
+                                 {match.region || 'Miền Bắc'}
+                              </span>
+                              <span className={`px-3 py-1 rounded-lg font-black text-xs border ${
+                                match.round?.includes('Tuần 1')
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                  : match.round?.includes('Tuần 2')
+                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                  : 'bg-orange-50 text-[#F37022] border-orange-200'
+                              }`}>
+                                {match.round}
+                              </span>
+                            </>
+                          )}
+                          {/* Match Status Selector (Sắp diễn ra, Đang thi đấu, Đã đấu) */}
+                          <select
+                            value={match.status || (match.winner != null ? 'DONE' : 'UPCOMING')}
+                            onChange={(e) => handleMatchUpdate(match.id, 'status', e.target.value)}
+                            className={`px-2.5 py-1 rounded-lg font-bold text-xs border outline-none cursor-pointer transition-all ${
+                              (match.status === 'LIVE' || match.status === 'Đang thi đấu')
+                                ? 'bg-rose-50 text-rose-600 border-rose-300 font-black'
+                                : (match.status === 'DONE' || match.status === 'Đã đấu')
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                                : 'bg-sky-50 text-sky-700 border-sky-300'
+                            }`}
+                          >
+                            <option value="UPCOMING">Sắp diễn ra</option>
+                            <option value="LIVE">Đang thi đấu</option>
+                            <option value="DONE">Đã đấu</option>
+                          </select>
+                        </div>
+
+                        {/* Middle 1: Date & Time Editors */}
+                        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 shrink-0">
+                          <span className="text-[11px] font-bold text-slate-500 uppercase">Ngày & Giờ:</span>
+                          <input
+                            type="text"
+                            placeholder="dd/mm/yyyy"
+                            value={match.date || ''}
+                            onChange={(e) => handleMatchUpdate(match.id, 'date', e.target.value)}
+                            className="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-center font-bold text-slate-800 focus:border-[#F37022] outline-none"
+                          />
+                          <input
+                            type="text"
+                            placeholder="hh:mm"
+                            value={match.time || ''}
+                            onChange={(e) => handleMatchUpdate(match.id, 'time', e.target.value)}
+                            className="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-center font-bold text-slate-800 focus:border-[#F37022] outline-none"
+                          />
+                        </div>
+
+                        {/* Middle 2: Interactive Match Score & Dynamic Team Selectors */}
+                        <div className="flex items-center justify-center gap-2 flex-1 flex-wrap sm:flex-nowrap">
+                          {/* Team 1 Searchable Combobox Selector */}
+                          <SearchableTeamSelect
+                            value={match.team1 || ''}
+                            onChange={(val) => handleMatchUpdate(match.id, 'team1', val)}
+                            teams={teamsToRender}
+                            isWinner={match.winner === 1}
+                            placeholder="-- Chọn Đội 1 (MB/MN) --"
+                          />
+
+                          <input
+                            type="number"
+                            min="0"
+                            max="99"
+                            value={match.score1 ?? ''}
+                            onChange={(e) => handleMatchUpdate(match.id, 'score1', e.target.value)}
+                            placeholder="0"
+                            className="w-11 text-center bg-slate-100 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
+                          />
+
+                          <span className="text-slate-400 font-black text-xs px-1">VS</span>
+
+                          <input
+                            type="number"
+                            min="0"
+                            max="99"
+                            value={match.score2 ?? ''}
+                            onChange={(e) => handleMatchUpdate(match.id, 'score2', e.target.value)}
+                            placeholder="0"
+                            className="w-11 text-center bg-slate-100 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
+                          />
+
+                          {/* Team 2 Searchable Combobox Selector */}
+                          <SearchableTeamSelect
+                            value={match.team2 || ''}
+                            onChange={(val) => handleMatchUpdate(match.id, 'team2', val)}
+                            teams={teamsToRender}
+                            isWinner={match.winner === 2}
+                            placeholder="-- Chọn Đội 2 (MB/MN) --"
+                          />
+                        </div>
+
+                        {/* Right: Winner Badge & Delete Match Button */}
+                        <div className="flex items-center gap-3 shrink-0 justify-end">
+                          <div className="text-xs font-bold text-right">
+                            {match.winner ? (
+                              <span className="text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                                Thắng: {match.winner === 1 ? match.team1 : match.team2}
+                              </span>
+                            ) : (
+                              <span className="text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
+                                Đang chờ kết quả
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Delete Match Button (Only for National Final matches) */}
+                          {isNationalFinal && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteMatch(match.id)}
+                              className="p-2 text-[#F37022] hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer border border-amber-300 hover:border-rose-300 bg-amber-50"
+                              title="Xóa trận Chung Kết Toàn Quốc này"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           )}
@@ -2159,7 +2585,7 @@ export default function AdminConsole({ onBackToLanding }) {
                           key={uni.id}
                           onClick={() => {
                             const selectedName = uni.shortName || uni.name;
-                            const defaultTeamName = `${selectedName} - ${newTeam.game}`;
+                            const defaultTeamName = selectedName;
                             setNewTeam({
                               ...newTeam,
                               school: uni.name,
@@ -2234,14 +2660,14 @@ export default function AdminConsole({ onBackToLanding }) {
                 </div>
               </div>
 
-              {/* 6 Members Form Section */}
+              {/* 7 Members Form Section */}
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-bold text-slate-900 uppercase flex items-center gap-1.5">
-                    <p className="w-4 h-4 text-[#F37022]" /> Nhập Danh Sách 6 Vận Động Viên (5 Chính + 1 Dự Bị)
+                    <p className="w-4 h-4 text-[#F37022]" /> Nhập Danh Sách 7 Vận Động Viên (5 Chính + 2 Dự Bị)
                   </label>
                   <span className="text-[11px] font-bold text-[#F37022] bg-orange-50 border border-orange-200 px-2.5 py-0.5 rounded-full">
-                    5 Chính + 1 Dự Bị
+                    5 Chính + 2 Dự Bị
                   </span>
                 </div>
 
@@ -2252,11 +2678,11 @@ export default function AdminConsole({ onBackToLanding }) {
                         <span className={`px-1.5 py-1 rounded text-[9px] font-black uppercase truncate ${
                           index === 0
                             ? 'bg-amber-500 text-white'
-                            : index === 5
+                            : index >= 5
                             ? 'bg-sky-500 text-white'
                             : 'bg-slate-100 text-slate-700 border border-slate-200'
                         }`}>
-                          {index === 0 ? ' Đội trưởng' : index === 5 ? ' Dự bị' : `Thành viên ${index + 1}`}
+                          {index === 0 ? ' Đội trưởng' : index >= 5 ? ` Dự bị ${index - 4}` : `Thành viên ${index + 1}`}
                         </span>
                       </div>
 
@@ -2264,7 +2690,7 @@ export default function AdminConsole({ onBackToLanding }) {
                         <input
                           type="text"
                           required={index < 5}
-                          placeholder={index === 5 ? 'Họ và tên dự bị...' : `Họ và tên tuyển thủ ${index + 1}...`}
+                          placeholder={index >= 5 ? `Họ và tên dự bị ${index - 4}...` : `Họ và tên tuyển thủ ${index + 1}...`}
                           value={member.name}
                           onChange={(e) => {
                             const updated = [...newTeamMembers];
@@ -2278,7 +2704,7 @@ export default function AdminConsole({ onBackToLanding }) {
                       <div className="sm:col-span-3">
                         <input
                           type="text"
-                          placeholder={index === 5 ? 'In-game ID dự bị...' : `In-game ID`}
+                          placeholder={index >= 5 ? `In-game ID dự bị ${index - 4}...` : `In-game ID`}
                           value={member.ingame}
                           onChange={(e) => {
                             const updated = [...newTeamMembers];
@@ -2291,15 +2717,15 @@ export default function AdminConsole({ onBackToLanding }) {
 
                       <div className="sm:col-span-3">
                         <input
-                          type="tel"
-                          placeholder={index === 0 ? 'SĐT Đội trưởng *' : 'SĐT liên hệ...'}
-                          value={member.phone || ''}
+                          type="text"
+                          placeholder="Role trong game..."
+                          value={member.role || ''}
                           onChange={(e) => {
                             const updated = [...newTeamMembers];
-                            updated[index].phone = e.target.value;
+                            updated[index].role = e.target.value;
                             setNewTeamMembers(updated);
                           }}
-                          className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-mono text-[11px]"
+                          className="w-full bg-slate-50 border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium"
                         />
                       </div>
                     </div>
@@ -2314,9 +2740,9 @@ export default function AdminConsole({ onBackToLanding }) {
                   onClick={() => {
                     setShowAddTeamModal(false);
                     setEditingTeamId(null);
-                    setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 6 });
+                    setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 7 });
                     setSchoolSearchQuery('');
-                    setNewTeamMembers(DEFAULT_6_MEMBERS);
+                    setNewTeamMembers(DEFAULT_7_MEMBERS);
                   }}
                   className="px-4 py-2 rounded-xl bg-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-300 cursor-pointer"
                 >
@@ -2327,7 +2753,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   className="px-5 py-2 rounded-xl bg-[#F37022] text-white text-xs font-bold hover:bg-orange-600 shadow-md cursor-pointer flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" />
-                  {editingTeamId ? 'Lưu Cập Nhật Đội Thi' : 'Xác Nhận Thêm Đội 6 Thành Viên'}
+                  {editingTeamId ? 'Lưu Cập Nhật Đội Thi' : 'Xác Nhận Thêm Đội 7 Thành Viên'}
                 </button>
               </div>
             </form>
