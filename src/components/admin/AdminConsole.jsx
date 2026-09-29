@@ -88,6 +88,43 @@ export const cleanTeamName = (str) => {
     .trim();
 };
 
+export const getRoundRank = (round, region) => {
+  const r = (round || '').toLowerCase();
+  const reg = (region || '').toLowerCase();
+  if (reg === 'toàn quốc' || r.includes('chung kết toàn quốc')) return 99;
+  if (r.includes('1/16') || r.includes('tuần 1')) return 1;
+  if (r.includes('tứ kết') || r.includes('tuần 2')) return 2;
+  if (r.includes('bán kết')) return 3;
+  if (r.includes('chung kết')) return 4;
+  return 5;
+};
+
+export const parseDateTimeSortKey = (dateStr, timeStr) => {
+  if (!dateStr) return '999999999999';
+  const parts = dateStr.split('/');
+  if (parts.length < 3) return '999999999999';
+  const day = parts[0].padStart(2, '0');
+  const month = parts[1].padStart(2, '0');
+  const year = parts[2];
+  const time = (timeStr || '00:00').replace(':', '').padStart(4, '0');
+  return `${year}${month}${day}${time}`;
+};
+
+export const sortMatchesList = (matchesList) => {
+  if (!Array.isArray(matchesList)) return [];
+  return [...matchesList].sort((a, b) => {
+    const rankA = getRoundRank(a.round, a.region);
+    const rankB = getRoundRank(b.round, b.region);
+    if (rankA !== rankB) return rankA - rankB;
+
+    const keyA = parseDateTimeSortKey(a.date, a.time);
+    const keyB = parseDateTimeSortKey(b.date, b.time);
+    if (keyA !== keyB) return keyA.localeCompare(keyB);
+
+    return String(a.id).localeCompare(String(b.id));
+  });
+};
+
 export const formatTeamLabel = (team) => {
   if (!team) return '';
   if (typeof team === 'string') {
@@ -2173,10 +2210,11 @@ export default function AdminConsole({ onBackToLanding }) {
 
               {/* Match Cards List */}
               <div className="space-y-4">
-                {matches
-                  .filter(m => (m.game === selectedBracketGame || (!m.game && selectedBracketGame === 'VALORANT')) && (bracketRegionFilter === 'ALL' || m.region === bracketRegionFilter || m.region === 'Toàn Quốc'))
-                  .filter(m => selectedBracketRound === 'ALL' || (m.round && m.round.includes(selectedBracketRound)))
-                  .map((match) => {
+                {sortMatchesList(
+                  matches
+                    .filter(m => (m.game === selectedBracketGame || (!m.game && selectedBracketGame === 'VALORANT')) && (bracketRegionFilter === 'ALL' || m.region === bracketRegionFilter || m.region === 'Toàn Quốc'))
+                    .filter(m => selectedBracketRound === 'ALL' || (m.round && m.round.includes(selectedBracketRound)))
+                ).map((match) => {
                     const matchRegion = (match.region || 'Miền Bắc').trim().toLowerCase();
                     const currentBracketGame = (selectedBracketGame || 'VALORANT').trim().toLowerCase();
                     const isNationalFinal = match.region === 'Toàn Quốc' || (match.round && match.round.toLowerCase().includes('chung kết toàn quốc'));
@@ -2210,7 +2248,7 @@ export default function AdminConsole({ onBackToLanding }) {
                         <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
                           {isNationalFinal ? (
                             <span className="px-3 py-1 rounded-lg font-black text-xs bg-amber-500 text-white border border-amber-600 flex items-center gap-1 shadow-sm">
-                              <Trophy className="w-3.5 h-3.5" /> CHUNG KẾT TOÀN QUỐC
+                              <p className=" h-3.5" /> CHUNG KẾT TOÀN QUỐC
                             </span>
                           ) : (
                             <>

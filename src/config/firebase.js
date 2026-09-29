@@ -1072,8 +1072,18 @@ export const INITIAL_BRACKET_MATCHES = [
   { id: 'AOV_MB_M2', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '15:30', status: 'UPCOMING' },
   { id: 'AOV_MB_M3', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '17:00', status: 'UPCOMING' },
   { id: 'AOV_MB_M4', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '18:30', status: 'UPCOMING' },
+  { id: 'AOV_MB_M5', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_M6', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'AOV_MB_M7', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_M8', game: 'AOV', region: 'Miền Bắc', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '18:30', status: 'UPCOMING' },
+
   { id: 'AOV_MB_Q1', game: 'AOV', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '14:00', status: 'UPCOMING' },
   { id: 'AOV_MB_Q2', game: 'AOV', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '16:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_Q3', game: 'AOV', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_Q4', game: 'AOV', region: 'Miền Bắc', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '16:00', status: 'UPCOMING' },
+
+  { id: 'AOV_MB_S1', game: 'AOV', region: 'Miền Bắc', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '18/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MB_S2', game: 'AOV', region: 'Miền Bắc', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '18/10/2026', time: '17:00', status: 'UPCOMING' },
   { id: 'AOV_MB_F', game: 'AOV', region: 'Miền Bắc', round: 'Chung Kết Miền Bắc', team1: '', team2: '', score1: null, score2: null, winner: null, date: '20/10/2026', time: '16:00', status: 'UPCOMING' },
 
   // ================= AOV (LIÊN QUÂN) - MIỀN NAM =================
@@ -1081,8 +1091,18 @@ export const INITIAL_BRACKET_MATCHES = [
   { id: 'AOV_MN_M2', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '15:30', status: 'UPCOMING' },
   { id: 'AOV_MN_M3', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '17:00', status: 'UPCOMING' },
   { id: 'AOV_MN_M4', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '05/10/2026', time: '18:30', status: 'UPCOMING' },
+  { id: 'AOV_MN_M5', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_M6', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '15:30', status: 'UPCOMING' },
+  { id: 'AOV_MN_M7', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '17:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_M8', game: 'AOV', region: 'Miền Nam', round: 'Vòng 1/16 (Tuần 1)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '06/10/2026', time: '18:30', status: 'UPCOMING' },
+
   { id: 'AOV_MN_Q1', game: 'AOV', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '14:00', status: 'UPCOMING' },
   { id: 'AOV_MN_Q2', game: 'AOV', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '12/10/2026', time: '16:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_Q3', game: 'AOV', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_Q4', game: 'AOV', region: 'Miền Nam', round: 'Tứ Kết (Tuần 2)', team1: '', team2: '', score1: null, score2: null, winner: null, date: '13/10/2026', time: '16:00', status: 'UPCOMING' },
+
+  { id: 'AOV_MN_S1', game: 'AOV', region: 'Miền Nam', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '19/10/2026', time: '14:00', status: 'UPCOMING' },
+  { id: 'AOV_MN_S2', game: 'AOV', region: 'Miền Nam', round: 'Bán Kết', team1: '', team2: '', score1: null, score2: null, winner: null, date: '19/10/2026', time: '17:00', status: 'UPCOMING' },
   { id: 'AOV_MN_F', game: 'AOV', region: 'Miền Nam', round: 'Chung Kết Miền Nam', team1: '', team2: '', score1: null, score2: null, winner: null, date: '20/10/2026', time: '18:00', status: 'UPCOMING' },
 ];
 
@@ -1118,13 +1138,30 @@ export function subscribeMatches(callback) {
       callback(e.detail);
     }
   };
+
+  const handleStorageEvent = (e) => {
+    if (e.key === 'fang_bracket_matches' && e.newValue) {
+      try {
+        const parsed = JSON.parse(e.newValue);
+        if (Array.isArray(parsed)) callback(parsed);
+      } catch (err) {
+        console.warn('Storage sync error:', err);
+      }
+    }
+  };
+
   window.addEventListener('fang_bracket_updated', handleCustomEvent);
+  window.addEventListener('storage', handleStorageEvent);
 
   try {
     const bracketDocRef = doc(db, 'bracket_matches', 'active_bracket');
     const unsubscribe = onSnapshot(bracketDocRef, (docSnap) => {
       if (docSnap.exists() && Array.isArray(docSnap.data().items)) {
-        callback(docSnap.data().items);
+        const savedItems = docSnap.data().items;
+        const existingIds = new Set(savedItems.map(m => m.id));
+        const missingMatches = INITIAL_BRACKET_MATCHES.filter(m => !existingIds.has(m.id));
+        const merged = missingMatches.length > 0 ? [...savedItems, ...missingMatches] : savedItems;
+        callback(merged);
       } else {
         saveMatches(INITIAL_BRACKET_MATCHES);
         callback(INITIAL_BRACKET_MATCHES);
@@ -1132,20 +1169,35 @@ export function subscribeMatches(callback) {
     }, (err) => {
       console.warn('[Firestore] Matches subscription error:', err);
       const saved = localStorage.getItem('fang_bracket_matches');
-      if (saved) callback(JSON.parse(saved));
-      else callback(INITIAL_BRACKET_MATCHES);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const existingIds = new Set(parsed.map(m => m.id));
+        const missingMatches = INITIAL_BRACKET_MATCHES.filter(m => !existingIds.has(m.id));
+        callback(missingMatches.length > 0 ? [...parsed, ...missingMatches] : parsed);
+      } else {
+        callback(INITIAL_BRACKET_MATCHES);
+      }
     });
+
     return () => {
       unsubscribe();
       window.removeEventListener('fang_bracket_updated', handleCustomEvent);
+      window.removeEventListener('storage', handleStorageEvent);
     };
   } catch (e) {
     console.warn('[Firestore] Matches init error:', e);
     const saved = localStorage.getItem('fang_bracket_matches');
-    if (saved) callback(JSON.parse(saved));
-    else callback(INITIAL_BRACKET_MATCHES);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      const existingIds = new Set(parsed.map(m => m.id));
+      const missingMatches = INITIAL_BRACKET_MATCHES.filter(m => !existingIds.has(m.id));
+      callback(missingMatches.length > 0 ? [...parsed, ...missingMatches] : parsed);
+    } else {
+      callback(INITIAL_BRACKET_MATCHES);
+    }
     return () => {
       window.removeEventListener('fang_bracket_updated', handleCustomEvent);
+      window.removeEventListener('storage', handleStorageEvent);
     };
   }
 }
