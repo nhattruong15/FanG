@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import qrCodeImg from '../../assets/QRCodeDangKy/qrcode_register.png';
+
 import {
   LayoutDashboard,
   Tv,
@@ -38,6 +40,8 @@ import {
   MousePointer,
   Share2,
   RotateCcw,
+  Settings,
+  X,
 } from 'lucide-react';
 
 import {
@@ -61,6 +65,10 @@ import {
   INITIAL_BRACKET_MATCHES,
   saveMatches,
   subscribeMatches,
+  saveQrConfig,
+  subscribeQrConfig,
+  INITIAL_QR_CONFIG,
+  recordQrScan,
 } from '../../config/firebase';
 
 import {
@@ -111,6 +119,34 @@ export const compressImageFile = (file, maxWidth = 800, maxHeight = 600, quality
     };
     reader.readAsDataURL(file);
   });
+};
+
+export const calculateSessionDurationText = (startedAt, lastSeen) => {
+  if (!startedAt) return 'Vừa kết nối';
+  const startMs = new Date(startedAt).getTime();
+  const lastMs = lastSeen ? new Date(lastSeen).getTime() : Date.now();
+  const diffSec = Math.max(0, Math.floor((lastMs - startMs) / 1000));
+
+  if (diffSec < 60) return `${diffSec} giây`;
+  const mins = Math.floor(diffSec / 60);
+  const secs = diffSec % 60;
+  if (mins < 60) return `${mins} phút ${secs > 0 ? `${secs}s` : ''}`;
+  const hours = Math.floor(mins / 60);
+  const remMins = mins % 60;
+  return `${hours} giờ ${remMins} phút`;
+};
+
+export const formatTimeString = (isoString) => {
+  if (!isoString) return '--:--:--';
+  try {
+    const d = new Date(isoString);
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const s = String(d.getSeconds()).padStart(2, '0');
+    return `${h}:${m}:${s}`;
+  } catch (e) {
+    return isoString;
+  }
 };
 
 /* ====================================================================
@@ -329,12 +365,20 @@ export default function AdminConsole({ onBackToLanding }) {
   const [qrStats, setQrStats] = useState(INITIAL_QR_STATS);
   const [liveStats, setLiveStats] = useState(INITIAL_LIVE_STATS);
   const [visitorStats, setVisitorStats] = useState({ totalVisits: 0, onlineCount: 0, activeSessions: [], lastVisitTime: null });
+  const [qrConfig, setQrConfig] = useState(INITIAL_QR_CONFIG);
+  const [tempQrConfig, setTempQrConfig] = useState(INITIAL_QR_CONFIG);
 
   // Analytics & Tracking UI State
   const [overviewChartFilter, setOverviewChartFilter] = useState('ALL');
   const [overviewChartType, setOverviewChartType] = useState('LINE'); // 'LINE' or 'BAR'
   const [overviewTimeRange, setOverviewTimeRange] = useState('TODAY'); // 'TODAY' | 'YESTERDAY' | '7DAYS' | '30DAYS' | 'CUSTOM'
-  const [selectedChartDate, setSelectedChartDate] = useState('2026-09-28');
+  const [selectedChartDate, setSelectedChartDate] = useState(() => {
+    const d = new Date();
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  });
   const [showScanLogs, setShowScanLogs] = useState(false);
   const [scanLogFilter, setScanLogFilter] = useState('ALL');
   const [scanLogPage, setScanLogPage] = useState(1);
@@ -342,6 +386,8 @@ export default function AdminConsole({ onBackToLanding }) {
   const [showLiveLogs, setShowLiveLogs] = useState(false);
   const [liveLogFilter, setLiveLogFilter] = useState('ALL');
   const [liveLogPage, setLiveLogPage] = useState(1);
+
+  const [showOnlineLogs, setShowOnlineLogs] = useState(true);
   const ITEMS_PER_PAGE = 10;
 
   // Track initial load for QR notification trigger
@@ -396,6 +442,12 @@ export default function AdminConsole({ onBackToLanding }) {
     const unsubVisitor = subscribeVisitorStats((data) => {
       if (data) setVisitorStats(data);
     });
+    const unsubQrConfig = subscribeQrConfig((data) => {
+      if (data) {
+        setQrConfig(data);
+        setTempQrConfig(data);
+      }
+    });
     return () => {
       unsubStream();
       unsubNews();
@@ -404,8 +456,56 @@ export default function AdminConsole({ onBackToLanding }) {
       unsubQr();
       unsubLive();
       unsubVisitor();
+      unsubQrConfig();
     };
   }, []);
+
+  const handleSaveQrConfig = async () => {
+    try {
+      await saveQrConfig(tempQrConfig);
+      triggerToast('Đã lưu thành công cấu hình Mã QR & Link Đăng Ký!');
+    } catch (err) {
+      console.error(err);
+      triggerToast('Lỗi khi lưu cấu hình QR.');
+    }
+  };
+
+  const handleResetQrConfig = async () => {
+    try {
+      await saveQrConfig(INITIAL_QR_CONFIG);
+      setTempQrConfig(INITIAL_QR_CONFIG);
+      triggerToast('Đã khôi phục Mã QR & Link đăng ký mặc định!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleQrImageFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 3 * 1024 * 1024) {
+      triggerToast('Kích thước ảnh quá lớn! Vui lòng chọn ảnh dưới 3MB.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const base64Data = event.target?.result;
+      if (base64Data) {
+        setTempQrConfig(prev => ({ ...prev, customQrUrl: base64Data }));
+        triggerToast('Đã tải ảnh QR mới từ máy tính!');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleTestQrScan = async () => {
+    try {
+      await recordQrScan('TEST_ADMIN');
+      triggerToast('Đã cộng +1 lượt quét thử nghiệm thành công!');
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const currentStream = streamsMap[selectedStreamGame] || INITIAL_LIVESTREAM_STREAMS[selectedStreamGame] || {
     title: '',
@@ -429,7 +529,38 @@ export default function AdminConsole({ onBackToLanding }) {
   const [toastMessage, setToastMessage] = useState(null);
   const [showAddTeamModal, setShowAddTeamModal] = useState(false);
   const [showAddNewsModal, setShowAddNewsModal] = useState(false);
+  const [showNationalFinalsModal, setShowNationalFinalsModal] = useState(false);
   const [editingArticleId, setEditingArticleId] = useState(null);
+
+  // National Finals Dual-Game State (VALORANT & AOV)
+  const [nationalValMatch, setNationalValMatch] = useState({
+    id: 'final_valorant',
+    game: 'VALORANT',
+    region: 'Toàn Quốc',
+    round: 'Chung Kết Toàn Quốc',
+    team1: '',
+    team2: '',
+    score1: null,
+    score2: null,
+    winner: null,
+    status: 'UPCOMING',
+    date: '',
+    time: ''
+  });
+  const [nationalAovMatch, setNationalAovMatch] = useState({
+    id: 'final_aov',
+    game: 'AOV',
+    region: 'Toàn Quốc',
+    round: 'Chung Kết Toàn Quốc',
+    team1: '',
+    team2: '',
+    score1: null,
+    score2: null,
+    winner: null,
+    status: 'UPCOMING',
+    date: '',
+    time: ''
+  });
 
   // Vietnam Universities API & 5 Member Roster State
   const [universitiesList, setUniversitiesList] = useState(VIETNAM_UNIVERSITIES_FALLBACK);
@@ -760,17 +891,21 @@ export default function AdminConsole({ onBackToLanding }) {
     }
   };
 
-  // Add a National Final (Chung Kết Toàn Quốc) match between 2 region champions
-  const handleAddNationalFinal = async () => {
-    const alreadyExists = matches.some(
-      m => m.round && m.round.toLowerCase().includes('chung kết toàn quốc')
+  // Open National Finals Modal with current data or empty templates
+  const handleOpenNationalFinalsModal = () => {
+    const valMatch = matches.find(
+      m => (m.region === 'Toàn Quốc' || (m.round && m.round.toLowerCase().includes('chung kết toàn quốc'))) &&
+           ((m.game || 'VALORANT').toUpperCase() === 'VALORANT')
     );
-    if (alreadyExists) {
-      if (!window.confirm('Trận Chung Kết Toàn Quốc đã tồn tại. Bạn có muốn thêm thêm một trận nữa không?')) return;
-    }
-    const finalMatch = {
-      id: `final_${Date.now()}`,
-      game: selectedBracketGame || 'VALORANT',
+
+    const aovMatch = matches.find(
+      m => (m.region === 'Toàn Quốc' || (m.round && m.round.toLowerCase().includes('chung kết toàn quốc'))) &&
+           ((m.game || '').toUpperCase() === 'AOV')
+    );
+
+    setNationalValMatch(valMatch ? { ...valMatch } : {
+      id: `final_val_${Date.now()}`,
+      game: 'VALORANT',
       region: 'Toàn Quốc',
       round: 'Chung Kết Toàn Quốc',
       team1: '',
@@ -780,12 +915,59 @@ export default function AdminConsole({ onBackToLanding }) {
       winner: null,
       status: 'UPCOMING',
       date: '',
-      time: '',
+      time: ''
+    });
+
+    setNationalAovMatch(aovMatch ? { ...aovMatch } : {
+      id: `final_aov_${Date.now()}`,
+      game: 'AOV',
+      region: 'Toàn Quốc',
+      round: 'Chung Kết Toàn Quốc',
+      team1: '',
+      team2: '',
+      score1: null,
+      score2: null,
+      winner: null,
+      status: 'UPCOMING',
+      date: '',
+      time: ''
+    });
+
+    setShowNationalFinalsModal(true);
+  };
+
+  // Save both National Finals Matches (VALORANT & AOV)
+  const handleSaveNationalFinals = async (e) => {
+    if (e) e.preventDefault();
+
+    const processMatch = (m, gameName) => {
+      const copy = { ...m, game: gameName, region: 'Toàn Quốc', round: 'Chung Kết Toàn Quốc' };
+      const s1 = copy.score1 !== null && copy.score1 !== '' ? Number(copy.score1) : null;
+      const s2 = copy.score2 !== null && copy.score2 !== '' ? Number(copy.score2) : null;
+      copy.score1 = s1;
+      copy.score2 = s2;
+      if (s1 !== null && s2 !== null) {
+        if (s1 > s2) copy.winner = 1;
+        else if (s2 > s1) copy.winner = 2;
+        else copy.winner = null;
+      } else {
+        copy.winner = null;
+      }
+      return copy;
     };
-    const updated = [...matches, finalMatch];
-    setMatches(updated);
-    await saveMatches(updated);
-    triggerToast('Đã thêm trận Chung Kết Toàn Quốc!');
+
+    const updatedVal = processMatch(nationalValMatch, 'VALORANT');
+    const updatedAov = processMatch(nationalAovMatch, 'AOV');
+
+    const nonNationalMatches = matches.filter(
+      m => !(m.region === 'Toàn Quốc' || (m.round && m.round.toLowerCase().includes('chung kết toàn quốc')))
+    );
+
+    const updatedMatches = [...nonNationalMatches, updatedVal, updatedAov];
+    setMatches(updatedMatches);
+    await saveMatches(updatedMatches);
+    triggerToast('Đã lưu 2 trận Chung Kết Toàn Quốc (VALORANT & AOV) thành công!');
+    setShowNationalFinalsModal(false);
   };
 
   // Filtered Teams
@@ -937,6 +1119,7 @@ export default function AdminConsole({ onBackToLanding }) {
             { id: 'teams', label: 'Quản Lý Đội Thi', icon: Users },
             { id: 'bracket', label: 'Quản Lý Bảng Đấu', icon: GitBranch },
             { id: 'news', label: 'Quản Lý Tin Tức', icon: Newspaper },
+            { id: 'settings', label: 'Khác', icon: Settings },
           ].map((tab) => {
             const active = activeTab === tab.id;
             const IconComp = tab.icon;
@@ -1043,161 +1226,84 @@ export default function AdminConsole({ onBackToLanding }) {
 
               {/* BIỂU ĐỒ ĐƯỜNG DÂY NỀN TỐI CHUẨN ANALYTICS (EXACT MATCH REFERENCE CHART) */}
               <div className="bg-[#0B0F19] border border-slate-800 shadow-2xl rounded-2xl p-6 space-y-6 text-white">
-                <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
-                  <div>
-                    <h3 className="font-heading font-black text-lg text-white uppercase tracking-wide flex items-center gap-2">
-                      <p className=" h-5 text-[#5B8FF9]" />
-                      BIỂU ĐỒ THEO DÕI CÁC LƯỢT TRUY CẬP
-                    </h3>
-                    <div className="text-xs text-slate-400 font-semibold mt-1 flex items-center gap-2">
-                      <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span>Thống kê ngày: <strong className="text-white">28/09/2026</strong></span>
-                      <span className="text-slate-600">•</span>
-                      <span className="text-slate-400">
-                        {overviewTimeRange === 'TODAY' ? 'Xem theo 24h hôm nay' : overviewTimeRange === '7DAYS' ? 'Xem 7 ngày qua' : 'Tất cả thời gian'}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3">
-                    {/* Date / Month Range Filter Selector */}
-                    <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800">
-                      <button
-                        onClick={() => setOverviewTimeRange('TODAY')}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          overviewTimeRange === 'TODAY'
-                            ? 'bg-[#5B8FF9] text-white shadow-sm'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Hôm Nay (28/09)
-                      </button>
-                      <button
-                        onClick={() => setOverviewTimeRange('YESTERDAY')}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          overviewTimeRange === 'YESTERDAY'
-                            ? 'bg-[#5B8FF9] text-white shadow-sm'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Hôm Qua (27/09)
-                      </button>
-                      <button
-                        onClick={() => setOverviewTimeRange('7DAYS')}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          overviewTimeRange === '7DAYS'
-                            ? 'bg-[#5B8FF9] text-white shadow-sm'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        7 Ngày Qua
-                      </button>
-                      <button
-                        onClick={() => setOverviewTimeRange('30DAYS')}
-                        className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          overviewTimeRange === '30DAYS'
-                            ? 'bg-[#5B8FF9] text-white shadow-sm'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Tháng 9/2026
-                      </button>
-                    </div>
-
-                    {/* Chart Filter Toggle Tabs */}
-                    <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800">
-                      <button
-                        onClick={() => setOverviewChartFilter('ALL')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          overviewChartFilter === 'ALL'
-                            ? 'bg-[#5B8FF9] text-white shadow-sm'
-                            : 'text-slate-400 hover:text-white'
-                        }`}
-                      >
-                        Tất Cả
-                      </button>
-                      <button
-                        onClick={() => setOverviewChartFilter('QR')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                          overviewChartFilter === 'QR'
-                            ? 'bg-[#F37021] text-white shadow-sm'
-                            : 'text-slate-400 hover:text-[#F37021]'
-                        }`}
-                      >
-                        <p className=" h-3.5" /> Quét Form QR
-                      </button>
-                      <button
-                        onClick={() => setOverviewChartFilter('LIVE')}
-                        className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                          overviewChartFilter === 'LIVE'
-                            ? 'bg-[#36CFC9] text-slate-950 font-black shadow-sm'
-                            : 'text-slate-400 hover:text-[#36CFC9]'
-                        }`}
-                      >
-                        <p className=" h-3.5" /> Xem Live
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Calculate Time Slots / Date Slots Based on overviewTimeRange */}
                 {(() => {
+                  {/* Dynamic Date Calculations */}
+                  const now = new Date();
+                  const getISO = (d) => {
+                    const y = d.getFullYear();
+                    const m = String(d.getMonth() + 1).padStart(2, '0');
+                    const day = String(d.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${day}`;
+                  };
+                  const getShortVN = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}`;
+                  const getFullVN = (iso) => {
+                    if (!iso) return '';
+                    const p = iso.split('-');
+                    return p.length === 3 ? `${p[2]}/${p[1]}/${p[0]}` : iso;
+                  };
+
+                  const todayISO = getISO(now);
+                  const todayShortVN = getShortVN(now);
+                  const yesterdayObj = new Date(now.getTime() - 86400000);
+                  const yesterdayISO = getISO(yesterdayObj);
+                  const yesterdayShortVN = getShortVN(yesterdayObj);
+
+                  const activeTargetDateISO =
+                    overviewTimeRange === 'TODAY' ? todayISO :
+                    overviewTimeRange === 'YESTERDAY' ? yesterdayISO :
+                    selectedChartDate || todayISO;
+
+                  const displayDateText =
+                    overviewTimeRange === '7DAYS' ? '7 Ngày Qua' :
+                    overviewTimeRange === '30DAYS' ? `Tháng ${now.getMonth() + 1}/${now.getFullYear()}` :
+                    getFullVN(activeTargetDateISO);
+
+                  // Calculate Time Slots / Date Slots Based on overviewTimeRange
                   let slotsData = [];
 
-                  if (overviewTimeRange === 'TODAY') {
+                  if (overviewTimeRange === 'TODAY' || overviewTimeRange === 'YESTERDAY' || overviewTimeRange === 'CUSTOM') {
                     const slots12 = [
-                      { label: '00:00', start: 0, end: 2, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '02:00', start: 2, end: 4, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '04:00', start: 4, end: 6, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '06:00', start: 6, end: 8, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '08:00', start: 8, end: 10, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '10:00', start: 10, end: 12, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '12:00', start: 12, end: 14, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '14:00', start: 14, end: 16, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '16:00', start: 16, end: 18, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '18:00', start: 18, end: 20, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '20:00', start: 20, end: 22, qr: 0, live: 0, fullDate: '28/09/2026' },
-                      { label: '22:00', start: 22, end: 24, qr: 0, live: 0, fullDate: '28/09/2026' },
+                      { label: '00:00', start: 0, end: 2, qr: 0, live: 0 },
+                      { label: '02:00', start: 2, end: 4, qr: 0, live: 0 },
+                      { label: '04:00', start: 4, end: 6, qr: 0, live: 0 },
+                      { label: '06:00', start: 6, end: 8, qr: 0, live: 0 },
+                      { label: '08:00', start: 8, end: 10, qr: 0, live: 0 },
+                      { label: '10:00', start: 10, end: 12, qr: 0, live: 0 },
+                      { label: '12:00', start: 12, end: 14, qr: 0, live: 0 },
+                      { label: '14:00', start: 14, end: 16, qr: 0, live: 0 },
+                      { label: '16:00', start: 16, end: 18, qr: 0, live: 0 },
+                      { label: '18:00', start: 18, end: 20, qr: 0, live: 0 },
+                      { label: '20:00', start: 20, end: 22, qr: 0, live: 0 },
+                      { label: '22:00', start: 22, end: 24, qr: 0, live: 0 },
                     ];
 
+                    const targetISO = activeTargetDateISO;
+
                     (qrStats.recentScans || []).forEach(scan => {
-                      const hour = scan.timestamp ? new Date(scan.timestamp).getHours() : 14;
-                      const idx = Math.min(Math.floor(hour / 2), 11);
-                      slots12[idx].qr += 1;
+                      if (!scan.timestamp) return;
+                      const scanDateISO = getISO(new Date(scan.timestamp));
+                      if (scanDateISO === targetISO) {
+                        const hour = new Date(scan.timestamp).getHours();
+                        const idx = Math.min(Math.floor(hour / 2), 11);
+                        slots12[idx].qr += 1;
+                      }
                     });
 
                     (liveStats.recentViews || []).forEach(view => {
-                      const hour = view.timestamp ? new Date(view.timestamp).getHours() : 18;
-                      const idx = Math.min(Math.floor(hour / 2), 11);
-                      slots12[idx].live += 1;
+                      if (!view.timestamp) return;
+                      const viewDateISO = getISO(new Date(view.timestamp));
+                      if (viewDateISO === targetISO) {
+                        const hour = new Date(view.timestamp).getHours();
+                        const idx = Math.min(Math.floor(hour / 2), 11);
+                        slots12[idx].live += 1;
+                      }
                     });
 
                     slotsData = slots12.map(s => ({
                       ...s,
                       total: s.qr + s.live,
-                      dateStr: `Hôm Nay (28/09/2026) - ${s.label}`
-                    }));
-                  } else if (overviewTimeRange === 'YESTERDAY') {
-                    // Yesterday (27/09/2026) 24h timeline
-                    const slotsYesterday = [
-                      { label: '00:00', qr: 2, live: 5, fullDate: '27/09/2026' },
-                      { label: '02:00', qr: 1, live: 3, fullDate: '27/09/2026' },
-                      { label: '04:00', qr: 0, live: 1, fullDate: '27/09/2026' },
-                      { label: '06:00', qr: 3, live: 8, fullDate: '27/09/2026' },
-                      { label: '08:00', qr: 12, live: 25, fullDate: '27/09/2026' },
-                      { label: '10:00', qr: 18, live: 34, fullDate: '27/09/2026' },
-                      { label: '12:00', qr: 15, live: 28, fullDate: '27/09/2026' },
-                      { label: '14:00', qr: 22, live: 42, fullDate: '27/09/2026' },
-                      { label: '16:00', qr: 19, live: 38, fullDate: '27/09/2026' },
-                      { label: '18:00', qr: 25, live: 55, fullDate: '27/09/2026' },
-                      { label: '20:00', qr: 14, live: 30, fullDate: '27/09/2026' },
-                      { label: '22:00', qr: 6, live: 12, fullDate: '27/09/2026' },
-                    ];
-
-                    slotsData = slotsYesterday.map(s => ({
-                      ...s,
-                      total: s.qr + s.live,
-                      dateStr: `Hôm Qua (27/09/2026) - ${s.label}`
+                      fullDate: getFullVN(targetISO),
+                      dateStr: `${getFullVN(targetISO)} - ${s.label}`
                     }));
                   } else if (overviewTimeRange === '7DAYS') {
                     // Last 7 days aggregation (22/09 to 28/09)
@@ -1240,6 +1346,120 @@ export default function AdminConsole({ onBackToLanding }) {
 
                   return (
                     <div className="space-y-6">
+                      {/* Chart Header Bar */}
+                      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+                        <div>
+                          <h3 className="font-heading font-black text-lg text-white uppercase tracking-wide flex items-center gap-2">
+                            <p className=" h-5 text-[#5B8FF9]" />
+                            BIỂU ĐỒ THEO DÕI CÁC LƯỢT TRUY CẬP
+                          </h3>
+                          <div className="text-xs text-slate-400 font-semibold mt-1 flex items-center gap-2 flex-wrap">
+                            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                            <span>Thống kê ngày: <strong className="text-white">{displayDateText}</strong></span>
+                            <span className="text-slate-600">•</span>
+                            <span className="text-slate-400">
+                              {overviewTimeRange === '7DAYS' ? 'Xem 7 ngày qua' : overviewTimeRange === '30DAYS' ? 'Xem cả tháng' : `Xem theo 24h ngày ${getFullVN(activeTargetDateISO)}`}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-3">
+                          {/* Date Range & Custom Date Picker Filter Bar */}
+                          <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800 flex-wrap">
+                            <button
+                              onClick={() => { setOverviewTimeRange('TODAY'); setSelectedChartDate(todayISO); }}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                overviewTimeRange === 'TODAY'
+                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              Hôm Nay ({todayShortVN})
+                            </button>
+                            <button
+                              onClick={() => { setOverviewTimeRange('YESTERDAY'); setSelectedChartDate(yesterdayISO); }}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                overviewTimeRange === 'YESTERDAY'
+                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              Hôm Qua ({yesterdayShortVN})
+                            </button>
+                            <button
+                              onClick={() => setOverviewTimeRange('7DAYS')}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                overviewTimeRange === '7DAYS'
+                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              7 Ngày Qua
+                            </button>
+                            <button
+                              onClick={() => setOverviewTimeRange('30DAYS')}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                overviewTimeRange === '30DAYS'
+                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              Tháng {now.getMonth() + 1}/{now.getFullYear()}
+                            </button>
+
+                            {/* Interactive Calendar Date Picker Input */}
+                            <div className="flex items-center gap-1 pl-1 border-l border-slate-700">
+                              <span className="text-[10px] text-slate-400 font-bold uppercase pl-1">Chọn ngày:</span>
+                              <input
+                                type="date"
+                                value={selectedChartDate}
+                                onChange={(e) => {
+                                  if (e.target.value) {
+                                    setSelectedChartDate(e.target.value);
+                                    setOverviewTimeRange('CUSTOM');
+                                  }
+                                }}
+                                className="bg-slate-900 text-xs text-white px-2 py-0.5 rounded-lg border border-slate-700 focus:outline-none focus:border-[#5B8FF9] cursor-pointer"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Chart Filter Toggle Tabs */}
+                          <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800">
+                            <button
+                              onClick={() => setOverviewChartFilter('ALL')}
+                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                                overviewChartFilter === 'ALL'
+                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-white'
+                              }`}
+                            >
+                              Tất Cả
+                            </button>
+                            <button
+                              onClick={() => setOverviewChartFilter('QR')}
+                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                                overviewChartFilter === 'QR'
+                                  ? 'bg-[#F37021] text-white shadow-sm'
+                                  : 'text-slate-400 hover:text-[#F37021]'
+                              }`}
+                            >
+                              <p className=" h-3.5" /> Quét Form QR
+                            </button>
+                            <button
+                              onClick={() => setOverviewChartFilter('LIVE')}
+                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                                overviewChartFilter === 'LIVE'
+                                  ? 'bg-[#36CFC9] text-slate-950 font-black shadow-sm'
+                                  : 'text-slate-400 hover:text-[#36CFC9]'
+                              }`}
+                            >
+                              <p className=" h-3.5" /> Xem Live
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Metric Summary Header Cards */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-[#161B26] p-4 rounded-xl border border-slate-800">
                         <div className="flex items-center gap-3">
@@ -1409,6 +1629,90 @@ export default function AdminConsole({ onBackToLanding }) {
           {/* ================= TAB 2: ANALYTICS & TRACKING ================= */}
           {activeTab === 'analytics' && (
             <div className="space-y-6">
+              {/* Online Visitors Real-time Tracking & Duration Module */}
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div className="p-6 bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div>
+                      <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2 uppercase tracking-wide">
+                        NGƯỜI DÙNG ĐANG ONLINE & THỜI GIAN TRUY CẬP REALTIME
+                      </h3>
+                      <p className="text-slate-400 text-xs mt-0.5">
+                        Đang có <strong className="text-emerald-400 font-bold">{visitorStats.onlineCount || 0} người online</strong> (active trong 90s qua) • Tổng cộng <strong className="text-white font-bold">{visitorStats.totalVisits || 0} lượt truy cập</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={() => setShowOnlineLogs(!showOnlineLogs)}
+                    className="px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-lg shadow-emerald-600/20 transition-all flex items-center gap-2.5 cursor-pointer hover:scale-105 active:scale-95 border border-emerald-400/40 whitespace-nowrap"
+                  >
+                    <span>{showOnlineLogs ? 'Ẩn Session Logs' : 'Xem Session Logs Online'}</span>
+                    <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${showOnlineLogs ? 'rotate-180' : ''}`} />
+                  </button>
+                </div>
+
+                <AnimatePresence>
+                  {showOnlineLogs && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="p-6 border-t border-slate-200 bg-slate-50/50 space-y-6"
+                    >
+                      <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-left text-xs">
+                            <thead className="bg-slate-100 border-b border-slate-200 font-bold text-slate-700 uppercase">
+                              <tr>
+                                <th className="p-3">#</th>
+                                <th className="p-3">Visitor ID (Thiết bị)</th>
+                                <th className="p-3">Trang truy cập</th>
+                                <th className="p-3">Thời gian Bắt đầu</th>
+                                <th className="p-3">Hoạt động Cuối</th>
+                                <th className="p-3"> Tổng Thời Gian On-site</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-200">
+                              {(visitorStats.activeSessions || []).length === 0 ? (
+                                <tr>
+                                  <td colSpan="6" className="p-6 text-center text-slate-400 italic font-medium">
+                                    Hiện chưa có kết nối online active nào trong 90 giây qua.
+                                  </td>
+                                </tr>
+                              ) : (
+                                (visitorStats.activeSessions || []).map((session, idx) => (
+                                  <tr key={session.id || idx} className="hover:bg-slate-50 transition-colors">
+                                    <td className="p-3 font-mono text-slate-400">{idx + 1}</td>
+                                    <td className="p-3 font-mono font-bold text-slate-800 flex items-center gap-2">
+                                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping shrink-0" />
+                                      <span className="truncate max-w-[160px] sm:max-w-none">{session.id ? session.id.substring(0, 18) + '...' : 'Visitor'}</span>
+                                    </td>
+                                    <td className="p-3 font-semibold text-blue-600 font-mono">
+                                      {session.page || '/'}
+                                    </td>
+                                    <td className="p-3 font-mono text-slate-600">
+                                      {formatTimeString(session.startedAt)}
+                                    </td>
+                                    <td className="p-3 font-mono text-slate-600">
+                                      {formatTimeString(session.lastSeen)} <span className="text-[10px] text-emerald-600 font-bold ml-1">(Active)</span>
+                                    </td>
+                                    <td className="p-3 font-bold text-amber-600 font-mono text-sm">
+                                      {calculateSessionDurationText(session.startedAt, session.lastSeen)}
+                                    </td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
               {/* Single Main Expandable QR Scan Tracking Module */}
               <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
                 {/* Module Header Bar */}
@@ -1866,11 +2170,7 @@ export default function AdminConsole({ onBackToLanding }) {
                 <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider">
                   QUẢN LÝ VIDEO LIVESTREAM THEO GAME
                 </h2>
-                <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${currentStream.isLive ? 'bg-rose-100 text-rose-600 border border-rose-300' : 'bg-slate-200 text-slate-600'}`}>
-                    {currentStream.isLive ? `● LIVE BROADCAST [${selectedStreamGame}]` : `○ OFFLINE [${selectedStreamGame}]`}
-                  </span>
-                </div>
+               
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1969,8 +2269,8 @@ export default function AdminConsole({ onBackToLanding }) {
                       }}
                       className="flex items-center gap-2 px-5 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
                     >
-                      <Save className="w-4 h-4" />
-                      Lưu Thay Đổi (Firestore)
+                      <p className="-4" />
+                      Lưu Thay Đổi 
                     </button>
                   </div>
                 </div>
@@ -2234,14 +2534,14 @@ export default function AdminConsole({ onBackToLanding }) {
                     Đặt lại -- Chọn Đội --
                   </button> */}
 
-                  {/* Add National Final Button */}
+                  {/* Open National Finals Dual-Game Modal Button */}
                   <button
                     type="button"
-                    onClick={handleAddNationalFinal}
-                    className="flex items-center gap-1.5 px-3 py-2 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-300 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs"
-                    title="Thêm trận Chung Kết Toàn Quốc (Miền Bắc vs Miền Nam)"
+                    onClick={handleOpenNationalFinalsModal}
+                    className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white border border-amber-400 rounded-xl text-xs font-black transition-all cursor-pointer shadow-md hover:shadow-lg"
+                    title="Cấu hình trận Chung Kết Toàn Quốc cho 2 bộ môn (VALORANT & AOV)"
                   >
-                    <p className=" h-3.5" />
+                    <p className="h-4 text-amber-200" />
                     Chung Kết Toàn Quốc
                   </button>
                 </div>
@@ -2554,6 +2854,133 @@ export default function AdminConsole({ onBackToLanding }) {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* ================= TAB 7: KHÁC (SETTINGS & QR MANAGEMENT) ================= */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <p className="h-6 text-[#F37022]" />
+                  CẤU HÌNH HỆ THỐNG & ĐỔI MÃ QR CODE ĐĂNG KÝ
+                </h2>
+               
+              </div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                {/* Left Card: Settings Editor */}
+                <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-6">
+                  <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+                    <h3 className="font-heading font-black text-base text-slate-900 uppercase flex items-center gap-2">
+                      <p className=" h-5 text-[#F37022]" />
+                      Cấu Hình Mã QR & Link Đăng Ký
+                    </h3>
+                   
+                  </div>
+
+                  {/* Destination Link Editor */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Link Chuyển Hướng Đăng Ký (Target Destination URL)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="url"
+                        value={tempQrConfig.destinationUrl || ''}
+                        onChange={(e) => setTempQrConfig({ ...tempQrConfig, destinationUrl: e.target.value })}
+                        placeholder="https://fangtv.vn/"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-900 focus:border-[#F37022] outline-none"
+                      />
+                    </div>
+                   
+                  </div>
+
+                  {/* QR Image Source Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Tải Lên Ảnh Mã QR Code Mới (Máy tính / Link URL)
+                    </label>
+                    <div className="space-y-3">
+                      {/* Upload local image */}
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          id="qr-image-upload-input"
+                          onChange={handleQrImageFileUpload}
+                          className="hidden"
+                        />
+                        <label
+                          htmlFor="qr-image-upload-input"
+                          className="px-4 py-2.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-[#F37022] border border-orange-200 text-xs font-bold transition-all cursor-pointer flex items-center gap-2 shadow-2xs"
+                        >
+                          <Upload className="w-4 h-4" />
+                          Chọn ảnh QR từ máy tính
+                        </label>
+                      </div>
+
+                      {/* Image URL Input */}
+                      <input
+                        type="text"
+                        value={tempQrConfig.customQrUrl || ''}
+                        onChange={(e) => setTempQrConfig({ ...tempQrConfig, customQrUrl: e.target.value })}
+                        placeholder="Dán URL ảnh QR Code (ví dụ: https://domain.com/qr.png)"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-800 focus:border-[#F37022] outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Actions Buttons */}
+                  <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={handleResetQrConfig}
+                      className="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                      Khôi phục mặc định
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleSaveQrConfig}
+                      className="px-6 py-2.5 rounded-xl bg-[#F37022] hover:bg-orange-600 text-white text-xs font-black transition-all shadow-md shadow-orange-500/20 flex items-center gap-2 cursor-pointer"
+                    >
+                      <Save className="w-4 h-4" />
+                      Lưu Cấu Hình Mã QR
+                    </button>
+                  </div>
+                </div>
+
+                {/* Right Card: Live Preview & Scan Simulator */}
+                <div className="lg:col-span-5 space-y-6">
+                  {/* Live Preview Card */}
+                  <div className="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col items-center text-center">
+                    <span className="px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-black uppercase mb-3 border border-slate-200">
+                      Xem Trước Mã QR Hiển Thị Cho Khách
+                    </span>
+
+                    <div className="w-56 h-56 bg-white p-3 rounded-2xl border-2 border-[#F37021] shadow-lg flex items-center justify-center overflow-hidden my-2">
+                      <img
+                        src={tempQrConfig.customQrUrl || qrCodeImg}
+                        alt="Preview QR Code"
+                        className="w-full h-full object-contain rounded-xl"
+                        onError={(e) => {
+                          e.target.src = qrCodeImg;
+                        }}
+                      />
+                    </div>
+
+                    <p className="text-xs font-bold text-slate-800 mt-2 truncate max-w-full">
+                      Target Link: <span className="text-[#F37022]">{tempQrConfig.destinationUrl || 'https://fangtv.vn/'}</span>
+                    </p>
+                  </div>
+
+                  {/* Live Test Scan Button */}
+                 
+                </div>
               </div>
             </div>
           )}
@@ -3117,6 +3544,278 @@ export default function AdminConsole({ onBackToLanding }) {
                     {editingArticleId ? 'Lưu Cập Nhật' : 'Đăng Bài Viết'}
                   </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ================= NATIONAL FINALS DUAL-GAME POPUP MODAL ================= */}
+      {showNationalFinalsModal && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-200 shadow-2xl rounded-2xl p-6 max-w-4xl w-full my-8 max-h-[90vh] flex flex-col">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 shrink-0">
+              <div>
+                <h3 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                  <p className="h-6 text-amber-500" />
+                  Quản Lý Trận Chung Kết Toàn Quốc
+                </h3>
+               
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowNationalFinalsModal(false)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Scrollable Content */}
+            <form onSubmit={handleSaveNationalFinals} className="overflow-y-auto py-4 space-y-6 flex-1 pr-1">
+              {/* ================= GAME 1: VALORANT ================= */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-rose-50 to-orange-50/50 border-2 border-rose-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-rose-200/60 pb-3">
+                  <span className="font-heading font-black text-sm text-rose-700 uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse" />
+                    1. CHUNG KẾT TOÀN QUỐC - VALORANT
+                  </span>
+                 
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Team 1 Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Đội Thi Đấu 1 (Miền Bắc / Miền Nam)
+                    </label>
+                    <select
+                      value={nationalValMatch.team1 || ''}
+                      onChange={(e) => setNationalValMatch({ ...nationalValMatch, team1: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:border-rose-500 outline-none"
+                    >
+                      <option value="">-- Chọn Đội 1 --</option>
+                      {teams
+                        .filter(t => (t.game || '').toLowerCase() === 'valorant' || (t.game || '').toLowerCase() === 'all')
+                        .map(t => (
+                          <option key={t.id} value={`${t.name} - ${t.school}`}>
+                            {t.name} ({t.school} - {t.region})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Team 2 Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Đội Thi Đấu 2 (Miền Bắc / Miền Nam)
+                    </label>
+                    <select
+                      value={nationalValMatch.team2 || ''}
+                      onChange={(e) => setNationalValMatch({ ...nationalValMatch, team2: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:border-rose-500 outline-none"
+                    >
+                      <option value="">-- Chọn Đội 2 --</option>
+                      {teams
+                        .filter(t => (t.game || '').toLowerCase() === 'valorant' || (t.game || '').toLowerCase() === 'all')
+                        .map(t => (
+                          <option key={t.id} value={`${t.name} - ${t.school}`}>
+                            {t.name} ({t.school} - {t.region})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Scores, Status, Date & Time */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Tỷ Số Đội 1</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={nationalValMatch.score1 ?? ''}
+                      onChange={(e) => setNationalValMatch({ ...nationalValMatch, score1: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:border-rose-500 outline-none text-center"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Tỷ Số Đội 2</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={nationalValMatch.score2 ?? ''}
+                      onChange={(e) => setNationalValMatch({ ...nationalValMatch, score2: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:border-rose-500 outline-none text-center"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Trạng Thái Trận</label>
+                    <select
+                      value={nationalValMatch.status || 'UPCOMING'}
+                      onChange={(e) => setNationalValMatch({ ...nationalValMatch, status: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:border-rose-500 outline-none"
+                    >
+                      <option value="UPCOMING">Sắp diễn ra</option>
+                      <option value="LIVE">🔴 Đang thi đấu</option>
+                      <option value="DONE">Đã kết thúc</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Ngày & Giờ Thi Đấu</label>
+                    <div className="grid grid-cols-2 gap-1">
+                      <input
+                        type="text"
+                        placeholder="DD/MM"
+                        value={nationalValMatch.date || ''}
+                        onChange={(e) => setNationalValMatch({ ...nationalValMatch, date: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-[11px] font-medium text-slate-800 focus:border-rose-500 outline-none text-center"
+                      />
+                      <input
+                        type="text"
+                        placeholder="HH:MM"
+                        value={nationalValMatch.time || ''}
+                        onChange={(e) => setNationalValMatch({ ...nationalValMatch, time: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-[11px] font-medium text-slate-800 focus:border-rose-500 outline-none text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* ================= GAME 2: AOV (LIÊN QUÂN) ================= */}
+              <div className="p-4 rounded-2xl bg-gradient-to-br from-amber-50 to-orange-50/50 border-2 border-amber-300 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-amber-200/60 pb-3">
+                  <span className="font-heading font-black text-sm text-amber-800 uppercase tracking-wider flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
+                    2. CHUNG KẾT TOÀN QUỐC - AOV (LIÊN QUÂN)
+                  </span>
+                 
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Team 1 Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Đội Thi Đấu 1 (Miền Bắc / Miền Nam)
+                    </label>
+                    <select
+                      value={nationalAovMatch.team1 || ''}
+                      onChange={(e) => setNationalAovMatch({ ...nationalAovMatch, team1: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:border-amber-500 outline-none"
+                    >
+                      <option value="">-- Chọn Đội 1 --</option>
+                      {teams
+                        .filter(t => (t.game || '').toLowerCase() === 'aov' || (t.game || '').toLowerCase() === 'all')
+                        .map(t => (
+                          <option key={t.id} value={`${t.name} - ${t.school}`}>
+                            {t.name} ({t.school} - {t.region})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+
+                  {/* Team 2 Selection */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Đội Thi Đấu 2 (Miền Bắc / Miền Nam)
+                    </label>
+                    <select
+                      value={nationalAovMatch.team2 || ''}
+                      onChange={(e) => setNationalAovMatch({ ...nationalAovMatch, team2: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:border-amber-500 outline-none"
+                    >
+                      <option value="">-- Chọn Đội 2 --</option>
+                      {teams
+                        .filter(t => (t.game || '').toLowerCase() === 'aov' || (t.game || '').toLowerCase() === 'all')
+                        .map(t => (
+                          <option key={t.id} value={`${t.name} - ${t.school}`}>
+                            {t.name} ({t.school} - {t.region})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Scores, Status, Date & Time */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Tỷ Số Đội 1</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={nationalAovMatch.score1 ?? ''}
+                      onChange={(e) => setNationalAovMatch({ ...nationalAovMatch, score1: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:border-amber-500 outline-none text-center"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Tỷ Số Đội 2</label>
+                    <input
+                      type="number"
+                      placeholder="0"
+                      value={nationalAovMatch.score2 ?? ''}
+                      onChange={(e) => setNationalAovMatch({ ...nationalAovMatch, score2: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-bold text-slate-900 focus:border-amber-500 outline-none text-center"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Trạng Thái Trận</label>
+                    <select
+                      value={nationalAovMatch.status || 'UPCOMING'}
+                      onChange={(e) => setNationalAovMatch({ ...nationalAovMatch, status: e.target.value })}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold text-slate-800 focus:border-amber-500 outline-none"
+                    >
+                      <option value="UPCOMING">Sắp diễn ra</option>
+                      <option value="LIVE">🔴 Đang thi đấu</option>
+                      <option value="DONE">Đã kết thúc</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">Ngày & Giờ Thi Đấu</label>
+                    <div className="grid grid-cols-2 gap-1">
+                      <input
+                        type="text"
+                        placeholder="DD/MM"
+                        value={nationalAovMatch.date || ''}
+                        onChange={(e) => setNationalAovMatch({ ...nationalAovMatch, date: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-[11px] font-medium text-slate-800 focus:border-amber-500 outline-none text-center"
+                      />
+                      <input
+                        type="text"
+                        placeholder="HH:MM"
+                        value={nationalAovMatch.time || ''}
+                        onChange={(e) => setNationalAovMatch({ ...nationalAovMatch, time: e.target.value })}
+                        className="w-full bg-white border border-slate-300 rounded-xl px-2 py-2 text-[11px] font-medium text-slate-800 focus:border-amber-500 outline-none text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Actions Footer */}
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowNationalFinalsModal(false)}
+                  className="px-4 py-2.5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold transition-colors cursor-pointer"
+                >
+                  Hủy Bỏ
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black transition-all shadow-md cursor-pointer flex items-center gap-2"
+                >
+                  <Trophy className="w-4 h-4 text-amber-200" />
+                  Lưu 2 Trận Chung Kết Toàn Quốc
+                </button>
               </div>
             </form>
           </div>

@@ -1,21 +1,25 @@
 import React, { useEffect } from 'react';
-import { doc, setDoc, increment, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, increment, serverTimestamp } from 'firebase/firestore';
 import { db, recordQrScan } from '../config/firebase';
 
 export default function QrRedirect() {
-  const CLIENT_FORM_URL = 'https://fangtv.vn/';
   const UTM_PARAMS = '?utm_source=fang_campus&utm_medium=qr_code&utm_campaign=esports_2026';
 
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const gameParam = searchParams.get('game')?.toUpperCase() || 'VALORANT';
 
-    const finalUrl = CLIENT_FORM_URL.includes('?')
-      ? `${CLIENT_FORM_URL}&${UTM_PARAMS.substring(1)}`
-      : `${CLIENT_FORM_URL}${UTM_PARAMS}`;
-
     const handleTrackAndRedirect = async () => {
+      let clientUrl = 'https://fangtv.vn/';
+
       try {
+        // Fetch dynamic QR Code destination URL from Firestore settings/qr_config
+        const configSnap = await getDoc(doc(db, 'settings', 'qr_config'));
+        if (configSnap.exists() && configSnap.data().destinationUrl) {
+          clientUrl = configSnap.data().destinationUrl;
+        }
+
+        // Execute +1 scan tracking
         await recordQrScan(gameParam);
 
         const qrDocRef = doc(db, 'QR_scans', 'val_register_qr');
@@ -31,6 +35,10 @@ export default function QrRedirect() {
       } catch (error) {
         console.error('Lỗi khi ghi nhận lượt quét QR lên Firebase:', error);
       } finally {
+        const finalUrl = clientUrl.includes('?')
+          ? `${clientUrl}&${UTM_PARAMS.substring(1)}`
+          : `${clientUrl}${UTM_PARAMS}`;
+
         window.location.replace(finalUrl);
       }
     };

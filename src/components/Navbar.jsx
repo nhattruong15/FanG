@@ -51,13 +51,13 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
           scrolled ? 'bg-[#090503]/95 backdrop-blur-md border-b border-[#F37022]/20 shadow-lg shadow-orange-950/20' : 'bg-[#0e0906]'
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 h-14 sm:h-16 md:h-20 flex items-center justify-between">
+          <div className="flex items-center gap-3 sm:gap-4">
             <button onClick={() => scrollTo('hero')} className="flex items-center gap-2.5 group text-left">
               <img
                 src={logoImg}
                 alt="FanG Exports Logo"
-                className="h-11 sm:h-13 md:h-14 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-[0_0_15px_rgba(243,112,34,0.4)]"
+                className="h-8 sm:h-11 md:h-14 w-auto object-contain group-hover:scale-105 transition-transform drop-shadow-[0_0_15px_rgba(243,112,34,0.4)]"
               />
             </button>
 
@@ -96,9 +96,9 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
 
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="lg:hidden p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors border border-slate-700"
+            className="lg:hidden p-2 sm:p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white transition-colors border border-slate-700/80"
           >
-            {isOpen ? <X className="w-6 h-6 text-[#F37021]" /> : <Menu className="w-6 h-6 text-white" />}
+            {isOpen ? <X className="w-5 h-5 sm:w-6 sm:h-6 text-[#F37021]" /> : <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
           </button>
         </div>
       </nav>

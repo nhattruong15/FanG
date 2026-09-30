@@ -234,53 +234,286 @@ const FinalCard = ({ title, match, teamsList, onSelectMatch, trophy = false }) =
   );
 };
 
-const RegionBracketPanel = ({ regionName, matches, teamsList, onSelectMatch }) => {
+/**
+ * Compact Tree Node Card for Elimination Bracket Diagram
+ */
+const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => {
+  if (!match) {
+    return (
+      <div className="w-56 sm:w-64 bg-[#0e0906]/60 border border-white/10 rounded-xl p-2.5 opacity-60 text-center">
+        <div className="text-[10px] text-slate-500 font-mono">TBD</div>
+        <div className="py-2 text-xs italic text-slate-500 font-medium">-- Chưa xác định --</div>
+      </div>
+    );
+  }
+
+  const t1Win = match.winner === 1;
+  const t2Win = match.winner === 2;
+  const upcoming = match.winner == null;
+
+  const t1Info = parseTeamInfo(match.team1, teamsList);
+  const t2Info = parseTeamInfo(match.team2, teamsList);
+
+  const getStatusBadge = (status) => {
+    const s = (status || '').toUpperCase();
+    if (s === 'LIVE' || status === 'Đang thi đấu') {
+      return (
+        <span className="px-1.5 py-0.5 rounded text-[9px] font-black uppercase bg-rose-500/20 text-rose-400 border border-rose-500/40 flex items-center gap-1 animate-pulse">
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+          LIVE
+        </span>
+      );
+    }
+    if (s === 'DONE' || status === 'Đã đấu') {
+      return (
+        <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+          XONG
+        </span>
+      );
+    }
+    return (
+      <span className="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase bg-sky-500/20 text-sky-400 border border-sky-500/30">
+        SẮP ĐẤU
+      </span>
+    );
+  };
+
+  return (
+    <div
+      onClick={() => onSelectMatch && onSelectMatch(match)}
+      className={`w-56 sm:w-64 rounded-xl border text-[11px] sm:text-xs overflow-hidden transition-all hover:border-[#F37022] hover:shadow-[0_0_20px_rgba(243,112,34,0.35)] cursor-pointer group shadow-lg ${
+        isFinal
+          ? 'border-amber-400/80 bg-gradient-to-b from-amber-950/40 via-[#1e130d] to-[#0e0906] shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+          : upcoming
+          ? 'border-[#F37022]/30 bg-[#0e0906]/90 hover:bg-[#150e09]'
+          : 'border-[#F37022]/20 bg-[#0e0906]/80'
+      }`}
+    >
+      {/* Header Bar */}
+      <div className="px-2.5 py-1 bg-white/5 border-b border-white/5 flex items-center justify-between text-[10px] text-amber-300/90 font-medium">
+        <span className="flex items-center gap-1 font-mono truncate max-w-[130px]">
+          <Clock className="w-3 h-3 text-[#F37022] shrink-0" />
+          {match.time || '--:--'} {match.date ? `· ${match.date}` : ''}
+        </span>
+        {getStatusBadge(match.status)}
+      </div>
+
+      {/* Team 1 Slot */}
+      <div className={`flex items-center justify-between px-2.5 py-1.5 gap-2 min-h-[34px] transition-colors group-hover:bg-white/5 ${
+        t1Win ? 'bg-[#F37022]/25 font-bold text-white' : t2Win ? 'opacity-50' : ''
+      }`}>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {t1Info.fullObj?.logo ? (
+            <img src={t1Info.fullObj.logo} alt="" className="w-4 h-4 rounded object-cover shrink-0 border border-[#F37022]/30" />
+          ) : (
+            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${t1Win ? 'bg-[#F37022] shadow-[0_0_6px_#F37022]' : 'bg-slate-600'}`} />
+          )}
+          <div className="flex flex-col min-w-0">
+            <span className={`truncate text-xs ${t1Info.teamName ? 'font-bold text-slate-100' : 'italic text-slate-400'}`}>
+              {t1Info.teamName || '#'}
+            </span>
+            {t1Info.schoolName && (
+              <span className="truncate text-[9px] text-slate-400 font-normal leading-tight">
+                {t1Info.schoolName}
+              </span>
+            )}
+          </div>
+        </div>
+        <span className={`font-heading font-black text-xs sm:text-sm min-w-[18px] text-center ${
+          t1Win ? 'text-[#F37022]' : 'text-slate-400'
+        }`}>
+          {match.score1 ?? (match.team1 ? '0' : '-')}
+        </span>
+      </div>
+
+      <div className="border-t border-orange-950/40" />
+
+      {/* Team 2 Slot */}
+      <div className={`flex items-center justify-between px-2.5 py-1.5 gap-2 min-h-[34px] transition-colors group-hover:bg-white/5 ${
+        t2Win ? 'bg-[#F37022]/25 font-bold text-white' : t1Win ? 'opacity-50' : ''
+      }`}>
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          {t2Info.fullObj?.logo ? (
+            <img src={t2Info.fullObj.logo} alt="" className="w-4 h-4 rounded object-cover shrink-0 border border-[#F37022]/30" />
+          ) : (
+            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${t2Win ? 'bg-[#F37022] shadow-[0_0_6px_#F37022]' : 'bg-slate-600'}`} />
+          )}
+          <div className="flex flex-col min-w-0">
+            <span className={`truncate text-xs ${t2Info.teamName ? 'font-bold text-slate-100' : 'italic text-slate-400'}`}>
+              {t2Info.teamName || '#'}
+            </span>
+            {t2Info.schoolName && (
+              <span className="truncate text-[9px] text-slate-400 font-normal leading-tight">
+                {t2Info.schoolName}
+              </span>
+            )}
+          </div>
+        </div>
+        <span className={`font-heading font-black text-xs sm:text-sm min-w-[18px] text-center ${
+          t2Win ? 'text-[#F37022]' : 'text-slate-400'
+        }`}>
+          {match.score2 ?? (match.team2 ? '0' : '-')}
+        </span>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Responsive Visual Bracket Tree Diagram (Round 1 -> Round 2 -> Round 3 -> Round 4)
+ */
+const VisualBracketTree = ({ regionName, matches, teamsList, onSelectMatch }) => {
+  const scrollContainerRef = React.useRef(null);
+  const [activeRoundCol, setActiveRoundCol] = useState(0);
+
+  // Group matches into rounds
   const round16 = matches.filter(m => m.round?.toLowerCase().includes('1/16') || m.round?.toLowerCase().includes('tuần 1'));
   const quarterFinals = matches.filter(m => m.round?.toLowerCase().includes('tứ kết') || m.round?.toLowerCase().includes('tuần 2'));
   const semiFinals = matches.filter(m => m.round?.toLowerCase().includes('bán kết'));
-  const final = matches.find(m => m.round?.toLowerCase().includes('chung kết')) || null;
-  const thirdPlace = matches.find(m => m.round?.toLowerCase().includes('hạng 3')) || null;
+  const finalMatch = matches.find(m => m.round?.toLowerCase().includes('chung kết') && !m.round?.toLowerCase().includes('toàn quốc')) || matches[matches.length - 1];
+
+  // Fill arrays to standard sizes (8 -> 4 -> 2 -> 1)
+  const r1Matches = Array.from({ length: 8 }, (_, i) => round16[i] || null);
+  const r2Matches = Array.from({ length: 4 }, (_, i) => quarterFinals[i] || null);
+  const r3Matches = Array.from({ length: 2 }, (_, i) => semiFinals[i] || null);
+
+  const scrollToRound = (colIndex) => {
+    setActiveRoundCol(colIndex);
+    if (scrollContainerRef.current) {
+      const colWidth = 290;
+      scrollContainerRef.current.scrollTo({
+        left: colIndex * colWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   return (
-    <div className="flex-1 min-w-0">
-      <div className="text-center mb-3 sm:mb-4">
-        <span className="inline-block font-heading font-black text-sm sm:text-base tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-[#F37022] via-amber-400 to-[#F37022] uppercase">
-          {regionName}
-        </span>
-        <div className="mx-auto w-20 h-0.5 bg-gradient-to-r from-transparent via-[#F37022] to-transparent mt-1" />
+    <div className="w-full bg-[#0a0705]/80 border border-[#F37022]/20 rounded-3xl p-4 sm:p-6 backdrop-blur-md shadow-2xl relative overflow-hidden">
+      {/* Title Header */}
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6 pb-4 border-b border-white/10">
+        <div className="flex items-center gap-3">
+          <div className="w-3 h-3 rounded-full bg-[#F37022] shadow-[0_0_10px_#F37022] animate-pulse" />
+          <h3 className="font-heading font-black text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-amber-400 uppercase tracking-wider">
+            SƠ ĐỒ NHÁNH ĐẤU - {regionName.toUpperCase()}
+          </h3>
+        </div>
+
+        {/* Mobile Quick Round Jump Tabs */}
+        <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10 overflow-x-auto max-w-full">
+          {['Vòng 1/16', 'Tứ Kết', 'Bán Kết', 'Chung Kết'].map((roundLabel, idx) => (
+            <button
+              key={idx}
+              onClick={() => scrollToRound(idx)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                activeRoundCol === idx
+                  ? 'bg-[#F37022] text-white shadow-md'
+                  : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              {roundLabel}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <RoundAccordion
-        title="Vòng 1/16"
-        subtitle="Tuần 1: 16 Đội ➔ 8 Đội"
-        matches={round16}
-        teamsList={teamsList}
-        onSelectMatch={onSelectMatch}
-        color="#F37022"
-        defaultOpen={true}
-      />
-      <RoundAccordion
-        title="Tứ Kết"
-        subtitle="Tuần 2: 8 Đội ➔ 4 Đội"
-        matches={quarterFinals}
-        teamsList={teamsList}
-        onSelectMatch={onSelectMatch}
-        color="#f59e0b"
-        defaultOpen={true}
-      />
-      <RoundAccordion
-        title="Bán Kết"
-        subtitle="4 Đội Xuất Sắc"
-        matches={semiFinals}
-        teamsList={teamsList}
-        onSelectMatch={onSelectMatch}
-        color="#f43f5e"
-        defaultOpen={true}
-      />
+      {/* Bracket Tree Canvas */}
+      <div
+        ref={scrollContainerRef}
+        className="overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-[#F37022]/40 scrollbar-track-transparent flex items-stretch min-w-full"
+      >
+        <div className="flex items-stretch gap-6 sm:gap-10 min-w-max py-4 px-2">
+          
+          {/* ROUND 1: VÒNG 1/16 (8 Matches) */}
+          <div className="flex flex-col justify-between space-y-4">
+            <div className="text-center pb-2 border-b border-orange-500/30 font-heading font-black text-xs text-[#F37022] uppercase tracking-wider">
+              Vòng 1/16 (8 Trận)
+            </div>
+            <div className="flex flex-col justify-around gap-4 flex-1">
+              {r1Matches.map((m, idx) => (
+                <div key={m?.id || `r1_${idx}`} className="flex items-center gap-2">
+                  <TreeMatchNode match={m} teamsList={teamsList} onSelectMatch={onSelectMatch} />
+                </div>
+              ))}
+            </div>
+          </div>
 
-      <div className="mt-3 space-y-2">
-        <FinalCard title={`CHUNG KẾT ${regionName.toUpperCase()}`} match={final} teamsList={teamsList} onSelectMatch={onSelectMatch} trophy />
-        {thirdPlace && <FinalCard title="TRANH HẠNG 3" match={thirdPlace} teamsList={teamsList} onSelectMatch={onSelectMatch} />}
+          {/* CONNECTOR COLUMN 1-2 */}
+          <div className="flex flex-col justify-around py-8 w-8 sm:w-12 text-[#F37022]/50 shrink-0">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="flex-1 flex items-center justify-center relative">
+                <svg className="w-full h-full text-[#F37022]/50" viewBox="0 0 40 100" preserveAspectRatio="none">
+                  {/* Top branch line */}
+                  <path d="M 0 20 L 20 20 L 20 50 L 40 50" fill="none" stroke="currentColor" strokeWidth="2" />
+                  {/* Bottom branch line */}
+                  <path d="M 0 80 L 20 80 L 20 50 L 40 50" fill="none" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              </div>
+            ))}
+          </div>
+
+          {/* ROUND 2: TỨ KẾT (4 Matches) */}
+          <div className="flex flex-col justify-between space-y-4">
+            <div className="text-center pb-2 border-b border-amber-500/30 font-heading font-black text-xs text-amber-400 uppercase tracking-wider">
+              Tứ Kết (4 Trận)
+            </div>
+            <div className="flex flex-col justify-around gap-4 flex-1">
+              {r2Matches.map((m, idx) => (
+                <div key={m?.id || `r2_${idx}`} className="flex items-center">
+                  <TreeMatchNode match={m} teamsList={teamsList} onSelectMatch={onSelectMatch} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CONNECTOR COLUMN 2-3 */}
+          <div className="flex flex-col justify-around py-16 w-8 sm:w-12 text-amber-500/50 shrink-0">
+            {[0, 1].map((i) => (
+              <div key={i} className="flex-1 flex items-center justify-center relative">
+                <svg className="w-full h-full text-amber-500/50" viewBox="0 0 40 100" preserveAspectRatio="none">
+                  <path d="M 0 25 L 20 25 L 20 50 L 40 50" fill="none" stroke="currentColor" strokeWidth="2" />
+                  <path d="M 0 75 L 20 75 L 20 50 L 40 50" fill="none" stroke="currentColor" strokeWidth="2" />
+                </svg>
+              </div>
+            ))}
+          </div>
+
+          {/* ROUND 3: BÁN KẾT (2 Matches) */}
+          <div className="flex flex-col justify-between space-y-4">
+            <div className="text-center pb-2 border-b border-rose-500/30 font-heading font-black text-xs text-rose-400 uppercase tracking-wider">
+              Bán Kết (2 Trận)
+            </div>
+            <div className="flex flex-col justify-around gap-4 flex-1">
+              {r3Matches.map((m, idx) => (
+                <div key={m?.id || `r3_${idx}`} className="flex items-center">
+                  <TreeMatchNode match={m} teamsList={teamsList} onSelectMatch={onSelectMatch} />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CONNECTOR COLUMN 3-4 */}
+          <div className="flex flex-col justify-center py-24 w-8 sm:w-12 text-rose-500/50 shrink-0">
+            <div className="w-full h-full flex items-center justify-center relative">
+              <svg className="w-full h-full text-rose-500/50" viewBox="0 0 40 100" preserveAspectRatio="none">
+                <path d="M 0 30 L 20 30 L 20 50 L 40 50" fill="none" stroke="currentColor" strokeWidth="2" />
+                <path d="M 0 70 L 20 70 L 20 50 L 40 50" fill="none" stroke="currentColor" strokeWidth="2" />
+              </svg>
+            </div>
+          </div>
+
+          {/* ROUND 4: CHUNG KẾT MIỀN (1 Match) */}
+          <div className="flex flex-col justify-between space-y-4">
+            <div className="text-center pb-2 border-b border-amber-400 font-heading font-black text-xs text-amber-300 uppercase tracking-wider flex items-center justify-center gap-1">
+              <p className="h-3.5 text-amber-400" />
+              Chung Kết {regionName}
+            </div>
+            <div className="flex flex-col justify-center flex-1">
+              <TreeMatchNode match={finalMatch} teamsList={teamsList} onSelectMatch={onSelectMatch} isFinal />
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
@@ -346,29 +579,29 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
         </div>
 
         {/* Team Matchup Banner */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-4 relative">
+        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-4 relative">
           {/* Team 1 Box */}
-          <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${
+          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${
             match.winner === 1 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
           }`}>
             {team1Obj?.logo ? (
-              <img src={team1Obj.logo} alt={t1Info.teamName} className="w-10 h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
+              <img src={team1Obj.logo} alt={t1Info.teamName} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
             ) : (
-              <div className="w-10 h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
                 {t1Info.teamName ? t1Info.teamName.charAt(0) : 'T1'}
               </div>
             )}
-            <div className="font-heading font-bold text-sm sm:text-base text-white">{t1Info.teamName}</div>
+            <div className="font-heading font-bold text-xs sm:text-base text-white line-clamp-1">{t1Info.teamName}</div>
             {t1Info.schoolName && (
-              <div className="text-[11px] text-slate-400 font-medium mt-0.5">{t1Info.schoolName}</div>
+              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{t1Info.schoolName}</div>
             )}
-            <div className="mt-1 text-lg font-black font-heading text-[#F37022]">
+            <div className="mt-1 text-sm sm:text-lg font-black font-heading text-[#F37022]">
               Tỷ số: {match.score1 ?? 0}
             </div>
           </div>
 
           {/* VS Badge */}
-          <div className="hidden sm:flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-[#F37022] font-black text-white text-[10px] items-center justify-center border-2 border-black shadow-[0_0_10px_#F37022] z-10">
+          <div className="flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#F37022] font-black text-white text-[9px] sm:text-[10px] items-center justify-center border-2 border-black shadow-[0_0_10px_#F37022] z-10">
             VS
           </div>
 
@@ -523,9 +756,10 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
 export default function Bracket({ selectedGame: initialGame }) {
   const [viewMode, setViewMode] = useState('bracket');
   const [activeGame, setActiveGame] = useState(initialGame || 'VALORANT');
-  const [scheduleRegion, setScheduleRegion] = useState('ALL'); // 'ALL' | 'MB' | 'MN'
+  const [scheduleRegion, setScheduleRegion] = useState('MB'); // 'MB' | 'MN'
   const [allMatches, setAllMatches] = useState(INITIAL_BRACKET_MATCHES);
   const [teamsList, setTeamsList] = useState(INITIAL_TEAMS);
+  const [treeRegion, setTreeRegion] = useState('MB'); // 'MB' | 'MN'
   const [selectedMatchModal, setSelectedMatchModal] = useState(null);
 
   // Sync state if parent selectedGame changes
@@ -742,53 +976,48 @@ export default function Bracket({ selectedGame: initialGame }) {
               );
             })()}
 
-            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-              {/* Miền Nam Bracket Panel */}
-              <RegionBracketPanel regionName="Miền Nam" matches={mienNamMatches} teamsList={teamsList} onSelectMatch={(m) => setSelectedMatchModal(m)} />
-
-              {/* Center Divider */}
-              <div className="hidden lg:flex flex-col items-center justify-center px-2">
-                <div className="w-0.5 flex-1 bg-gradient-to-b from-transparent via-[#F37022] to-transparent opacity-40" />
-                <div className="my-3 w-12 h-12 rounded-full bg-gradient-to-br from-[#F37022] to-amber-600 flex items-center justify-center font-black text-white text-xs shadow-[0_0_25px_#F37022] border-2 border-white/20">
-                  VS
-                </div>
-                <div className="w-0.5 flex-1 bg-gradient-to-b from-transparent via-[#F37022] to-transparent opacity-40" />
-              </div>
-
-              <div className="lg:hidden flex items-center gap-3 py-2">
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#F37022] to-transparent opacity-40" />
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F37022] to-amber-600 flex items-center justify-center font-black text-white text-[10px] shadow-[0_0_15px_#F37022] border border-white/20">
-                  VS
-                </div>
-                <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#F37022] to-transparent opacity-40" />
-              </div>
-
-              {/* Miền Bắc Bracket Panel */}
-              <RegionBracketPanel regionName="Miền Bắc" matches={mienBacMatches} teamsList={teamsList} onSelectMatch={(m) => setSelectedMatchModal(m)} />
-            </div>
-          </motion.div>
-        ) : (
-          /* Real-time Schedule List View with Region Filtering */
-          <motion.div {...fadeInUp} className="space-y-4">
-            {/* Region Filter Buttons Bar */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-[#F37022]/20 backdrop-blur-md">
+            {/* Region Selector Tabs for Visual Tree Diagram */}
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-[#F37022]/20 backdrop-blur-md">
               <button
-                onClick={() => setScheduleRegion('ALL')}
-                className={`px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  scheduleRegion === 'ALL'
+                onClick={() => setTreeRegion('MB')}
+                className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  treeRegion === 'MB'
                     ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
                     : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
                 }`}
               >
-                <span>Tất Cả Khu Vực</span>
-                <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${scheduleRegion === 'ALL' ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-400'}`}>
-                  {currentMatches.length}
-                </span>
+                <span>Nhánh đấu Miền Bắc</span>
+               
               </button>
 
               <button
+                onClick={() => setTreeRegion('MN')}
+                className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                  treeRegion === 'MN'
+                    ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
+                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
+                }`}
+              >
+                <span>Nhánh đấu Miền Nam</span>
+               
+              </button>
+            </div>
+
+            {/* Tree View Rendering */}
+            {treeRegion === 'MB' ? (
+              <VisualBracketTree regionName="Miền Bắc" matches={mienBacMatches} teamsList={teamsList} onSelectMatch={(m) => setSelectedMatchModal(m)} />
+            ) : (
+              <VisualBracketTree regionName="Miền Nam" matches={mienNamMatches} teamsList={teamsList} onSelectMatch={(m) => setSelectedMatchModal(m)} />
+            )}
+          </motion.div>
+        ) : (
+          /* Real-time Schedule List View with Region Filtering */
+          <motion.div {...fadeInUp} className="space-y-4 px-2 sm:px-4">
+            {/* Region Filter Buttons Bar */}
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-[#F37022]/20 backdrop-blur-md">
+              <button
                 onClick={() => setScheduleRegion('MB')}
-                className={`px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-5 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   scheduleRegion === 'MB'
                     ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
                     : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
@@ -802,7 +1031,7 @@ export default function Bracket({ selectedGame: initialGame }) {
 
               <button
                 onClick={() => setScheduleRegion('MN')}
-                className={`px-4 sm:px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
+                className={`px-5 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
                   scheduleRegion === 'MN'
                     ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
                     : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'

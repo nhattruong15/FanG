@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, ExternalLink, ArrowRight, X, Download, Maximize2 } from 'lucide-react';
 import bg3Img from '../assets/background/background3.jpg';
 import qrCodeImg from '../assets/QRCodeDangKy/qrcode_register.png';
-import { recordQrScan } from '../config/firebase';
+import { recordQrScan, subscribeQrConfig, INITIAL_QR_CONFIG } from '../config/firebase';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -13,9 +13,21 @@ const fadeInUp = {
 };
 
 export default function Registration({ selectedGame }) {
-  const REGISTRATION_URL = 'https://fangtv.vn/';
+  const [qrConfig, setQrConfig] = useState(INITIAL_QR_CONFIG);
   const [scannedToast, setScannedToast] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    const unsub = subscribeQrConfig((config) => {
+      if (config) {
+        setQrConfig(config);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const activeDestinationUrl = qrConfig?.destinationUrl || 'https://fangtv.vn/';
+  const activeQrImage = qrConfig?.customQrUrl || qrCodeImg;
 
   const handleOpenQrModal = () => {
     setIsModalOpen(true);
@@ -69,7 +81,7 @@ export default function Registration({ selectedGame }) {
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
                   <a
-                    href={REGISTRATION_URL}
+                    href={activeDestinationUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={handleDirectClick}
@@ -96,7 +108,7 @@ export default function Registration({ selectedGame }) {
 
                   <div className="w-48 h-48 sm:w-56 sm:h-56 bg-white p-2.5 rounded-xl flex items-center justify-center overflow-hidden">
                     <img
-                      src={qrCodeImg}
+                      src={activeQrImage}
                       alt="Mã QR Đăng Ký FanG"
                       className="w-full h-full object-contain rounded-lg"
                     />
@@ -141,7 +153,7 @@ export default function Registration({ selectedGame }) {
 
               <div className="w-60 h-60 rounded-2xl bg-white p-3 shadow-2xl border-2 border-orange-400 flex items-center justify-center my-3">
                 <img 
-                  src={qrCodeImg} 
+                  src={activeQrImage} 
                   alt="Mã QR Đăng Ký Rõ Nét" 
                   className="w-full h-full object-contain rounded-xl"
                 />
@@ -149,7 +161,7 @@ export default function Registration({ selectedGame }) {
 
               <div className="w-full space-y-2.5">
                 <a
-                  href={qrCodeImg}
+                  href={activeQrImage}
                   download="qrcode_register.png"
                   className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#F37021] hover:bg-[#ff8235] text-white font-black text-xs shadow-lg transition-all border border-orange-400/40"
                 >
@@ -158,7 +170,7 @@ export default function Registration({ selectedGame }) {
                 </a>
 
                 <a
-                  href={REGISTRATION_URL}
+                  href={activeDestinationUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={handleDirectClick}

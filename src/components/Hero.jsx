@@ -5,7 +5,7 @@ import kvImage from '../assets/KV/hero-kv-final.png';
 
 export default function Hero() {
   return (
-    <section id="hero" className="relative w-full bg-[#0e0906] pt-20 lg:pt-0 overflow-hidden">
+    <section id="hero" className="relative w-full bg-[#0e0906] pt-14 sm:pt-16 lg:pt-0 overflow-hidden">
       <div className="relative w-full aspect-video lg:aspect-auto lg:h-screen overflow-hidden bg-[#0e0906]">
         <img
           src={kvImage}

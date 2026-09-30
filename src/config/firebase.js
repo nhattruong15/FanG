@@ -1202,3 +1202,68 @@ export function subscribeMatches(callback) {
   }
 }
 
+/**
+ * Dynamic Settings: QR Code Image & Target Destination Link Configuration
+ */
+export const INITIAL_QR_CONFIG = {
+  destinationUrl: 'https://fangtv.vn/',
+  customQrUrl: '',
+  updatedAt: new Date().toISOString()
+};
+
+/**
+ * Save / Update Dynamic QR Code & Target Link Configuration in Firestore "settings/qr_config"
+ */
+export async function saveQrConfig(config) {
+  try {
+    const payload = {
+      destinationUrl: config.destinationUrl || 'https://fangtv.vn/',
+      customQrUrl: config.customQrUrl || '',
+      updatedAt: new Date().toISOString()
+    };
+    const configDocRef = doc(db, 'settings', 'qr_config');
+    await setDoc(configDocRef, payload, { merge: true });
+    console.log('[Firestore] Dynamic QR Config saved successfully to settings/qr_config');
+    localStorage.setItem('fang_qr_config', JSON.stringify(payload));
+    return { success: true, config: payload };
+  } catch (error) {
+    console.warn('[Firestore] QR config save fallback:', error);
+    const payload = {
+      destinationUrl: config.destinationUrl || 'https://fangtv.vn/',
+      customQrUrl: config.customQrUrl || '',
+      updatedAt: new Date().toISOString()
+    };
+    localStorage.setItem('fang_qr_config', JSON.stringify(payload));
+    return { success: true, fallback: true, config: payload };
+  }
+}
+
+/**
+ * Subscribe to Real-time QR Code & Destination URL Settings in Firestore "settings/qr_config"
+ */
+export function subscribeQrConfig(callback) {
+  try {
+    const configDocRef = doc(db, 'settings', 'qr_config');
+    const unsubscribe = onSnapshot(configDocRef, (docSnap) => {
+      if (docSnap.exists()) {
+        callback(docSnap.data());
+      } else {
+        saveQrConfig(INITIAL_QR_CONFIG);
+        callback(INITIAL_QR_CONFIG);
+      }
+    }, (err) => {
+      console.warn('[Firestore] QR config subscription error:', err);
+      const saved = localStorage.getItem('fang_qr_config');
+      if (saved) callback(JSON.parse(saved));
+      else callback(INITIAL_QR_CONFIG);
+    });
+    return unsubscribe;
+  } catch (e) {
+    console.warn('[Firestore] QR config init error:', e);
+    const saved = localStorage.getItem('fang_qr_config');
+    if (saved) callback(JSON.parse(saved));
+    else callback(INITIAL_QR_CONFIG);
+    return () => {};
+  }
+}
+
