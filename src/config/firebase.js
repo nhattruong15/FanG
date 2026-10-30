@@ -572,9 +572,14 @@ export const INITIAL_QR_STATS = {
  * Record a QR Code Scan event in Firestore collection "qr_scans/stats"
  */
 export async function recordQrScan(gameName = 'ALL') {
+  const rawGame = (gameName || '').toString().trim().toUpperCase();
+  const isAov = rawGame === 'AOV' || rawGame.includes('LIÊN QUÂN') || rawGame.includes('LIEN QUAN');
+  const isVal = rawGame === 'VALORANT' || rawGame === 'VAL' || rawGame.includes('VALORANT');
+  const normalizedGameName = isAov ? 'AOV' : isVal ? 'VALORANT' : (rawGame || 'ALL');
+
   const newScanEntry = {
     id: `scan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
-    game: gameName,
+    game: normalizedGameName,
     timestamp: new Date().toISOString(),
     formattedTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
   };
@@ -598,8 +603,8 @@ export async function recordQrScan(gameName = 'ALL') {
     }
 
     const updatedTotal = currentTotal + 1;
-    const updatedVal = gameName === 'VALORANT' ? currentVal + 1 : currentVal;
-    const updatedAov = gameName === 'AOV' ? currentAov + 1 : currentAov;
+    const updatedVal = isVal ? currentVal + 1 : currentVal;
+    const updatedAov = isAov ? currentAov + 1 : currentAov;
     const updatedRecent = [newScanEntry, ...recent].slice(0, 100);
 
     const payload = {
@@ -607,13 +612,13 @@ export async function recordQrScan(gameName = 'ALL') {
       valorantScans: updatedVal,
       aovScans: updatedAov,
       lastScanTime: newScanEntry.timestamp,
-      lastScanGame: gameName,
+      lastScanGame: normalizedGameName,
       recentScans: updatedRecent,
       updatedAt: newScanEntry.timestamp
     };
 
     await setDoc(qrDocRef, payload, { merge: true });
-    console.log('[Firestore] QR scan recorded successfully. Total scans:', updatedTotal);
+    console.log('[Firestore] QR scan recorded successfully. Total scans:', updatedTotal, 'VAL:', updatedVal, 'AOV:', updatedAov);
     localStorage.setItem('fang_qr_stats', JSON.stringify(payload));
     return { success: true, stats: payload, newScan: newScanEntry };
   } catch (error) {
@@ -621,14 +626,14 @@ export async function recordQrScan(gameName = 'ALL') {
     const saved = localStorage.getItem('fang_qr_stats');
     let parsed = saved ? JSON.parse(saved) : INITIAL_QR_STATS;
     const recentArr = [newScanEntry, ...(parsed.recentScans || [])].slice(0, 100);
-    const updatedVal = gameName === 'VALORANT' ? (parsed.valorantScans || 0) + 1 : (parsed.valorantScans || 0);
-    const updatedAov = gameName === 'AOV' ? (parsed.aovScans || 0) + 1 : (parsed.aovScans || 0);
+    const updatedVal = isVal ? (parsed.valorantScans || 0) + 1 : (parsed.valorantScans || 0);
+    const updatedAov = isAov ? (parsed.aovScans || 0) + 1 : (parsed.aovScans || 0);
     const updatedStats = {
       totalScans: (parsed.totalScans || 0) + 1,
       valorantScans: updatedVal,
       aovScans: updatedAov,
       lastScanTime: newScanEntry.timestamp,
-      lastScanGame: gameName,
+      lastScanGame: normalizedGameName,
       recentScans: recentArr,
       updatedAt: newScanEntry.timestamp
     };
@@ -1208,6 +1213,8 @@ export function subscribeMatches(callback) {
 export const INITIAL_QR_CONFIG = {
   destinationUrl: 'https://fangtv.vn/',
   customQrUrl: '',
+  customQrUrlVal: '',
+  customQrUrlAov: '',
   updatedAt: new Date().toISOString()
 };
 
@@ -1219,6 +1226,8 @@ export async function saveQrConfig(config) {
     const payload = {
       destinationUrl: config.destinationUrl || 'https://fangtv.vn/',
       customQrUrl: config.customQrUrl || '',
+      customQrUrlVal: config.customQrUrlVal || '',
+      customQrUrlAov: config.customQrUrlAov || '',
       updatedAt: new Date().toISOString()
     };
     const configDocRef = doc(db, 'settings', 'qr_config');
@@ -1231,6 +1240,8 @@ export async function saveQrConfig(config) {
     const payload = {
       destinationUrl: config.destinationUrl || 'https://fangtv.vn/',
       customQrUrl: config.customQrUrl || '',
+      customQrUrlVal: config.customQrUrlVal || '',
+      customQrUrlAov: config.customQrUrlAov || '',
       updatedAt: new Date().toISOString()
     };
     localStorage.setItem('fang_qr_config', JSON.stringify(payload));

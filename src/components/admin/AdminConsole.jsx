@@ -79,6 +79,8 @@ import {
   VIETNAM_UNIVERSITIES_FALLBACK
 } from '../../services/universityApi';
 
+import { generateQrDataUrl } from '../../utils/qrcode';
+
 /* ====================================================================
    INITIAL MOCK DATA FOR ADMIN CONSOLE
    ==================================================================== */
@@ -252,9 +254,8 @@ function SearchableTeamSelect({ value, onChange, teams, isWinner, placeholder = 
           setIsOpen(!isOpen);
           setSearchQuery('');
         }}
-        className={`w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all text-left bg-slate-50 cursor-pointer shadow-2xs ${
-          isWinner ? 'text-[#F37022] font-black bg-orange-50 border-orange-300' : 'text-slate-800 border-slate-300 hover:border-[#F37022]'
-        }`}
+        className={`w-full flex items-center justify-between gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all text-left bg-slate-50 cursor-pointer shadow-2xs ${isWinner ? 'text-[#F37022] font-black bg-orange-50 border-orange-300' : 'text-slate-800 border-slate-300 hover:border-[#F37022]'
+          }`}
       >
         <span className="truncate flex-1">
           {cleanCurrentValue || placeholder}
@@ -300,11 +301,10 @@ function SearchableTeamSelect({ value, onChange, teams, isWinner, placeholder = 
                     onChange(label);
                     setIsOpen(false);
                   }}
-                  className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
-                    isSelected
-                      ? 'bg-orange-50 text-[#F37022] border border-orange-200'
-                      : 'text-slate-800 hover:bg-slate-100'
-                  }`}
+                  className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${isSelected
+                    ? 'bg-orange-50 text-[#F37022] border border-orange-200'
+                    : 'text-slate-800 hover:bg-slate-100'
+                    }`}
                 >
                   <span className="truncate flex-1">{label}</span>
                   {t.region && (
@@ -372,6 +372,7 @@ export default function AdminConsole({ onBackToLanding }) {
   const [tempQrConfig, setTempQrConfig] = useState(INITIAL_QR_CONFIG);
   const [rulesLinks, setRulesLinks] = useState(INITIAL_RULES_LINKS);
   const [tempRulesLinks, setTempRulesLinks] = useState(INITIAL_RULES_LINKS);
+  const [adminPreviewGame, setAdminPreviewGame] = useState('VALORANT');
 
   // Analytics & Tracking UI State
   const [overviewChartFilter, setOverviewChartFilter] = useState('ALL');
@@ -398,7 +399,7 @@ export default function AdminConsole({ onBackToLanding }) {
   // Track initial load for QR notification trigger
   const isInitialQrLoad = React.useRef(true);
   const isInitialLiveLoad = React.useRef(true);
-
+  //NHẬT TRƯỜNG CODE
   // Subscribe to real-time Firestore database collection "videolivestream", "news", "teams", "qr_scans" & "live_views"
   React.useEffect(() => {
     const unsubStream = subscribeVideoLivestream((data) => {
@@ -510,10 +511,10 @@ export default function AdminConsole({ onBackToLanding }) {
     reader.readAsDataURL(file);
   };
 
-  const handleTestQrScan = async () => {
+  const handleTestQrScan = async (testGame = 'VALORANT') => {
     try {
-      await recordQrScan('TEST_ADMIN');
-      triggerToast('Đã cộng +1 lượt quét thử nghiệm thành công!');
+      await recordQrScan(testGame);
+      triggerToast(`Đã cộng +1 lượt quét thử nghiệm (${testGame}) thành công!`);
     } catch (err) {
       console.error(err);
     }
@@ -580,6 +581,18 @@ export default function AdminConsole({ onBackToLanding }) {
   const [schoolSearchQuery, setSchoolSearchQuery] = useState('');
   const [showUniDropdown, setShowUniDropdown] = useState(false);
   const [viewingTeamRoster, setViewingTeamRoster] = useState(null);
+  const uniDropdownRef = React.useRef(null);
+
+  // Click-outside handler for university dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (uniDropdownRef.current && !uniDropdownRef.current.contains(e.target)) {
+        setShowUniDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const DEFAULT_7_MEMBERS = [
     { id: 1, name: '', ingame: '', phone: '', role: '' },
@@ -635,7 +648,7 @@ export default function AdminConsole({ onBackToLanding }) {
       }
     }
   };
-  
+
   // Article Form State (Supports full metadata & game selection)
   const [newArticle, setNewArticle] = useState({
     game: 'VALORANT',
@@ -907,12 +920,12 @@ export default function AdminConsole({ onBackToLanding }) {
   const handleOpenNationalFinalsModal = () => {
     const valMatch = matches.find(
       m => (m.region === 'Toàn Quốc' || (m.round && m.round.toLowerCase().includes('chung kết toàn quốc'))) &&
-           ((m.game || 'VALORANT').toUpperCase() === 'VALORANT')
+        ((m.game || 'VALORANT').toUpperCase() === 'VALORANT')
     );
 
     const aovMatch = matches.find(
       m => (m.region === 'Toàn Quốc' || (m.round && m.round.toLowerCase().includes('chung kết toàn quốc'))) &&
-           ((m.game || '').toUpperCase() === 'AOV')
+        ((m.game || '').toUpperCase() === 'AOV')
     );
 
     setNationalValMatch(valMatch ? { ...valMatch } : {
@@ -1017,9 +1030,9 @@ export default function AdminConsole({ onBackToLanding }) {
           </button>
 
           <div className="text-center mb-8">
-            
+
             <h2 className="text-2xl font-black font-heading text-white uppercase tracking-wider">
-            <span className="text-[#F37022]">LOGIN</span>
+              <span className="text-[#F37022]">LOGIN</span>
             </h2>
           </div>
 
@@ -1069,7 +1082,7 @@ export default function AdminConsole({ onBackToLanding }) {
             </button>
           </form>
 
-       
+
         </motion.div>
       </div>
     );
@@ -1106,7 +1119,7 @@ export default function AdminConsole({ onBackToLanding }) {
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-[#F37022] animate-ping" />
             <h1 className="font-heading font-black text-lg text-slate-900 uppercase tracking-wider">
-             <span className="text-[#F37022]">ADMIN </span>
+              <span className="text-[#F37022]">ADMIN </span>
             </h1>
           </div>
         </div>
@@ -1139,19 +1152,17 @@ export default function AdminConsole({ onBackToLanding }) {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  active
-                    ? 'bg-[#F37022] text-white shadow-md shadow-orange-500/20'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                }`}
+                className={`flex items-center justify-between px-4 py-3 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${active
+                  ? 'bg-[#F37022] text-white shadow-md shadow-orange-500/20'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
               >
                 <div className="flex items-center gap-2.5">
                   <span>{tab.label}</span>
                 </div>
                 {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${
-                    active ? 'bg-white text-[#F37022]' : 'bg-orange-100 text-[#F37022]'
-                  }`}>
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-black ${active ? 'bg-white text-[#F37022]' : 'bg-orange-100 text-[#F37022]'
+                    }`}>
                     {tab.badge}
                   </span>
                 )}
@@ -1182,7 +1193,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   <div className="font-heading font-black text-3xl text-slate-900 mb-1">
                     {visitorStats.onlineCount || 0} <span className="text-sm font-bold text-slate-500">người</span>
                   </div>
-               
+
                   {/* Animated bg glow */}
                   <div className="absolute -top-4 -right-4 w-20 h-20 bg-emerald-400/15 rounded-full blur-2xl" />
                 </div>
@@ -1197,13 +1208,13 @@ export default function AdminConsole({ onBackToLanding }) {
                   <div className="font-heading font-black text-3xl text-slate-900 mb-1">
                     {visitorStats.totalVisits || 0} <span className="text-sm font-bold text-slate-500">lượt</span>
                   </div>
-                  
+
                   <div className="absolute -top-4 -right-4 w-20 h-20 bg-blue-400/15 rounded-full blur-2xl" />
                 </div>
-                
+
 
                 {/* Real-time QR Scan KPI Card (Links directly to Analytics & Tracking) */}
-                <div 
+                <div
                   onClick={() => {
                     setActiveTab('analytics');
                     setShowScanLogs(true);
@@ -1219,14 +1230,14 @@ export default function AdminConsole({ onBackToLanding }) {
                   </div>
                   <div className="font-heading font-black text-3xl text-slate-900 mb-1 flex items-baseline justify-between">
                     <span>{qrStats.totalScans || 0} <span className="text-sm font-bold text-slate-500">lượt</span></span>
-                   
+
                   </div>
-                 
+
                 </div>
 
-                
 
-               
+
+
 
                 <div className="bg-white border border-slate-200 shadow-sm rounded-2xl p-5 relative overflow-hidden">
                   <div className="flex items-center justify-between mb-2">
@@ -1239,7 +1250,7 @@ export default function AdminConsole({ onBackToLanding }) {
               {/* BIỂU ĐỒ ĐƯỜNG DÂY NỀN TỐI CHUẨN ANALYTICS (EXACT MATCH REFERENCE CHART) */}
               <div className="bg-[#0B0F19] border border-slate-800 shadow-2xl rounded-2xl p-6 space-y-6 text-white">
                 {(() => {
-                  {/* Dynamic Date Calculations */}
+                  {/* Dynamic Date Calculations */ }
                   const now = new Date();
                   const getISO = (d) => {
                     const y = d.getFullYear();
@@ -1262,13 +1273,13 @@ export default function AdminConsole({ onBackToLanding }) {
 
                   const activeTargetDateISO =
                     overviewTimeRange === 'TODAY' ? todayISO :
-                    overviewTimeRange === 'YESTERDAY' ? yesterdayISO :
-                    selectedChartDate || todayISO;
+                      overviewTimeRange === 'YESTERDAY' ? yesterdayISO :
+                        selectedChartDate || todayISO;
 
                   const displayDateText =
                     overviewTimeRange === '7DAYS' ? '7 Ngày Qua' :
-                    overviewTimeRange === '30DAYS' ? `Tháng ${now.getMonth() + 1}/${now.getFullYear()}` :
-                    getFullVN(activeTargetDateISO);
+                      overviewTimeRange === '30DAYS' ? `Tháng ${now.getMonth() + 1}/${now.getFullYear()}` :
+                        getFullVN(activeTargetDateISO);
 
                   // Calculate Time Slots / Date Slots Based on overviewTimeRange
                   let slotsData = [];
@@ -1380,41 +1391,37 @@ export default function AdminConsole({ onBackToLanding }) {
                           <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800 flex-wrap">
                             <button
                               onClick={() => { setOverviewTimeRange('TODAY'); setSelectedChartDate(todayISO); }}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                overviewTimeRange === 'TODAY'
-                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
-                                  : 'text-slate-400 hover:text-white'
-                              }`}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${overviewTimeRange === 'TODAY'
+                                ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
                             >
                               Hôm Nay ({todayShortVN})
                             </button>
                             <button
                               onClick={() => { setOverviewTimeRange('YESTERDAY'); setSelectedChartDate(yesterdayISO); }}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                overviewTimeRange === 'YESTERDAY'
-                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
-                                  : 'text-slate-400 hover:text-white'
-                              }`}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${overviewTimeRange === 'YESTERDAY'
+                                ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
                             >
                               Hôm Qua ({yesterdayShortVN})
                             </button>
                             <button
                               onClick={() => setOverviewTimeRange('7DAYS')}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                overviewTimeRange === '7DAYS'
-                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
-                                  : 'text-slate-400 hover:text-white'
-                              }`}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${overviewTimeRange === '7DAYS'
+                                ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
                             >
                               7 Ngày Qua
                             </button>
                             <button
                               onClick={() => setOverviewTimeRange('30DAYS')}
-                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                overviewTimeRange === '30DAYS'
-                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
-                                  : 'text-slate-400 hover:text-white'
-                              }`}
+                              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${overviewTimeRange === '30DAYS'
+                                ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
                             >
                               Tháng {now.getMonth() + 1}/{now.getFullYear()}
                             </button>
@@ -1440,31 +1447,28 @@ export default function AdminConsole({ onBackToLanding }) {
                           <div className="flex items-center gap-1 bg-[#161B26] p-1 rounded-xl border border-slate-800">
                             <button
                               onClick={() => setOverviewChartFilter('ALL')}
-                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                overviewChartFilter === 'ALL'
-                                  ? 'bg-[#5B8FF9] text-white shadow-sm'
-                                  : 'text-slate-400 hover:text-white'
-                              }`}
+                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer ${overviewChartFilter === 'ALL'
+                                ? 'bg-[#5B8FF9] text-white shadow-sm'
+                                : 'text-slate-400 hover:text-white'
+                                }`}
                             >
                               Tất Cả
                             </button>
                             <button
                               onClick={() => setOverviewChartFilter('QR')}
-                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                                overviewChartFilter === 'QR'
-                                  ? 'bg-[#F37021] text-white shadow-sm'
-                                  : 'text-slate-400 hover:text-[#F37021]'
-                              }`}
+                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${overviewChartFilter === 'QR'
+                                ? 'bg-[#F37021] text-white shadow-sm'
+                                : 'text-slate-400 hover:text-[#F37021]'
+                                }`}
                             >
                               <p className=" h-3.5" /> Quét Form QR
                             </button>
                             <button
                               onClick={() => setOverviewChartFilter('LIVE')}
-                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-                                overviewChartFilter === 'LIVE'
-                                  ? 'bg-[#36CFC9] text-slate-950 font-black shadow-sm'
-                                  : 'text-slate-400 hover:text-[#36CFC9]'
-                              }`}
+                              className={`px-3 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${overviewChartFilter === 'LIVE'
+                                ? 'bg-[#36CFC9] text-slate-950 font-black shadow-sm'
+                                : 'text-slate-400 hover:text-[#36CFC9]'
+                                }`}
                             >
                               <p className=" h-3.5" /> Xem Live
                             </button>
@@ -1634,7 +1638,7 @@ export default function AdminConsole({ onBackToLanding }) {
               </div>
 
               {/* Quick Navigation to Analytics & Tracking Section */}
-             
+
             </div>
           )}
 
@@ -1730,10 +1734,10 @@ export default function AdminConsole({ onBackToLanding }) {
                 {/* Module Header Bar */}
                 <div className="p-6 bg-slate-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                   
+
                     <div>
                       <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
-                        DANH SÁCH LƯỢT TRUY CẬP QUÉT MÃ QR ĐĂNG KÝ 
+                        DANH SÁCH LƯỢT TRUY CẬP QUÉT MÃ QR ĐĂNG KÝ
                       </h3>
                       <p className="text-slate-400 text-xs mt-0.5">
                         Tổng cộng: <strong className="text-white font-bold">{qrStats.totalScans || 0} lượt quét</strong> trên toàn hệ thống
@@ -1821,11 +1825,10 @@ export default function AdminConsole({ onBackToLanding }) {
                                       setScanLogFilter(filterGame);
                                       setScanLogPage(1);
                                     }}
-                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                      scanLogFilter === filterGame
-                                        ? 'bg-slate-900 text-white shadow-sm'
-                                        : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
-                                    }`}
+                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${scanLogFilter === filterGame
+                                      ? 'bg-slate-900 text-white shadow-sm'
+                                      : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                      }`}
                                   >
                                     {filterGame}
                                   </button>
@@ -1859,13 +1862,12 @@ export default function AdminConsole({ onBackToLanding }) {
                                         <div>
                                           <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
                                             <span>Ghi nhận lượt quét thành công</span>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${
-                                              scan.game === 'VALORANT'
-                                                ? 'bg-rose-600'
-                                                : scan.game === 'AOV'
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${scan.game === 'VALORANT'
+                                              ? 'bg-rose-600'
+                                              : scan.game === 'AOV'
                                                 ? 'bg-amber-600'
                                                 : 'bg-[#F37021]'
-                                            }`}>
+                                              }`}>
                                               {scan.game || 'GENERAL'}
                                             </span>
                                           </div>
@@ -1893,18 +1895,17 @@ export default function AdminConsole({ onBackToLanding }) {
                                     disabled={validPage === 1}
                                     className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                                   >
-                                     Trước
+                                    Trước
                                   </button>
 
                                   {Array.from({ length: totalPages }, (_, i) => i + 1).map((pNum) => (
                                     <button
                                       key={pNum}
                                       onClick={() => setScanLogPage(pNum)}
-                                      className={`w-8 h-8 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                                        validPage === pNum
-                                          ? 'bg-[#F37021] text-white shadow-md shadow-orange-500/20'
-                                          : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-                                      }`}
+                                      className={`w-8 h-8 rounded-lg text-xs font-black transition-all cursor-pointer ${validPage === pNum
+                                        ? 'bg-[#F37021] text-white shadow-md shadow-orange-500/20'
+                                        : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                        }`}
                                     >
                                       {pNum}
                                     </button>
@@ -1915,7 +1916,7 @@ export default function AdminConsole({ onBackToLanding }) {
                                     disabled={validPage >= totalPages}
                                     className="px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                                   >
-                                    Sau 
+                                    Sau
                                   </button>
                                 </div>
                               </div>
@@ -1939,8 +1940,8 @@ export default function AdminConsole({ onBackToLanding }) {
                               </span>
                             </div>
                             <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                              <div 
-                                className="h-full bg-rose-500 rounded-full transition-all duration-500" 
+                              <div
+                                className="h-full bg-rose-500 rounded-full transition-all duration-500"
                                 style={{
                                   width: `${qrStats.totalScans ? (((qrStats.valorantScans ?? (qrStats.recentScans || []).filter(s => s.game === 'VALORANT').length)) / Math.max(qrStats.totalScans, 1)) * 100 : 0}%`
                                 }}
@@ -1956,8 +1957,8 @@ export default function AdminConsole({ onBackToLanding }) {
                               </span>
                             </div>
                             <div className="w-full h-2.5 rounded-full bg-slate-100 overflow-hidden">
-                              <div 
-                                className="h-full bg-amber-500 rounded-full transition-all duration-500" 
+                              <div
+                                className="h-full bg-amber-500 rounded-full transition-all duration-500"
                                 style={{
                                   width: `${qrStats.totalScans ? (((qrStats.aovScans ?? (qrStats.recentScans || []).filter(s => s.game === 'AOV').length)) / Math.max(qrStats.totalScans, 1)) * 100 : 0}%`
                                 }}
@@ -1978,7 +1979,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   <div className="flex items-center gap-3">
                     <div>
                       <h3 className="font-heading font-bold text-lg text-white flex items-center gap-2">
-                        DANH SÁCH LƯỢT XEM LIVE 
+                        DANH SÁCH LƯỢT XEM LIVE
                       </h3>
                       <p className="text-slate-400 text-xs mt-0.5">
                         Tổng cộng: <strong className="text-white font-bold">{liveStats.totalViews || 0} lượt xem</strong> trên toàn hệ thống
@@ -2066,11 +2067,10 @@ export default function AdminConsole({ onBackToLanding }) {
                                       setLiveLogFilter(filterGame);
                                       setLiveLogPage(1);
                                     }}
-                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                                      liveLogFilter === filterGame
-                                        ? 'bg-slate-900 text-white shadow-sm'
-                                        : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
-                                    }`}
+                                    className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${liveLogFilter === filterGame
+                                      ? 'bg-slate-900 text-white shadow-sm'
+                                      : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'
+                                      }`}
                                   >
                                     {filterGame}
                                   </button>
@@ -2104,13 +2104,12 @@ export default function AdminConsole({ onBackToLanding }) {
                                         <div>
                                           <div className="text-sm font-bold text-slate-900 flex items-center gap-2">
                                             <span>Ghi nhận lượt xem Livestream</span>
-                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${
-                                              view.game === 'VALORANT'
-                                                ? 'bg-rose-600'
-                                                : view.game === 'AOV'
+                                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase text-white ${view.game === 'VALORANT'
+                                              ? 'bg-rose-600'
+                                              : view.game === 'AOV'
                                                 ? 'bg-amber-600'
                                                 : 'bg-cyan-600'
-                                            }`}>
+                                              }`}>
                                               {view.game || 'ALL'}
                                             </span>
                                           </div>
@@ -2145,11 +2144,10 @@ export default function AdminConsole({ onBackToLanding }) {
                                     <button
                                       key={pNum}
                                       onClick={() => setLiveLogPage(pNum)}
-                                      className={`w-8 h-8 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                                        validPage === pNum
-                                          ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
-                                          : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
-                                      }`}
+                                      className={`w-8 h-8 rounded-lg text-xs font-black transition-all cursor-pointer ${validPage === pNum
+                                        ? 'bg-cyan-600 text-white shadow-md shadow-cyan-500/20'
+                                        : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
+                                        }`}
                                     >
                                       {pNum}
                                     </button>
@@ -2182,7 +2180,7 @@ export default function AdminConsole({ onBackToLanding }) {
                 <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider">
                   QUẢN LÝ VIDEO LIVESTREAM THEO GAME
                 </h2>
-               
+
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2201,11 +2199,10 @@ export default function AdminConsole({ onBackToLanding }) {
                             key={g.id}
                             type="button"
                             onClick={() => setSelectedStreamGame(g.id)}
-                            className={`py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer border flex items-center justify-center gap-1.5 ${
-                              isSelected
-                                ? `${g.color} text-white shadow-md shadow-slate-300 scale-[1.02]`
-                                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                            }`}
+                            className={`py-2 px-3 rounded-xl text-xs font-black transition-all cursor-pointer border flex items-center justify-center gap-1.5 ${isSelected
+                              ? `${g.color} text-white shadow-md shadow-slate-300 scale-[1.02]`
+                              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                              }`}
                           >
                             <span>{g.label}</span>
                             {isSelected && <CheckCircle2 className="w-3.5 h-3.5 text-white" />}
@@ -2266,9 +2263,8 @@ export default function AdminConsole({ onBackToLanding }) {
                         await saveVideoLivestream(updatedMap);
                         triggerToast(nextLiveState ? `Đã BẬT stream live cho ${selectedStreamGame}!` : `Đã TẮT stream live cho ${selectedStreamGame}!`);
                       }}
-                      className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                        currentStream.isLive ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-                      }`}
+                      className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${currentStream.isLive ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                        }`}
                     >
                       {currentStream.isLive ? `Tắt Stream Live (${selectedStreamGame})` : `Bật Stream Live (${selectedStreamGame})`}
                     </button>
@@ -2282,7 +2278,7 @@ export default function AdminConsole({ onBackToLanding }) {
                       className="flex items-center gap-2 px-5 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
                     >
                       <p className="-4" />
-                      Lưu Thay Đổi 
+                      Lưu Thay Đổi
                     </button>
                   </div>
                 </div>
@@ -2293,13 +2289,12 @@ export default function AdminConsole({ onBackToLanding }) {
                     <h3 className="font-heading font-bold text-sm text-slate-900 uppercase flex items-center gap-2">
                       <Eye className="w-4 h-4 text-[#F37022]" /> Xem Trước Khung Phát ({selectedStreamGame})
                     </h3>
-                    <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase text-white shadow-sm ${
-                      selectedStreamGame === 'VALORANT'
-                        ? 'bg-rose-600'
-                        : selectedStreamGame === 'AOV'
+                    <span className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase text-white shadow-sm ${selectedStreamGame === 'VALORANT'
+                      ? 'bg-rose-600'
+                      : selectedStreamGame === 'AOV'
                         ? 'bg-cyan-600'
                         : 'bg-amber-500'
-                    }`}>
+                      }`}>
                       {selectedStreamGame === 'ALL' ? 'TẤT CẢ GAME' : selectedStreamGame}
                     </span>
                   </div>
@@ -2429,7 +2424,7 @@ export default function AdminConsole({ onBackToLanding }) {
                               );
                             })()}
                           </td>
-                         
+
                           <td className="p-3.5 text-right flex items-center justify-end gap-1.5">
                             <button
                               onClick={() => setViewingTeamRoster(team)}
@@ -2469,9 +2464,9 @@ export default function AdminConsole({ onBackToLanding }) {
               <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-sm">
                 <div>
                   <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider flex items-center gap-2">
-                    QUẢN LÝ TỶ SỐ & LỊCH THI ĐẤU 
+                    QUẢN LÝ TỶ SỐ & LỊCH THI ĐẤU
                   </h2>
-                 
+
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -2485,11 +2480,10 @@ export default function AdminConsole({ onBackToLanding }) {
                         key={g.id}
                         type="button"
                         onClick={() => setSelectedBracketGame(g.id)}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                          selectedBracketGame === g.id
-                            ? `${g.color} shadow-sm`
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                        }`}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${selectedBracketGame === g.id
+                          ? `${g.color} shadow-sm`
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                          }`}
                       >
                         {g.label}
                       </button>
@@ -2506,11 +2500,10 @@ export default function AdminConsole({ onBackToLanding }) {
                         key={r.id}
                         type="button"
                         onClick={() => setBracketRegionFilter(r.id)}
-                        className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${
-                          bracketRegionFilter === r.id
-                            ? r.activeClass
-                            : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
-                        }`}
+                        className={`px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer ${bracketRegionFilter === r.id
+                          ? r.activeClass
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-white/60'
+                          }`}
                       >
                         {r.label}
                       </button>
@@ -2566,168 +2559,164 @@ export default function AdminConsole({ onBackToLanding }) {
                     .filter(m => (m.game === selectedBracketGame || (!m.game && selectedBracketGame === 'VALORANT')) && (bracketRegionFilter === 'ALL' || m.region === bracketRegionFilter || m.region === 'Toàn Quốc'))
                     .filter(m => selectedBracketRound === 'ALL' || (m.round && m.round.includes(selectedBracketRound)))
                 ).map((match) => {
-                    const matchRegion = (match.region || 'Miền Bắc').trim().toLowerCase();
-                    const currentBracketGame = (selectedBracketGame || 'VALORANT').trim().toLowerCase();
-                    const isNationalFinal = match.region === 'Toàn Quốc' || (match.round && match.round.toLowerCase().includes('chung kết toàn quốc'));
+                  const matchRegion = (match.region || 'Miền Bắc').trim().toLowerCase();
+                  const currentBracketGame = (selectedBracketGame || 'VALORANT').trim().toLowerCase();
+                  const isNationalFinal = match.region === 'Toàn Quốc' || (match.round && match.round.toLowerCase().includes('chung kết toàn quốc'));
 
-                    // Strictly filter available teams created in Team Management
-                    // For National Final (Toàn Quốc), allow selection from ALL regions (Miền Bắc & Miền Nam)
-                    const teamsToRender = teams.filter(t => {
-                      const teamGame = (t.game || 'VALORANT').trim().toLowerCase();
-                      const matchesGame = teamGame === currentBracketGame || teamGame === 'all';
+                  // Strictly filter available teams created in Team Management
+                  // For National Final (Toàn Quốc), allow selection from ALL regions (Miền Bắc & Miền Nam)
+                  const teamsToRender = teams.filter(t => {
+                    const teamGame = (t.game || 'VALORANT').trim().toLowerCase();
+                    const matchesGame = teamGame === currentBracketGame || teamGame === 'all';
 
-                      if (isNationalFinal) {
-                        return matchesGame;
-                      }
+                    if (isNationalFinal) {
+                      return matchesGame;
+                    }
 
-                      const teamRegion = (t.region || '').trim().toLowerCase();
-                      const matchesRegion = teamRegion === matchRegion || teamRegion === 'all';
+                    const teamRegion = (t.region || '').trim().toLowerCase();
+                    const matchesRegion = teamRegion === matchRegion || teamRegion === 'all';
 
-                      return matchesGame && matchesRegion;
-                    });
+                    return matchesGame && matchesRegion;
+                  });
 
-                    return (
-                      <div
-                        key={match.id}
-                        className={`rounded-2xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 transition-all relative ${
-                          isNationalFinal
-                            ? 'bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 border-2 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
-                            : 'bg-white border border-slate-200 shadow-sm hover:border-orange-300'
+                  return (
+                    <div
+                      key={match.id}
+                      className={`rounded-2xl p-4 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 transition-all relative ${isNationalFinal
+                        ? 'bg-gradient-to-r from-amber-500/10 via-orange-500/5 to-amber-500/10 border-2 border-amber-400 shadow-[0_0_20px_rgba(245,158,11,0.25)]'
+                        : 'bg-white border border-slate-200 shadow-sm hover:border-orange-300'
                         }`}
-                      >
-                        {/* Left: Region Badge, Round & Match Info */}
-                        <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
-                          {isNationalFinal ? (
-                            <span className="px-3 py-1 rounded-lg font-black text-xs bg-amber-500 text-white border border-amber-600 flex items-center gap-1 shadow-sm">
-                              <p className=" h-3.5" /> CHUNG KẾT TOÀN QUỐC
+                    >
+                      {/* Left: Region Badge, Round & Match Info */}
+                      <div className="flex items-center gap-2.5 shrink-0 flex-wrap">
+                        {isNationalFinal ? (
+                          <span className="px-3 py-1 rounded-lg font-black text-xs bg-amber-500 text-white border border-amber-600 flex items-center gap-1 shadow-sm">
+                            <p className=" h-3.5" /> CHUNG KẾT TOÀN QUỐC
+                          </span>
+                        ) : (
+                          <>
+                            <span className={`px-2.5 py-1 rounded-lg font-extrabold text-xs border ${match.region === 'Miền Nam' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-red-50 text-red-700 border-red-200'
+                              }`}>
+                              {match.region || 'Miền Bắc'}
+                            </span>
+                            <span className={`px-3 py-1 rounded-lg font-black text-xs border ${match.round?.includes('Tuần 1')
+                              ? 'bg-blue-50 text-blue-700 border-blue-200'
+                              : match.round?.includes('Tuần 2')
+                                ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                : 'bg-orange-50 text-[#F37022] border-orange-200'
+                              }`}>
+                              {match.round}
+                            </span>
+                          </>
+                        )}
+                        {/* Match Status Selector (Sắp diễn ra, Đang thi đấu, Đã đấu) */}
+                        <select
+                          value={match.status || (match.winner != null ? 'DONE' : 'UPCOMING')}
+                          onChange={(e) => handleMatchUpdate(match.id, 'status', e.target.value)}
+                          className={`px-2.5 py-1 rounded-lg font-bold text-xs border outline-none cursor-pointer transition-all ${(match.status === 'LIVE' || match.status === 'Đang thi đấu')
+                            ? 'bg-rose-50 text-rose-600 border-rose-300 font-black'
+                            : (match.status === 'DONE' || match.status === 'Đã đấu')
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
+                              : 'bg-sky-50 text-sky-700 border-sky-300'
+                            }`}
+                        >
+                          <option value="UPCOMING">Sắp diễn ra</option>
+                          <option value="LIVE">Đang thi đấu</option>
+                          <option value="DONE">Đã đấu</option>
+                        </select>
+                      </div>
+
+                      {/* Middle 1: Date & Time Editors */}
+                      <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 shrink-0">
+                        <span className="text-[11px] font-bold text-slate-500 uppercase">Ngày & Giờ:</span>
+                        <input
+                          type="text"
+                          placeholder="dd/mm/yyyy"
+                          value={match.date || ''}
+                          onChange={(e) => handleMatchUpdate(match.id, 'date', e.target.value)}
+                          className="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-center font-bold text-slate-800 focus:border-[#F37022] outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="hh:mm"
+                          value={match.time || ''}
+                          onChange={(e) => handleMatchUpdate(match.id, 'time', e.target.value)}
+                          className="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-center font-bold text-slate-800 focus:border-[#F37022] outline-none"
+                        />
+                      </div>
+
+                      {/* Middle 2: Interactive Match Score & Dynamic Team Selectors */}
+                      <div className="flex items-center justify-center gap-2 flex-1 flex-wrap sm:flex-nowrap">
+                        {/* Team 1 Searchable Combobox Selector */}
+                        <SearchableTeamSelect
+                          value={match.team1 || ''}
+                          onChange={(val) => handleMatchUpdate(match.id, 'team1', val)}
+                          teams={teamsToRender}
+                          isWinner={match.winner === 1}
+                          placeholder="-- Chọn Đội 1 (MB/MN) --"
+                        />
+
+                        <input
+                          type="number"
+                          min="0"
+                          max="99"
+                          value={match.score1 ?? ''}
+                          onChange={(e) => handleMatchUpdate(match.id, 'score1', e.target.value)}
+                          placeholder="0"
+                          className="w-11 text-center bg-slate-100 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
+                        />
+
+                        <span className="text-slate-400 font-black text-xs px-1">VS</span>
+
+                        <input
+                          type="number"
+                          min="0"
+                          max="99"
+                          value={match.score2 ?? ''}
+                          onChange={(e) => handleMatchUpdate(match.id, 'score2', e.target.value)}
+                          placeholder="0"
+                          className="w-11 text-center bg-slate-100 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
+                        />
+
+                        {/* Team 2 Searchable Combobox Selector */}
+                        <SearchableTeamSelect
+                          value={match.team2 || ''}
+                          onChange={(val) => handleMatchUpdate(match.id, 'team2', val)}
+                          teams={teamsToRender}
+                          isWinner={match.winner === 2}
+                          placeholder="-- Chọn Đội 2 (MB/MN) --"
+                        />
+                      </div>
+
+                      {/* Right: Winner Badge & Delete Match Button */}
+                      <div className="flex items-center gap-3 shrink-0 justify-end">
+                        <div className="text-xs font-bold text-right">
+                          {match.winner ? (
+                            <span className="text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
+                              Thắng: {match.winner === 1 ? match.team1 : match.team2}
                             </span>
                           ) : (
-                            <>
-                              <span className={`px-2.5 py-1 rounded-lg font-extrabold text-xs border ${
-                                match.region === 'Miền Nam' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-red-50 text-red-700 border-red-200'
-                              }`}>
-                                 {match.region || 'Miền Bắc'}
-                              </span>
-                              <span className={`px-3 py-1 rounded-lg font-black text-xs border ${
-                                match.round?.includes('Tuần 1')
-                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                                  : match.round?.includes('Tuần 2')
-                                  ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                  : 'bg-orange-50 text-[#F37022] border-orange-200'
-                              }`}>
-                                {match.round}
-                              </span>
-                            </>
+                            <span className="text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
+                              Đang chờ kết quả
+                            </span>
                           )}
-                          {/* Match Status Selector (Sắp diễn ra, Đang thi đấu, Đã đấu) */}
-                          <select
-                            value={match.status || (match.winner != null ? 'DONE' : 'UPCOMING')}
-                            onChange={(e) => handleMatchUpdate(match.id, 'status', e.target.value)}
-                            className={`px-2.5 py-1 rounded-lg font-bold text-xs border outline-none cursor-pointer transition-all ${
-                              (match.status === 'LIVE' || match.status === 'Đang thi đấu')
-                                ? 'bg-rose-50 text-rose-600 border-rose-300 font-black'
-                                : (match.status === 'DONE' || match.status === 'Đã đấu')
-                                ? 'bg-emerald-50 text-emerald-700 border-emerald-300'
-                                : 'bg-sky-50 text-sky-700 border-sky-300'
-                            }`}
+                        </div>
+
+                        {/* Delete Match Button (Only for National Final matches) */}
+                        {isNationalFinal && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteMatch(match.id)}
+                            className="p-2 text-[#F37022] hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer border border-amber-300 hover:border-rose-300 bg-amber-50"
+                            title="Xóa trận Chung Kết Toàn Quốc này"
                           >
-                            <option value="UPCOMING">Sắp diễn ra</option>
-                            <option value="LIVE">Đang thi đấu</option>
-                            <option value="DONE">Đã đấu</option>
-                          </select>
-                        </div>
-
-                        {/* Middle 1: Date & Time Editors */}
-                        <div className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 shrink-0">
-                          <span className="text-[11px] font-bold text-slate-500 uppercase">Ngày & Giờ:</span>
-                          <input
-                            type="text"
-                            placeholder="dd/mm/yyyy"
-                            value={match.date || ''}
-                            onChange={(e) => handleMatchUpdate(match.id, 'date', e.target.value)}
-                            className="w-24 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-center font-bold text-slate-800 focus:border-[#F37022] outline-none"
-                          />
-                          <input
-                            type="text"
-                            placeholder="hh:mm"
-                            value={match.time || ''}
-                            onChange={(e) => handleMatchUpdate(match.id, 'time', e.target.value)}
-                            className="w-16 bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs text-center font-bold text-slate-800 focus:border-[#F37022] outline-none"
-                          />
-                        </div>
-
-                        {/* Middle 2: Interactive Match Score & Dynamic Team Selectors */}
-                        <div className="flex items-center justify-center gap-2 flex-1 flex-wrap sm:flex-nowrap">
-                          {/* Team 1 Searchable Combobox Selector */}
-                          <SearchableTeamSelect
-                            value={match.team1 || ''}
-                            onChange={(val) => handleMatchUpdate(match.id, 'team1', val)}
-                            teams={teamsToRender}
-                            isWinner={match.winner === 1}
-                            placeholder="-- Chọn Đội 1 (MB/MN) --"
-                          />
-
-                          <input
-                            type="number"
-                            min="0"
-                            max="99"
-                            value={match.score1 ?? ''}
-                            onChange={(e) => handleMatchUpdate(match.id, 'score1', e.target.value)}
-                            placeholder="0"
-                            className="w-11 text-center bg-slate-100 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
-                          />
-
-                          <span className="text-slate-400 font-black text-xs px-1">VS</span>
-
-                          <input
-                            type="number"
-                            min="0"
-                            max="99"
-                            value={match.score2 ?? ''}
-                            onChange={(e) => handleMatchUpdate(match.id, 'score2', e.target.value)}
-                            placeholder="0"
-                            className="w-11 text-center bg-slate-100 border border-slate-300 rounded-lg py-1 font-heading font-black text-sm text-slate-900 focus:border-[#F37022] outline-none"
-                          />
-
-                          {/* Team 2 Searchable Combobox Selector */}
-                          <SearchableTeamSelect
-                            value={match.team2 || ''}
-                            onChange={(val) => handleMatchUpdate(match.id, 'team2', val)}
-                            teams={teamsToRender}
-                            isWinner={match.winner === 2}
-                            placeholder="-- Chọn Đội 2 (MB/MN) --"
-                          />
-                        </div>
-
-                        {/* Right: Winner Badge & Delete Match Button */}
-                        <div className="flex items-center gap-3 shrink-0 justify-end">
-                          <div className="text-xs font-bold text-right">
-                            {match.winner ? (
-                              <span className="text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                                Thắng: {match.winner === 1 ? match.team1 : match.team2}
-                              </span>
-                            ) : (
-                              <span className="text-slate-400 bg-slate-50 px-2 py-1 rounded-lg">
-                                Đang chờ kết quả
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Delete Match Button (Only for National Final matches) */}
-                          {isNationalFinal && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteMatch(match.id)}
-                              className="p-2 text-[#F37022] hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors cursor-pointer border border-amber-300 hover:border-rose-300 bg-amber-50"
-                              title="Xóa trận Chung Kết Toàn Quốc này"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
-                        </div>
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -2740,7 +2729,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   <h2 className="font-heading font-black text-xl text-slate-900 uppercase tracking-wider">
                     QUẢN LÝ BÀI VIẾT TIN TỨC & HIGHLIGHTS ({news.length})
                   </h2>
-                
+
                 </div>
                 <button
                   onClick={() => {
@@ -2781,11 +2770,10 @@ export default function AdminConsole({ onBackToLanding }) {
                   <button
                     key={g.id}
                     onClick={() => setNewsGameFilter(g.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      newsGameFilter === g.id
-                        ? 'bg-[#F37022] text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${newsGameFilter === g.id
+                      ? 'bg-[#F37022] text-white shadow-sm'
+                      : 'text-slate-600 hover:bg-slate-100'
+                      }`}
                   >
                     {g.label}
                   </button>
@@ -2797,75 +2785,74 @@ export default function AdminConsole({ onBackToLanding }) {
                 {news
                   .filter(item => newsGameFilter === 'ALL' || item.game === newsGameFilter || item.game === 'ALL')
                   .map((item) => (
-                  <div key={item.id} className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
-                    <div>
-                      {/* Thumbnail or Video Preview */}
-                      <div className="relative aspect-video bg-slate-900 border-b border-slate-100 overflow-hidden">
-                        {item.thumbnail ? (
-                          <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
-                        ) : item.videoEmbed ? (
-                          <iframe src={parseYouTubeEmbed(item.videoEmbed)} title={item.title} className="w-full h-full pointer-events-none" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
-                            <Newspaper className="w-8 h-8" />
-                          </div>
-                        )}
+                    <div key={item.id} className="bg-white border border-slate-200 shadow-sm rounded-2xl overflow-hidden flex flex-col justify-between hover:shadow-md transition-shadow">
+                      <div>
+                        {/* Thumbnail or Video Preview */}
+                        <div className="relative aspect-video bg-slate-900 border-b border-slate-100 overflow-hidden">
+                          {item.thumbnail ? (
+                            <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
+                          ) : item.videoEmbed ? (
+                            <iframe src={parseYouTubeEmbed(item.videoEmbed)} title={item.title} className="w-full h-full pointer-events-none" />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
+                              <Newspaper className="w-8 h-8" />
+                            </div>
+                          )}
 
-                        {/* Game Badge */}
-                        <div className="absolute top-2 left-2 flex items-center gap-1">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase shadow-sm ${
-                            item.game === 'VALORANT'
+                          {/* Game Badge */}
+                          <div className="absolute top-2 left-2 flex items-center gap-1">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-black uppercase shadow-sm ${item.game === 'VALORANT'
                               ? 'bg-rose-600 text-white'
                               : item.game === 'AOV'
-                              ? 'bg-cyan-600 text-white'
-                              : 'bg-amber-500 text-white'
-                          }`}>
-                            {item.game || 'ALL GAME'}
-                          </span>
-                          <span className="px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs">
-                            {item.category}
-                          </span>
-                        </div>
-
-                        {item.videoEmbed && (
-                          <div className="absolute bottom-2 right-2 bg-rose-600 text-white p-1 rounded-md text-[10px] font-bold flex items-center gap-1 shadow">
-                            <Radio className="w-3 h-3 animate-pulse" /> Video
+                                ? 'bg-cyan-600 text-white'
+                                : 'bg-amber-500 text-white'
+                              }`}>
+                              {item.game || 'ALL GAME'}
+                            </span>
+                            <span className="px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold backdrop-blur-xs">
+                              {item.category}
+                            </span>
                           </div>
-                        )}
-                      </div>
 
-                      {/* Card Content */}
-                      <div className="p-4">
-                        <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
-                          <span>{item.date} {item.time ? `· ${item.time}` : ''}</span>
-                          <span className="font-medium text-slate-500">Tác giả: {item.author || 'Admin'}</span>
+                          {item.videoEmbed && (
+                            <div className="absolute bottom-2 right-2 bg-rose-600 text-white p-1 rounded-md text-[10px] font-bold flex items-center gap-1 shadow">
+                              <Radio className="w-3 h-3 animate-pulse" /> Video
+                            </div>
+                          )}
                         </div>
-                        <h3 className="font-bold text-sm text-slate-900 mb-1.5 line-clamp-2">{item.title}</h3>
-                        <p className="text-xs text-slate-500 line-clamp-2 mb-3">{item.summary || item.description}</p>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center justify-between p-3.5 bg-slate-50 border-t border-slate-100">
-                      <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{item.status || 'PUBLISHED'}</span>
-                      <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => handleOpenEditNews(item)}
-                          className="p-1.5 rounded-lg bg-slate-200 hover:bg-[#F37022] hover:text-white text-slate-700 transition-colors cursor-pointer"
-                          title="Chỉnh sửa bài viết"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteNews(item.id)}
-                          className="p-1.5 rounded-lg bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-600 transition-colors cursor-pointer"
-                          title="Xóa bài viết"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        {/* Card Content */}
+                        <div className="p-4">
+                          <div className="flex items-center justify-between text-[11px] text-slate-400 mb-1.5">
+                            <span>{item.date} {item.time ? `· ${item.time}` : ''}</span>
+                            <span className="font-medium text-slate-500">Tác giả: {item.author || 'Admin'}</span>
+                          </div>
+                          <h3 className="font-bold text-sm text-slate-900 mb-1.5 line-clamp-2">{item.title}</h3>
+                          <p className="text-xs text-slate-500 line-clamp-2 mb-3">{item.summary || item.description}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between p-3.5 bg-slate-50 border-t border-slate-100">
+                        <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">{item.status || 'PUBLISHED'}</span>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            onClick={() => handleOpenEditNews(item)}
+                            className="p-1.5 rounded-lg bg-slate-200 hover:bg-[#F37022] hover:text-white text-slate-700 transition-colors cursor-pointer"
+                            title="Chỉnh sửa bài viết"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteNews(item.id)}
+                            className="p-1.5 rounded-lg bg-rose-100 hover:bg-rose-600 hover:text-white text-rose-600 transition-colors cursor-pointer"
+                            title="Xóa bài viết"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
               </div>
             </div>
           )}
@@ -2878,7 +2865,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   <p className="h-6 text-[#F37022]" />
                   CẤU HÌNH HỆ THỐNG & ĐỔI MÃ QR CODE ĐĂNG KÝ
                 </h2>
-               
+
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -2889,7 +2876,7 @@ export default function AdminConsole({ onBackToLanding }) {
                       <p className=" h-5 text-[#F37022]" />
                       Cấu Hình Mã QR & Link Đăng Ký
                     </h3>
-                   
+
                   </div>
 
                   {/* Destination Link Editor */}
@@ -2906,7 +2893,7 @@ export default function AdminConsole({ onBackToLanding }) {
                         className="w-full bg-slate-50 border border-slate-300 rounded-xl px-4 py-2.5 text-xs font-semibold text-slate-900 focus:border-[#F37022] outline-none"
                       />
                     </div>
-                   
+
                   </div>
 
                   {/* QR Image Source Selection */}
@@ -2991,17 +2978,17 @@ export default function AdminConsole({ onBackToLanding }) {
                   </div>
 
                   {/* Live Test Scan Button */}
-                 
+
                 </div>
               </div>
 
               {/* Rules Links Management Card */}
               <div className="mt-8 bg-white border border-slate-200 rounded-2xl p-6 shadow-sm">
                 <div className="flex items-center gap-3 mb-5 pb-4 border-b border-slate-100">
-                 
+
                   <div>
                     <h3 className="font-heading font-black text-base text-slate-900 uppercase tracking-wide">
-                    Quản lý URL cho nút "Chi tiết thể thức giải đấu" theo từng bộ môn
+                      Quản lý URL cho nút "Chi tiết thể thức giải đấu" theo từng bộ môn
                     </h3>
                     <p className="text-xs text-slate-500 mt-0.5"></p>
                   </div>
@@ -3140,19 +3127,23 @@ export default function AdminConsole({ onBackToLanding }) {
                 </div>
               </div>
               {/* University / College API Combobox */}
-              <div className="relative">
+              <div className="relative" ref={uniDropdownRef}>
                 <label className="text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
                   <span className="flex items-center gap-1.5">
                     Trường Đại Học / Cao Đẳng
                   </span>
-                 
+                  {newTeam.school && !universitiesList.some(u => u.name === newTeam.school) && (
+                    <span className="text-[10px] text-amber-600 font-semibold bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200">
+                      ✏️ Nhập tay
+                    </span>
+                  )}
                 </label>
 
                 <div className="relative">
                   <input
                     type="text"
                     required
-                    placeholder="Gõ để tìm tên trường Đại Học / Cao Đẳng tại Việt Nam..."
+                    placeholder="Gõ để tìm hoặc nhập tên trường Đại Học / Cao Đẳng..."
                     value={newTeam.school}
                     onFocus={() => setShowUniDropdown(true)}
                     onChange={(e) => {
@@ -3161,14 +3152,48 @@ export default function AdminConsole({ onBackToLanding }) {
                       setSchoolSearchQuery(val);
                       setShowUniDropdown(true);
                     }}
-                    className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium pr-8"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === 'Escape') {
+                        e.preventDefault();
+                        setShowUniDropdown(false);
+                      }
+                    }}
+                    className={`w-full bg-slate-50 border rounded-xl px-3.5 py-2.5 text-xs text-slate-900 focus:border-[#F37022] outline-none font-medium pr-8 ${newTeam.school && !universitiesList.some(u => u.name === newTeam.school)
+                      ? 'border-amber-400 bg-amber-50/30'
+                      : 'border-slate-300'
+                      }`}
                   />
-                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <ChevronDown
+                    className={`w-4 h-4 absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer transition-transform ${showUniDropdown ? 'rotate-180 text-[#F37022]' : 'text-slate-400'}`}
+                    onClick={() => setShowUniDropdown(!showUniDropdown)}
+                  />
                 </div>
 
                 {/* API University Dropdown List */}
                 {showUniDropdown && (
                   <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-72 overflow-y-auto z-50 p-1 divide-y divide-slate-100">
+                    {/* Option to use custom-typed school name */}
+                    {schoolSearchQuery && schoolSearchQuery.trim().length > 0 && !universitiesList.some(u => u.name.toLowerCase() === schoolSearchQuery.toLowerCase()) && (
+                      <div
+                        onClick={() => {
+                          setNewTeam({ ...newTeam, school: schoolSearchQuery.trim() });
+                          setShowUniDropdown(false);
+                        }}
+                        className="p-2.5 hover:bg-amber-50 rounded-lg cursor-pointer transition-colors flex items-center justify-between text-xs border-b-2 border-amber-200 bg-amber-50/50"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">✏️</span>
+                          <div>
+                            <div className="font-bold text-amber-700">Sử dụng: "{schoolSearchQuery.trim()}"</div>
+                            <div className="text-[10px] text-amber-500 mt-0.5">Trường không có trong danh sách vui lòng nhập tay</div>
+                          </div>
+                        </div>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-600 border border-amber-300 shrink-0">
+                          Nhập tay
+                        </span>
+                      </div>
+                    )}
+
                     {universitiesList
                       .filter(u =>
                         !schoolSearchQuery ||
@@ -3188,6 +3213,7 @@ export default function AdminConsole({ onBackToLanding }) {
                               region: uni.region || newTeam.region,
                               name: newTeam.name || defaultTeamName
                             });
+                            setSchoolSearchQuery('');
                             setShowUniDropdown(false);
                           }}
                           className="p-2 hover:bg-orange-50 rounded-lg cursor-pointer transition-colors flex items-center justify-between text-xs"
@@ -3208,9 +3234,9 @@ export default function AdminConsole({ onBackToLanding }) {
                           </div>
                         </div>
                       ))}
-                    {universitiesList.filter(u => !schoolSearchQuery || u.name.toLowerCase().includes(schoolSearchQuery.toLowerCase())).length === 0 && (
+                    {universitiesList.filter(u => !schoolSearchQuery || u.name.toLowerCase().includes(schoolSearchQuery.toLowerCase()) || (u.shortName && u.shortName.toLowerCase().includes(schoolSearchQuery.toLowerCase()))).length === 0 && !schoolSearchQuery && (
                       <div className="p-3 text-center text-xs text-slate-400">
-                        Không tìm thấy trường khớp. Bạn có thể tự nhập tên trường trực tiếp!
+                        Không tìm thấy trường nào. Hãy gõ tên trường để nhập tay!
                       </div>
                     )}
                   </div>
@@ -3271,13 +3297,12 @@ export default function AdminConsole({ onBackToLanding }) {
                   {newTeamMembers.map((member, index) => (
                     <div key={member.id} className="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center bg-white p-2.5 rounded-xl border border-slate-200 shadow-xs">
                       <div className="sm:col-span-2 flex items-center gap-1.5">
-                        <span className={`px-1.5 py-1 rounded text-[9px] font-black uppercase truncate ${
-                          index === 0
-                            ? 'bg-amber-500 text-white'
-                            : index >= 5
+                        <span className={`px-1.5 py-1 rounded text-[9px] font-black uppercase truncate ${index === 0
+                          ? 'bg-amber-500 text-white'
+                          : index >= 5
                             ? 'bg-sky-500 text-white'
                             : 'bg-slate-100 text-slate-700 border border-slate-200'
-                        }`}>
+                          }`}>
                           {index === 0 ? ' Đội trưởng' : index >= 5 ? ` Dự bị ${index - 4}` : `Thành viên ${index + 1}`}
                         </span>
                       </div>
@@ -3406,11 +3431,10 @@ export default function AdminConsole({ onBackToLanding }) {
                 ]).map((m, idx) => (
                   <div key={m.id || idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-200">
                     <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${
-                        m.role === 'Đội trưởng' || idx === 0
-                          ? 'bg-amber-500 text-white shadow-sm'
-                          : 'bg-slate-200 text-slate-700'
-                      }`}>
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs ${m.role === 'Đội trưởng' || idx === 0
+                        ? 'bg-amber-500 text-white shadow-sm'
+                        : 'bg-slate-200 text-slate-700'
+                        }`}>
                         {idx + 1}
                       </div>
                       <div>
@@ -3468,33 +3492,30 @@ export default function AdminConsole({ onBackToLanding }) {
                   <button
                     type="button"
                     onClick={() => setNewArticle({ ...newArticle, game: 'VALORANT' })}
-                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${
-                      newArticle.game === 'VALORANT'
-                        ? 'bg-rose-600 text-white border-rose-700 shadow-md shadow-rose-600/30 ring-2 ring-rose-500/50'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${newArticle.game === 'VALORANT'
+                      ? 'bg-rose-600 text-white border-rose-700 shadow-md shadow-rose-600/30 ring-2 ring-rose-500/50'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
-                   VALORANT
+                    VALORANT
                   </button>
                   <button
                     type="button"
                     onClick={() => setNewArticle({ ...newArticle, game: 'AOV' })}
-                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${
-                      newArticle.game === 'AOV'
-                        ? 'bg-cyan-600 text-white border-cyan-700 shadow-md shadow-cyan-600/30 ring-2 ring-cyan-500/50'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${newArticle.game === 'AOV'
+                      ? 'bg-cyan-600 text-white border-cyan-700 shadow-md shadow-cyan-600/30 ring-2 ring-cyan-500/50'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
-                     AOV (LIÊN QUÂN)
+                    AOV (LIÊN QUÂN)
                   </button>
                   <button
                     type="button"
                     onClick={() => setNewArticle({ ...newArticle, game: 'ALL' })}
-                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${
-                      newArticle.game === 'ALL'
-                        ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/30 ring-2 ring-amber-400/50'
-                        : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
-                    }`}
+                    className={`py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wide border transition-all cursor-pointer ${newArticle.game === 'ALL'
+                      ? 'bg-amber-500 text-white border-amber-600 shadow-md shadow-amber-500/30 ring-2 ring-amber-400/50'
+                      : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+                      }`}
                   >
                     CẢ 2 GAME
                   </button>
@@ -3540,7 +3561,7 @@ export default function AdminConsole({ onBackToLanding }) {
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 focus:border-[#F37022] outline-none"
                   />
                 </div>
-                
+
               </div>
 
               {/* Thumbnail URL, File Upload & Article Link */}
@@ -3578,7 +3599,7 @@ export default function AdminConsole({ onBackToLanding }) {
                     </label>
                   </div>
                 </div>
-                
+
                 <div>
                   <label className="block text-xs font-bold text-slate-700 mb-1">Link Bài Viết Gốc (URL)</label>
                   <input
@@ -3618,7 +3639,7 @@ export default function AdminConsole({ onBackToLanding }) {
               {/* Author & Featured Toggle */}
               <div className="flex items-center justify-between pt-2">
                 <div className="flex items-center gap-2">
-                  
+
                 </div>
 
                 <div className="flex justify-end gap-2">
@@ -3653,7 +3674,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   <p className="h-6 text-amber-500" />
                   Quản Lý Trận Chung Kết Toàn Quốc
                 </h3>
-               
+
               </div>
               <button
                 type="button"
@@ -3673,7 +3694,7 @@ export default function AdminConsole({ onBackToLanding }) {
                     <span className="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse" />
                     1. CHUNG KẾT TOÀN QUỐC - VALORANT
                   </span>
-                 
+
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3786,7 +3807,7 @@ export default function AdminConsole({ onBackToLanding }) {
                     <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse" />
                     2. CHUNG KẾT TOÀN QUỐC - AOV (LIÊN QUÂN)
                   </span>
-                 
+
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -3905,7 +3926,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   type="submit"
                   className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white text-xs font-black transition-all shadow-md cursor-pointer flex items-center gap-2"
                 >
-                  <Trophy className="w-4 h-4 text-amber-200" />
+                  <p className="h-4 text-amber-200" />
                   Lưu 2 Trận Chung Kết Toàn Quốc
                 </button>
               </div>

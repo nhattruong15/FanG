@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Users, ChevronDown, ChevronUp, ShieldCheck } from 'lucide-react';
+import { Search, Users, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ShieldCheck } from 'lucide-react';
 import { subscribeTeams, INITIAL_TEAMS } from '../config/firebase';
+
+const TEAMS_PER_PAGE = 4;
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -15,6 +17,7 @@ export default function TeamList({ selectedGame = 'valorant' }) {
   const [regionFilter, setRegionFilter] = useState('all');
   const [teams, setTeams] = useState(INITIAL_TEAMS);
   const [expandedTeam, setExpandedTeam] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
     const unsub = subscribeTeams((data) => {
@@ -57,6 +60,18 @@ export default function TeamList({ selectedGame = 'valorant' }) {
     if (!schoolGroups[schoolName]) schoolGroups[schoolName] = [];
     schoolGroups[schoolName].push(team);
   });
+
+  // Reset page when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, regionFilter, selectedGame]);
+
+  // Pagination logic
+  const allSchoolEntries = Object.entries(schoolGroups);
+  const totalPages = Math.max(1, Math.ceil(allSchoolEntries.length / TEAMS_PER_PAGE));
+  const safePage = Math.min(currentPage, totalPages);
+  const startIdx = (safePage - 1) * TEAMS_PER_PAGE;
+  const paginatedEntries = allSchoolEntries.slice(startIdx, startIdx + TEAMS_PER_PAGE);
 
   return (
     <section id="teams" className="section-padding relative">
@@ -102,11 +117,10 @@ export default function TeamList({ selectedGame = 'valorant' }) {
               <button
                 key={opt.value}
                 onClick={() => setRegionFilter(opt.value)}
-                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${
-                  regionFilter === opt.value
-                    ? 'bg-[#F37021] text-white shadow-md'
-                    : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-slate-800'
-                }`}
+                className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all ${regionFilter === opt.value
+                  ? 'bg-[#F37021] text-white shadow-md'
+                  : 'bg-white/5 text-slate-400 hover:bg-white/10 border border-slate-800'
+                  }`}
               >
                 {opt.label}
               </button>
@@ -115,10 +129,11 @@ export default function TeamList({ selectedGame = 'valorant' }) {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Object.entries(schoolGroups).map(([school, teamList], idx) => (
+          {paginatedEntries.map(([school, teamList], idx) => (
             <motion.div
               key={school}
-              {...fadeInUp}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: idx * 0.05 }}
               className="bg-glass rounded-2xl overflow-hidden border-glow"
             >
@@ -170,16 +185,15 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                       <div key={tIdx} className="mt-3">
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                           
+
                             <span
-                              className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-bold ${
-                                tItem.game === 'Valorant' ? 'bg-rose-500/15 text-rose-400' : 'bg-[#F37021]/15 text-[#F37021]'
-                              }`}
+                              className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-bold ${tItem.game === 'Valorant' ? 'bg-rose-500/15 text-rose-400' : 'bg-[#F37021]/15 text-[#F37021]'
+                                }`}
                             >
-                              {tItem.name || tItem.game}
+                              Tên đội: {tItem.name || tItem.game}
                             </span>
                           </div>
-                         
+
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {members.map((mObj, mIdx) => {
@@ -196,26 +210,16 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                             return (
                               <div
                                 key={mIdx}
-                                className={`px-2.5 py-2 rounded-xl border transition-all ${
-                                  isCaptain
-                                    ? 'bg-orange-500/10 border-orange-500/30 text-white'
-                                    : isSub
+                                className={`px-2.5 py-2 rounded-xl border transition-all ${isCaptain
+                                  ? 'bg-orange-500/10 border-orange-500/30 text-white'
+                                  : isSub
                                     ? 'bg-sky-500/10 border-sky-500/30 text-white'
                                     : 'bg-white/5 border-slate-800 text-slate-300'
-                                }`}
+                                  }`}
                               >
                                 <div className="flex items-center justify-between gap-1">
                                   <span className="text-xs font-bold truncate">{name}</span>
-                                  {isCaptain && (
-                                    <span className="text-[9px] font-black bg-[#F37021] text-white px-1.5 py-0.2 rounded shrink-0">
-                                      C
-                                    </span>
-                                  )}
-                                  {isSub && (
-                                    <span className="text-[9px] font-black bg-sky-500 text-white px-1.5 py-0.2 rounded shrink-0 uppercase">
-                                      SUB
-                                    </span>
-                                  )}
+
                                 </div>
                                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono truncate mt-0.5 gap-1">
                                   <span className="truncate">{ingame}</span>
@@ -237,6 +241,94 @@ export default function TeamList({ selectedGame = 'valorant' }) {
             </motion.div>
           ))}
         </div>
+
+        {/* Pagination Controls */}
+        {allSchoolEntries.length > TEAMS_PER_PAGE && (
+          <motion.div
+            {...fadeInUp}
+            className="flex items-center justify-center gap-2 mt-8"
+          >
+            {/* Previous Button */}
+            <button
+              onClick={() => {
+                setCurrentPage(p => Math.max(1, p - 1));
+                setExpandedTeam(null);
+                document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              disabled={safePage <= 1}
+              className={`p-2 rounded-xl border transition-all ${
+                safePage <= 1
+                  ? 'border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
+                  : 'border-slate-700 text-slate-300 hover:bg-white/10 hover:border-[#F37021] hover:text-[#F37021] cursor-pointer'
+              }`}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+
+            {/* Page Numbers */}
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+              // Show: first, last, current, and neighbors of current
+              const isVisible =
+                page === 1 ||
+                page === totalPages ||
+                Math.abs(page - safePage) <= 1;
+              const isEllipsisBefore =
+                page === safePage - 2 && safePage > 3;
+              const isEllipsisAfter =
+                page === safePage + 2 && safePage < totalPages - 2;
+
+              if (!isVisible && !isEllipsisBefore && !isEllipsisAfter) return null;
+
+              if ((isEllipsisBefore || isEllipsisAfter) && !isVisible) {
+                return (
+                  <span key={`ellipsis-${page}`} className="px-1 text-slate-600 text-sm select-none">
+                    ···
+                  </span>
+                );
+              }
+
+              return (
+                <button
+                  key={page}
+                  onClick={() => {
+                    setCurrentPage(page);
+                    setExpandedTeam(null);
+                    document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }}
+                  className={`min-w-[36px] h-9 rounded-xl text-sm font-bold transition-all ${
+                    page === safePage
+                      ? 'bg-[#F37021] text-white shadow-lg shadow-orange-900/40 scale-105'
+                      : 'bg-white/5 text-slate-400 border border-slate-800 hover:bg-white/10 hover:text-white hover:border-[#F37021] cursor-pointer'
+                  }`}
+                >
+                  {page}
+                </button>
+              );
+            })}
+
+            {/* Next Button */}
+            <button
+              onClick={() => {
+                setCurrentPage(p => Math.min(totalPages, p + 1));
+                setExpandedTeam(null);
+                document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              disabled={safePage >= totalPages}
+              className={`p-2 rounded-xl border transition-all ${
+                safePage >= totalPages
+                  ? 'border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
+                  : 'border-slate-700 text-slate-300 hover:bg-white/10 hover:border-[#F37021] hover:text-[#F37021] cursor-pointer'
+              }`}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+
+            {/* Page Info */}
+            <span className="ml-3 text-xs text-slate-500 font-medium">
+              Trang {safePage}/{totalPages} · {allSchoolEntries.length} đội
+            </span>
+          </motion.div>
+        )}
 
         {filteredTeams.length === 0 && (
           <div className="text-center py-12 text-slate-500 font-medium">

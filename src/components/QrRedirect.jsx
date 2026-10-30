@@ -6,8 +6,43 @@ export default function QrRedirect() {
   const UTM_PARAMS = '?utm_source=fang_campus&utm_medium=qr_code&utm_campaign=esports_2026';
 
   useEffect(() => {
+    // 1. Extract game parameter from search, hash query, or pathname
     const searchParams = new URLSearchParams(window.location.search);
-    const gameParam = searchParams.get('game')?.toUpperCase() || 'VALORANT';
+    let rawGame = searchParams.get('game');
+
+    if (!rawGame && window.location.hash && window.location.hash.includes('?')) {
+      const hashQuery = window.location.hash.split('?')[1];
+      const hashParams = new URLSearchParams(hashQuery);
+      rawGame = hashParams.get('game');
+    }
+
+    if (!rawGame && window.location.hash) {
+      const lowerHash = window.location.hash.toLowerCase();
+      if (lowerHash.includes('aov') || lowerHash.includes('lienquan')) rawGame = 'AOV';
+      else if (lowerHash.includes('val') || lowerHash.includes('valorant')) rawGame = 'VALORANT';
+    }
+
+    if (!rawGame && window.location.pathname) {
+      const lowerPath = window.location.pathname.toLowerCase();
+      if (lowerPath.includes('aov') || lowerPath.includes('lienquan')) rawGame = 'AOV';
+      else if (lowerPath.includes('val') || lowerPath.includes('valorant')) rawGame = 'VALORANT';
+    }
+
+    // Fallback to locally stored game if scanned in same browser session
+    if (!rawGame) {
+      try {
+        const stored = localStorage.getItem('fang_selected_game');
+        if (stored) rawGame = stored;
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // 2. Normalize game parameter
+    const cleanGame = (rawGame || '').trim().toUpperCase();
+    const isAov = cleanGame === 'AOV' || cleanGame.includes('LIÊN QUÂN') || cleanGame.includes('LIEN QUAN');
+    const isVal = cleanGame === 'VALORANT' || cleanGame === 'VAL' || cleanGame.includes('VALORANT');
+    const gameParam = isAov ? 'AOV' : isVal ? 'VALORANT' : (cleanGame || 'GENERAL');
 
     const handleTrackAndRedirect = async () => {
       let clientUrl = 'https://fangtv.vn/';
@@ -19,13 +54,15 @@ export default function QrRedirect() {
           clientUrl = configSnap.data().destinationUrl;
         }
 
-        // Execute +1 scan tracking
+        // Execute +1 scan tracking for the correct game
         await recordQrScan(gameParam);
 
-        const qrDocRef = doc(db, 'QR_scans', 'val_register_qr');
+        const qrDocId = isAov ? 'aov_register_qr' : isVal ? 'val_register_qr' : 'general_register_qr';
+        const qrDocRef = doc(db, 'QR_scans', qrDocId);
         await setDoc(
           qrDocRef,
           {
+            game: gameParam,
             totalScans: increment(1),
             lastScanned: serverTimestamp(),
             updatedAt: new Date().toISOString()

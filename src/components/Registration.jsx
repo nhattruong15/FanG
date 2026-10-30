@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, ExternalLink, ArrowRight, X, Download, Maximize2 } from 'lucide-react';
 import bg3Img from '../assets/background/background3.jpg';
 import qrCodeImg from '../assets/QRCodeDangKy/qrcode_register.png';
 import { recordQrScan, subscribeQrConfig, INITIAL_QR_CONFIG } from '../config/firebase';
+import { generateQrDataUrl } from '../utils/qrcode';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 30 },
@@ -26,8 +27,34 @@ export default function Registration({ selectedGame }) {
     return () => unsub();
   }, []);
 
+  const isAov = (selectedGame || '').toLowerCase() === 'aov';
+  const gameKey = isAov ? 'aov' : 'valorant';
+  const gameUpper = isAov ? 'AOV' : 'VALORANT';
+
+  // Construct target registration URL with explicit game parameter for phone cameras
+  const baseUrl = (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost'))
+    ? window.location.origin
+    : 'https://fan-g.vercel.app';
+  const targetQrRegisterUrl = `${baseUrl}/qr-register?game=${gameKey}`;
+
+  // Check if admin uploaded custom QR for this game, or custom general QR
+  const customGameQr = isAov
+    ? (qrConfig?.customQrUrlAov || qrConfig?.customQrUrl)
+    : (qrConfig?.customQrUrlVal || qrConfig?.customQrUrl);
+
+  // Dynamic QR SVG Data URL for the exact game
+  const dynamicQrDataUrl = useMemo(() => {
+    try {
+      const dataUri = generateQrDataUrl(targetQrRegisterUrl, 320);
+      if (dataUri) return dataUri;
+    } catch (e) {
+      console.warn('Dynamic QR generation error:', e);
+    }
+    return `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(targetQrRegisterUrl)}`;
+  }, [targetQrRegisterUrl]);
+
   const activeDestinationUrl = qrConfig?.destinationUrl || 'https://fangtv.vn/';
-  const activeQrImage = qrConfig?.customQrUrl || qrCodeImg;
+  const activeQrImage = customGameQr || dynamicQrDataUrl || qrCodeImg;
 
   const handleOpenQrModal = () => {
     setIsModalOpen(true);
@@ -35,7 +62,7 @@ export default function Registration({ selectedGame }) {
 
   const handleDirectClick = async () => {
     try {
-      await recordQrScan(selectedGame ? selectedGame.toUpperCase() : 'GENERAL');
+      await recordQrScan(gameUpper);
       setScannedToast(true);
       setTimeout(() => setScannedToast(false), 4000);
     } catch (err) {
@@ -67,7 +94,7 @@ export default function Registration({ selectedGame }) {
             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
               {/* Column 1: Info & CTAs */}
               <div className="md:col-span-7 text-center md:text-left flex flex-col justify-center">
-               
+
 
                 <h2 className="font-heading font-black text-3xl sm:text-4xl text-white mb-3 leading-tight">
                   Sẵn sàng xưng bá?
@@ -88,17 +115,17 @@ export default function Registration({ selectedGame }) {
                     className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#F37021] hover:bg-[#ff8235] text-white font-black text-base shadow-xl shadow-orange-950/40 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
                   >
                     <ExternalLink className="w-5 h-5 text-white" />
-                    Mở trang Đăng Ký FanG ID
+                    Mở trang Đăng Ký
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </a>
 
-                  
+
                 </div>
               </div>
 
               {/* Column 2: QR Code Card */}
               <div className="md:col-span-5 flex flex-col items-center justify-center">
-                <div 
+                <div
                   onClick={handleOpenQrModal}
                   className="relative group cursor-pointer p-4 rounded-2xl bg-[#140c08]/90 border-2 border-[#F37021]/60 hover:border-[#F37021] shadow-[0_0_35px_rgba(243,112,34,0.3)] hover:shadow-[0_0_50px_rgba(243,112,34,0.5)] transition-all duration-300 transform hover:scale-[1.03]"
                 >
@@ -109,15 +136,18 @@ export default function Registration({ selectedGame }) {
                   <div className="w-48 h-48 sm:w-56 sm:h-56 bg-white p-2.5 rounded-xl flex items-center justify-center overflow-hidden">
                     <img
                       src={activeQrImage}
-                      alt="Mã QR Đăng Ký FanG"
+                      alt={`Mã QR Đăng Ký ${gameUpper}`}
                       className="w-full h-full object-contain rounded-lg"
+                      onError={(e) => {
+                        e.target.src = dynamicQrDataUrl || qrCodeImg;
+                      }}
                     />
                   </div>
 
                   <div className="mt-3 text-center">
                     <span className="text-xs font-bold text-slate-200 group-hover:text-[#F37021] transition-colors flex items-center justify-center gap-1.5">
                       <QrCode className="w-3.5 h-3.5 text-[#F37021]" />
-                      Quét mã QR Code để Đăng Ký
+                      Quét mã QR để Đăng Ký {gameUpper}
                     </span>
                   </div>
                 </div>
@@ -129,13 +159,17 @@ export default function Registration({ selectedGame }) {
 
       <AnimatePresence>
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+          <div
+            onClick={() => setIsModalOpen(false)}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md cursor-pointer"
+          >
             <motion.div
+              onClick={(e) => e.stopPropagation()}
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.25 }}
-              className="relative w-full max-w-sm rounded-3xl bg-[#0f1222] border-2 border-[#F37021] shadow-[0_0_80px_rgba(243,112,34,0.5)] p-6 text-center overflow-hidden flex flex-col items-center"
+              className="relative w-full max-w-sm rounded-3xl bg-[#0f1222] border-2 border-[#F37021] shadow-[0_0_80px_rgba(243,112,34,0.5)] p-6 text-center overflow-hidden flex flex-col items-center cursor-default"
             >
               <button
                 onClick={() => setIsModalOpen(false)}
@@ -147,26 +181,29 @@ export default function Registration({ selectedGame }) {
 
               <div className="mb-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 border border-[#F37021]/50 text-[#F37021] text-xs font-black tracking-wider uppercase">
-                  <QrCode className="w-4 h-4" /> Mã QR Đăng Ký Chính Thức
+                  <QrCode className="w-4 h-4" /> Mã QR Đăng Ký {gameUpper}
                 </span>
               </div>
 
               <div className="w-60 h-60 rounded-2xl bg-white p-3 shadow-2xl border-2 border-orange-400 flex items-center justify-center my-3">
-                <img 
-                  src={activeQrImage} 
-                  alt="Mã QR Đăng Ký Rõ Nét" 
+                <img
+                  src={activeQrImage}
+                  alt={`Mã QR Đăng Ký ${gameUpper}`}
                   className="w-full h-full object-contain rounded-xl"
+                  onError={(e) => {
+                    e.target.src = dynamicQrDataUrl || qrCodeImg;
+                  }}
                 />
               </div>
 
               <div className="w-full space-y-2.5">
                 <a
                   href={activeQrImage}
-                  download="qrcode_register.png"
+                  download={`qrcode_dangky_${gameKey}.png`}
                   className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-[#F37021] hover:bg-[#ff8235] text-white font-black text-xs shadow-lg transition-all border border-orange-400/40"
                 >
                   <Download className="w-4 h-4" />
-                  Tải Về Mã QR Code (.png)
+                  Tải Về Mã QR Code ({gameUpper})
                 </a>
 
                 <a

@@ -52,10 +52,10 @@ export default function App() {
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
-      const isQrAccess = 
-        params.get('src') === 'qr_scan' || 
-        params.get('scan') === 'qr' || 
-        params.get('scan') === 'true' || 
+      const isQrAccess =
+        params.get('src') === 'qr_scan' ||
+        params.get('scan') === 'qr' ||
+        params.get('scan') === 'true' ||
         params.get('qr') === '1' ||
         params.get('ref') === 'qr' ||
         params.get('from') === 'qr';
@@ -173,7 +173,7 @@ export default function App() {
               </button>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-3 text-xs text-slate-400">
             <span>Đang chọn: <strong className={selectedGame === 'valorant' ? 'text-[#ff4655]' : 'text-[#f39c12]'}>
               {selectedGame === 'valorant' ? 'VALORANT' : 'AOV (LIÊN QUÂN)'}
@@ -187,7 +187,7 @@ export default function App() {
           </div>
 
           <p className="text-slate-500 text-xs text-center sm:text-right">
-            © 2026 FanG Exports. All rights reserved.
+            © 2026 FanG ESports. All rights reserved.
           </p>
         </div>
       </footer>

@@ -102,11 +102,10 @@ const MatchRow = ({ match, teamsList = [], onSelectMatch }) => {
   return (
     <div
       onClick={() => onSelectMatch && onSelectMatch(match)}
-      className={`rounded-xl border text-[11px] sm:text-xs overflow-hidden transition-all hover:border-[#F37022]/80 hover:shadow-[0_0_20px_rgba(243,112,34,0.25)] cursor-pointer group ${
-        upcoming
-          ? 'border-[#F37022]/40 bg-[#F37022]/5'
-          : 'border-[#F37022]/15 bg-[#0e0906]/80'
-      }`}
+      className={`rounded-xl border text-[11px] sm:text-xs overflow-hidden transition-all hover:border-[#F37022]/80 hover:shadow-[0_0_20px_rgba(243,112,34,0.25)] cursor-pointer group ${upcoming
+        ? 'border-[#F37022]/40 bg-[#F37022]/5'
+        : 'border-[#F37022]/15 bg-[#0e0906]/80'
+        }`}
     >
       {/* Date, Time & Status Header Bar */}
       <div className="px-2.5 py-1 bg-white/5 border-b border-white/5 flex items-center justify-between text-[10px] text-amber-400 font-medium">
@@ -117,9 +116,8 @@ const MatchRow = ({ match, teamsList = [], onSelectMatch }) => {
       </div>
 
       {/* Team 1 Row */}
-      <div className={`flex items-center justify-between px-2.5 py-2 gap-2 min-h-[38px] transition-colors group-hover:bg-white/5 ${
-        t1Win ? 'bg-[#F37022]/25 font-bold' : t2Win ? 'opacity-60' : ''
-      }`}>
+      <div className={`flex items-center justify-between px-2.5 py-2 gap-2 min-h-[38px] transition-colors group-hover:bg-white/5 ${t1Win ? 'bg-[#F37022]/25 font-bold' : t2Win ? 'opacity-60' : ''
+        }`}>
         <div className="flex flex-col min-w-0 flex-1">
           <span className={`truncate font-bold text-xs sm:text-sm ${t1Win ? 'text-white font-black' : 'text-slate-100'}`}>
             {t1Info.teamName}
@@ -130,9 +128,8 @@ const MatchRow = ({ match, teamsList = [], onSelectMatch }) => {
             </span>
           )}
         </div>
-        <span className={`font-heading font-black text-sm sm:text-base min-w-[22px] text-center ${
-          t1Win ? 'text-[#F37022]' : 'text-slate-400'
-        }`}>
+        <span className={`font-heading font-black text-sm sm:text-base min-w-[22px] text-center ${t1Win ? 'text-[#F37022]' : 'text-slate-400'
+          }`}>
           {match.score1 ?? ''}
         </span>
       </div>
@@ -140,9 +137,8 @@ const MatchRow = ({ match, teamsList = [], onSelectMatch }) => {
       <div className="border-t border-orange-900/30" />
 
       {/* Team 2 Row */}
-      <div className={`flex items-center justify-between px-2.5 py-2 gap-2 min-h-[38px] transition-colors group-hover:bg-white/5 ${
-        t2Win ? 'bg-[#F37022]/25 font-bold' : t1Win ? 'opacity-60' : ''
-      }`}>
+      <div className={`flex items-center justify-between px-2.5 py-2 gap-2 min-h-[38px] transition-colors group-hover:bg-white/5 ${t2Win ? 'bg-[#F37022]/25 font-bold' : t1Win ? 'opacity-60' : ''
+        }`}>
         <div className="flex flex-col min-w-0 flex-1">
           <span className={`truncate font-bold text-xs sm:text-sm ${t2Win ? 'text-white font-black' : 'text-slate-100'}`}>
             {t2Info.teamName}
@@ -153,9 +149,8 @@ const MatchRow = ({ match, teamsList = [], onSelectMatch }) => {
             </span>
           )}
         </div>
-        <span className={`font-heading font-black text-sm sm:text-base min-w-[22px] text-center ${
-          t2Win ? 'text-[#F37022]' : 'text-slate-400'
-        }`}>
+        <span className={`font-heading font-black text-sm sm:text-base min-w-[22px] text-center ${t2Win ? 'text-[#F37022]' : 'text-slate-400'
+          }`}>
           {match.score2 ?? ''}
         </span>
       </div>
@@ -217,11 +212,10 @@ const FinalCard = ({ title, match, teamsList, onSelectMatch, trophy = false }) =
   if (!match) return null;
 
   return (
-    <div className={`rounded-xl border p-3 backdrop-blur-sm ${
-      trophy
-        ? 'bg-gradient-to-b from-[#F37022]/15 via-[#1e130d] to-[#0e0906] border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.25)]'
-        : 'bg-[#0e0906]/80 border-[#F37022]/25'
-    }`}>
+    <div className={`rounded-xl border p-3 backdrop-blur-sm ${trophy
+      ? 'bg-gradient-to-b from-[#F37022]/15 via-[#1e130d] to-[#0e0906] border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.25)]'
+      : 'bg-[#0e0906]/80 border-[#F37022]/25'
+      }`}>
       <div className="flex items-center justify-center gap-2 mb-2">
         {trophy && <Trophy className="w-3.5 h-3.5 text-amber-400" />}
         <span className="font-heading font-black text-[10px] sm:text-xs tracking-widest uppercase text-white">
@@ -281,13 +275,12 @@ const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => 
   return (
     <div
       onClick={() => onSelectMatch && onSelectMatch(match)}
-      className={`w-56 sm:w-64 rounded-xl border text-[11px] sm:text-xs overflow-hidden transition-all hover:border-[#F37022] hover:shadow-[0_0_20px_rgba(243,112,34,0.35)] cursor-pointer group shadow-lg ${
-        isFinal
-          ? 'border-amber-400/80 bg-gradient-to-b from-amber-950/40 via-[#1e130d] to-[#0e0906] shadow-[0_0_15px_rgba(245,158,11,0.25)]'
-          : upcoming
+      className={`w-56 sm:w-64 rounded-xl border text-[11px] sm:text-xs overflow-hidden transition-all hover:border-[#F37022] hover:shadow-[0_0_20px_rgba(243,112,34,0.35)] cursor-pointer group shadow-lg ${isFinal
+        ? 'border-amber-400/80 bg-gradient-to-b from-amber-950/40 via-[#1e130d] to-[#0e0906] shadow-[0_0_15px_rgba(245,158,11,0.25)]'
+        : upcoming
           ? 'border-[#F37022]/30 bg-[#0e0906]/90 hover:bg-[#150e09]'
           : 'border-[#F37022]/20 bg-[#0e0906]/80'
-      }`}
+        }`}
     >
       {/* Header Bar */}
       <div className="px-2.5 py-1 bg-white/5 border-b border-white/5 flex items-center justify-between text-[10px] text-amber-300/90 font-medium">
@@ -299,9 +292,8 @@ const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => 
       </div>
 
       {/* Team 1 Slot */}
-      <div className={`flex items-center justify-between px-2.5 py-1.5 gap-2 min-h-[34px] transition-colors group-hover:bg-white/5 ${
-        t1Win ? 'bg-[#F37022]/25 font-bold text-white' : t2Win ? 'opacity-50' : ''
-      }`}>
+      <div className={`flex items-center justify-between px-2.5 py-1.5 gap-2 min-h-[34px] transition-colors group-hover:bg-white/5 ${t1Win ? 'bg-[#F37022]/25 font-bold text-white' : t2Win ? 'opacity-50' : ''
+        }`}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {t1Info.fullObj?.logo ? (
             <img src={t1Info.fullObj.logo} alt="" className="w-4 h-4 rounded object-cover shrink-0 border border-[#F37022]/30" />
@@ -319,9 +311,8 @@ const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => 
             )}
           </div>
         </div>
-        <span className={`font-heading font-black text-xs sm:text-sm min-w-[18px] text-center ${
-          t1Win ? 'text-[#F37022]' : 'text-slate-400'
-        }`}>
+        <span className={`font-heading font-black text-xs sm:text-sm min-w-[18px] text-center ${t1Win ? 'text-[#F37022]' : 'text-slate-400'
+          }`}>
           {match.score1 ?? (match.team1 ? '0' : '-')}
         </span>
       </div>
@@ -329,9 +320,8 @@ const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => 
       <div className="border-t border-orange-950/40" />
 
       {/* Team 2 Slot */}
-      <div className={`flex items-center justify-between px-2.5 py-1.5 gap-2 min-h-[34px] transition-colors group-hover:bg-white/5 ${
-        t2Win ? 'bg-[#F37022]/25 font-bold text-white' : t1Win ? 'opacity-50' : ''
-      }`}>
+      <div className={`flex items-center justify-between px-2.5 py-1.5 gap-2 min-h-[34px] transition-colors group-hover:bg-white/5 ${t2Win ? 'bg-[#F37022]/25 font-bold text-white' : t1Win ? 'opacity-50' : ''
+        }`}>
         <div className="flex items-center gap-2 min-w-0 flex-1">
           {t2Info.fullObj?.logo ? (
             <img src={t2Info.fullObj.logo} alt="" className="w-4 h-4 rounded object-cover shrink-0 border border-[#F37022]/30" />
@@ -349,9 +339,8 @@ const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => 
             )}
           </div>
         </div>
-        <span className={`font-heading font-black text-xs sm:text-sm min-w-[18px] text-center ${
-          t2Win ? 'text-[#F37022]' : 'text-slate-400'
-        }`}>
+        <span className={`font-heading font-black text-xs sm:text-sm min-w-[18px] text-center ${t2Win ? 'text-[#F37022]' : 'text-slate-400'
+          }`}>
           {match.score2 ?? (match.team2 ? '0' : '-')}
         </span>
       </div>
@@ -393,7 +382,6 @@ const VisualBracketTree = ({ regionName, matches, teamsList, onSelectMatch }) =>
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-3 h-3 rounded-full bg-[#F37022] shadow-[0_0_10px_#F37022] animate-pulse" />
           <h3 className="font-heading font-black text-lg sm:text-xl text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-amber-400 uppercase tracking-wider">
             SƠ ĐỒ NHÁNH ĐẤU - {regionName.toUpperCase()}
           </h3>
@@ -405,11 +393,10 @@ const VisualBracketTree = ({ regionName, matches, teamsList, onSelectMatch }) =>
             <button
               key={idx}
               onClick={() => scrollToRound(idx)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                activeRoundCol === idx
-                  ? 'bg-[#F37022] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${activeRoundCol === idx
+                ? 'bg-[#F37022] text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+                }`}
             >
               {roundLabel}
             </button>
@@ -423,7 +410,7 @@ const VisualBracketTree = ({ regionName, matches, teamsList, onSelectMatch }) =>
         className="overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-[#F37022]/40 scrollbar-track-transparent flex items-stretch min-w-full"
       >
         <div className="flex items-stretch gap-6 sm:gap-10 min-w-max py-4 px-2">
-          
+
           {/* ROUND 1: VÒNG 1/16 (8 Matches) */}
           <div className="flex flex-col justify-between space-y-4">
             <div className="text-center pb-2 border-b border-orange-500/30 font-heading font-black text-xs text-[#F37022] uppercase tracking-wider">
@@ -525,6 +512,14 @@ const VisualBracketTree = ({ regionName, matches, teamsList, onSelectMatch }) =>
 const MatchDetailModal = ({ match, teamsList, onClose }) => {
   if (!match) return null;
 
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onClose]);
+
   const t1Info = parseTeamInfo(match.team1, teamsList);
   const t2Info = parseTeamInfo(match.team2, teamsList);
 
@@ -544,209 +539,209 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
   }));
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md">
+    <div
+      onClick={onClose}
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md cursor-pointer"
+    >
       <motion.div
+        onClick={(e) => e.stopPropagation()}
         initial={{ scale: 0.95, opacity: 0, y: 40 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.95, opacity: 0, y: 40 }}
-        className="bg-[#120c08] border border-[#F37022]/40 rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] sm:max-h-[88vh] flex flex-col shadow-[0_0_40px_rgba(243,112,34,0.3)] text-white"
+        className="bg-[#120c08] border border-[#F37022]/40 rounded-t-2xl sm:rounded-2xl max-w-2xl w-full max-h-[90vh] sm:max-h-[88vh] flex flex-col shadow-[0_0_40px_rgba(243,112,34,0.3)] text-white cursor-default"
       >
         {/* Sticky Header with Close Button */}
-       
+
 
         {/* Scrollable Content */}
         <div className="overflow-y-auto px-3.5 sm:px-5 pb-3.5 sm:pb-5">
 
-        {/* Header */}
-        <div className="text-center mt-3 mb-3.5 border-b border-white/10 pb-2.5">
-         
+          {/* Header */}
+          <div className="text-center mt-3 mb-3.5 border-b border-white/10 pb-2.5">
 
-          <h3 className="font-heading font-black text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-amber-400 uppercase tracking-wider">
-            
-          </h3>
 
-          <div className="text-[11px] text-amber-400 font-mono mt-0.5 flex items-center justify-center gap-1.5">
-           
-          </div>
-           <div className="flex items-center justify-end px-3.5 pt-5 pb-2 border-b border-white/10 shrink-0">
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-white p-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        </div>
+            <h3 className="font-heading font-black text-base sm:text-lg text-transparent bg-clip-text bg-gradient-to-r from-white via-orange-100 to-amber-400 uppercase tracking-wider">
 
-        {/* Team Matchup Banner */}
-        <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-4 relative">
-          {/* Team 1 Box */}
-          <div className={`p-2 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${
-            match.winner === 1 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
-          }`}>
-            {team1Obj?.logo ? (
-              <img src={team1Obj.logo} alt={t1Info.teamName} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
-            ) : (
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
-                {t1Info.teamName ? t1Info.teamName.charAt(0) : 'T1'}
-              </div>
-            )}
-            <div className="font-heading font-bold text-xs sm:text-base text-white line-clamp-1">{t1Info.teamName}</div>
-            {t1Info.schoolName && (
-              <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{t1Info.schoolName}</div>
-            )}
-            <div className="mt-1 text-sm sm:text-lg font-black font-heading text-[#F37022]">
-              Tỷ số: {match.score1 ?? 0}
+            </h3>
+
+            <div className="text-[11px] text-amber-400 font-mono mt-0.5 flex items-center justify-center gap-1.5">
+
+            </div>
+            <div className="flex items-center justify-end px-3.5 pt-5 pb-2 border-b border-white/10 shrink-0">
+              <button
+                onClick={onClose}
+                className="text-slate-400 hover:text-white p-1 rounded-lg bg-white/5 hover:bg-white/10 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
-          {/* VS Badge */}
-          <div className="flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#F37022] font-black text-white text-[9px] sm:text-[10px] items-center justify-center border-2 border-black shadow-[0_0_10px_#F37022] z-10">
-            VS
-          </div>
-
-          {/* Team 2 Box */}
-          <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${
-            match.winner === 2 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
-          }`}>
-            {team2Obj?.logo ? (
-              <img src={team2Obj.logo} alt={t2Info.teamName} className="w-10 h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
-                {t2Info.teamName ? t2Info.teamName.charAt(0) : 'T2'}
+          {/* Team Matchup Banner */}
+          <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-4 relative">
+            {/* Team 1 Box */}
+            <div className={`p-2 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${match.winner === 1 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
+              }`}>
+              {team1Obj?.logo ? (
+                <img src={team1Obj.logo} alt={t1Info.teamName} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
+              ) : (
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
+                  {t1Info.teamName ? t1Info.teamName.charAt(0) : 'T1'}
+                </div>
+              )}
+              <div className="font-heading font-bold text-xs sm:text-base text-white line-clamp-1">{t1Info.teamName}</div>
+              {t1Info.schoolName && (
+                <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{t1Info.schoolName}</div>
+              )}
+              <div className="mt-1 text-sm sm:text-lg font-black font-heading text-[#F37022]">
+                Tỷ số: {match.score1 ?? 0}
               </div>
-            )}
-            <div className="font-heading font-bold text-sm sm:text-base text-white">{t2Info.teamName}</div>
-            {t2Info.schoolName && (
-              <div className="text-[11px] text-slate-400 font-medium mt-0.5">{t2Info.schoolName}</div>
-            )}
-            <div className="mt-1 text-lg font-black font-heading text-[#F37022]">
-              Tỷ số: {match.score2 ?? 0}
+            </div>
+
+            {/* VS Badge */}
+            <div className="flex absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 sm:w-8 sm:h-8 rounded-full bg-[#F37022] font-black text-white text-[9px] sm:text-[10px] items-center justify-center border-2 border-black shadow-[0_0_10px_#F37022] z-10">
+              VS
+            </div>
+
+            {/* Team 2 Box */}
+            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${match.winner === 2 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
+              }`}>
+              {team2Obj?.logo ? (
+                <img src={team2Obj.logo} alt={t2Info.teamName} className="w-10 h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
+                  {t2Info.teamName ? t2Info.teamName.charAt(0) : 'T2'}
+                </div>
+              )}
+              <div className="font-heading font-bold text-sm sm:text-base text-white">{t2Info.teamName}</div>
+              {t2Info.schoolName && (
+                <div className="text-[11px] text-slate-400 font-medium mt-0.5">{t2Info.schoolName}</div>
+              )}
+              <div className="mt-1 text-lg font-black font-heading text-[#F37022]">
+                Tỷ số: {match.score2 ?? 0}
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Rosters Comparison */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-          {/* Team 1 Roster */}
-          <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
-            <h4 className="font-bold text-sm text-[#F37022] uppercase tracking-wider mb-3 flex items-center gap-2">
-              <p className="h-4" /> Thành Viên Đội: {t1Info.teamName}
-            </h4>
-            {t1Members.length > 0 ? (
-              <div className="grid grid-cols-1 gap-2">
-                {t1Members.map((m, idx) => {
-                  const name = typeof m === 'object' ? m.name : m;
-                  const ingame = typeof m === 'object' ? m.ingame : '';
-                  const role = typeof m === 'object' ? m.role : (idx === 0 ? 'Đội trưởng' : 'Thành viên');
-                  const isCaptain = role === 'Đội trưởng' || name.includes('(C)');
-                  const isSub = role === 'Dự bị' || name.toLowerCase().includes('sub');
+          {/* Rosters Comparison */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {/* Team 1 Roster */}
+            <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
+              {/* <h4 className="font-bold text-sm text-[#F37022] uppercase tracking-wider mb-3 flex items-center gap-2">
+                <p className="h-4" />  {t1Info.teamName}
+              </h4> */}
+              {t1Members.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {t1Members.map((m, idx) => {
+                    const name = typeof m === 'object' ? m.name : m;
+                    const ingame = typeof m === 'object' ? m.ingame : '';
+                    const role = typeof m === 'object' ? m.role : (idx === 0 ? 'Đội trưởng' : 'Thành viên');
+                    const isCaptain = role === 'Đội trưởng' || name.includes('(C)');
+                    const isSub = role === 'Dự bị' || name.toLowerCase().includes('sub');
 
-                  return (
-                    <div
-                      key={idx}
-                      className={`p-2.5 rounded-lg border text-xs ${
-                        isCaptain
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-2.5 rounded-lg border text-xs ${isCaptain
                           ? 'bg-orange-500/15 border-orange-500/40 text-white'
                           : isSub
-                          ? 'bg-sky-500/15 border-sky-500/30 text-slate-300'
-                          : 'bg-white/5 border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold truncate">{name}</span>
-                        {isCaptain && (
-                          <span className="text-[9px] font-black bg-[#F37022] text-white px-1.5 py-0.2 rounded uppercase">
-                            C
-                          </span>
-                        )}
-                        {isSub && (
-                          <span className="text-[9px] font-black bg-sky-500 text-white px-1.5 py-0.2 rounded uppercase">
-                            SUB
-                          </span>
-                        )}
+                            ? 'bg-sky-500/15 border-sky-500/30 text-slate-300'
+                            : 'bg-white/5 border-slate-800 text-slate-300'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold truncate">{name}</span>
+                          {/* {isCaptain && (
+                            <span className="text-[9px] font-black bg-[#F37022] text-white px-1.5 py-0.2 rounded uppercase">
+                              C
+                            </span>
+                          )} */}
+                          {/* {isSub && (
+                            <span className="text-[9px] font-black bg-sky-500 text-white px-1.5 py-0.2 rounded uppercase">
+                              SUB
+                            </span>
+                          )} */}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                          <span className="truncate">{ingame}</span>
+                          {role && (
+                            <span className="text-amber-300 font-sans font-semibold text-[9px] bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 shrink-0 ml-1">
+                              {role}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono truncate mt-0.5">
-                        <span className="truncate">{ingame}</span>
-                        {role && (
-                          <span className="text-amber-300 font-sans font-semibold text-[9px] bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 shrink-0 ml-1">
-                            {role}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-xs text-slate-400 italic">Chưa có dữ liệu danh sách thi đấu.</div>
-            )}
-          </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 italic">Chưa có dữ liệu danh sách thi đấu.</div>
+              )}
+            </div>
 
-          {/* Team 2 Roster */}
-          <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
-            <h4 className="font-bold text-sm text-[#F37022] uppercase tracking-wider mb-3 flex items-center gap-2">
-              <p className=" h-4" /> Thành Viên Đội: {t2Info.teamName}
-            </h4>
-            {t2Members.length > 0 ? (
-              <div className="grid grid-cols-1 gap-2">
-                {t2Members.map((m, idx) => {
-                  const name = typeof m === 'object' ? m.name : m;
-                  const ingame = typeof m === 'object' ? m.ingame : '';
-                  const role = typeof m === 'object' ? m.role : (idx === 0 ? 'Đội trưởng' : idx >= 5 ? 'Dự bị' : 'Thành viên');
-                  const isCaptain = role === 'Đội trưởng' || name.includes('(C)');
-                  const isSub = role === 'Dự bị' || name.toLowerCase().includes('sub') || idx >= 5;
+            {/* Team 2 Roster */}
+            <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
+              {/* <h4 className="font-bold text-sm text-[#F37022] uppercase tracking-wider mb-3 flex items-center gap-2">
+                <p className=" h-4" /> {t2Info.teamName}
+              </h4> */}
+              {t2Members.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2">
+                  {t2Members.map((m, idx) => {
+                    const name = typeof m === 'object' ? m.name : m;
+                    const ingame = typeof m === 'object' ? m.ingame : '';
+                    const role = typeof m === 'object' ? m.role : (idx === 0 ? 'Đội trưởng' : idx >= 5 ? 'Dự bị' : 'Thành viên');
+                    const isCaptain = role === 'Đội trưởng' || name.includes('(C)');
+                    const isSub = role === 'Dự bị' || name.toLowerCase().includes('sub') || idx >= 5;
 
-                  return (
-                    <div
-                      key={idx}
-                      className={`p-2.5 rounded-lg border text-xs ${
-                        isCaptain
+                    return (
+                      <div
+                        key={idx}
+                        className={`p-2.5 rounded-lg border text-xs ${isCaptain
                           ? 'bg-orange-500/15 border-orange-500/40 text-white'
                           : isSub
-                          ? 'bg-sky-500/15 border-sky-500/30 text-slate-300'
-                          : 'bg-white/5 border-slate-800 text-slate-300'
-                      }`}
-                    >
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="font-bold truncate">{name}</span>
-                        {isCaptain && (
-                          <span className="text-[9px] font-black bg-[#F37022] text-white px-1.5 py-0.2 rounded uppercase">
-                            C
-                          </span>
-                        )}
-                        {isSub && (
-                          <span className="text-[9px] font-black bg-sky-500 text-white px-1.5 py-0.2 rounded uppercase">
-                            SUB
-                          </span>
-                        )}
+                            ? 'bg-sky-500/15 border-sky-500/30 text-slate-300'
+                            : 'bg-white/5 border-slate-800 text-slate-300'
+                          }`}
+                      >
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold truncate">{name}</span>
+                          {/* {isCaptain && (
+                            <span className="text-[9px] font-black bg-[#F37022] text-white px-1.5 py-0.2 rounded uppercase">
+                              C
+                            </span>
+                          )} */}
+                          {/* {isSub && (
+                            <span className="text-[9px] font-black bg-sky-500 text-white px-1.5 py-0.2 rounded uppercase">
+                              SUB
+                            </span>
+                          )} */}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono truncate mt-0.5">
+                          <span className="truncate">{ingame}</span>
+                          {role && (
+                            <span className="text-amber-300 font-sans font-semibold text-[9px] bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 shrink-0 ml-1">
+                              {role}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono truncate mt-0.5">
-                        <span className="truncate">{ingame}</span>
-                        {role && (
-                          <span className="text-amber-300 font-sans font-semibold text-[9px] bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 shrink-0 ml-1">
-                            {role}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-xs text-slate-400 italic">Chưa có dữ liệu danh sách thi đấu.</div>
-            )}
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-400 italic">Chưa có dữ liệu danh sách thi đấu.</div>
+              )}
+            </div>
           </div>
-        </div>
 
-        <div className="mt-3.5 text-center">
-          <button
-            onClick={onClose}
-            className="px-5 py-1.5 rounded-xl bg-[#F37022] text-white font-bold text-xs uppercase hover:bg-orange-600 transition-colors shadow-md cursor-pointer"
-          >
-            Đóng Cửa Sổ
-          </button>
-        </div>
+          <div className="mt-3.5 text-center">
+            <button
+              onClick={onClose}
+              className="px-5 py-1.5 rounded-xl bg-[#F37022] text-white font-bold text-xs uppercase hover:bg-orange-600 transition-colors shadow-md cursor-pointer"
+            >
+              Đóng Cửa Sổ
+            </button>
+          </div>
         </div>{/* end scrollable content */}
       </motion.div>
     </div>
@@ -875,22 +870,20 @@ export default function Bracket({ selectedGame: initialGame }) {
           <div className="inline-flex bg-white/5 rounded-2xl p-1.5 border border-[#F37022]/20">
             <button
               onClick={() => setViewMode('bracket')}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                viewMode === 'bracket'
-                  ? 'bg-[#F37022] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${viewMode === 'bracket'
+                ? 'bg-[#F37022] text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+                }`}
             >
               <GitBranch className="w-4 h-4" />
               Sơ Đồ Các Đội
             </button>
             <button
               onClick={() => setViewMode('schedule')}
-              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
-                viewMode === 'schedule'
-                  ? 'bg-[#F37022] text-white shadow-md'
-                  : 'text-slate-400 hover:text-white'
-              }`}
+              className={`flex items-center gap-2 px-5 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${viewMode === 'schedule'
+                ? 'bg-[#F37022] text-white shadow-md'
+                : 'text-slate-400 hover:text-white'
+                }`}
             >
               <CalendarDays className="w-4 h-4" />
               Lịch Thi Đấu
@@ -968,9 +961,9 @@ export default function Bracket({ selectedGame: initialGame }) {
                       </div>
                     </div>
 
-                    <div className="mt-3 text-[11px] text-amber-300/80 font-semibold group-hover:text-amber-200 transition-colors flex items-center gap-1">
+                    {/* <div className="mt-3 text-[11px] text-amber-300/80 font-semibold group-hover:text-amber-200 transition-colors flex items-center gap-1">
                       <Info className="w-3.5 h-3.5" /> Bấm để xem thông tin đội hình 2 đội
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               );
@@ -980,26 +973,24 @@ export default function Bracket({ selectedGame: initialGame }) {
             <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-[#F37022]/20 backdrop-blur-md">
               <button
                 onClick={() => setTreeRegion('MB')}
-                className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  treeRegion === 'MB'
-                    ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
-                }`}
+                className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${treeRegion === 'MB'
+                  ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
+                  }`}
               >
                 <span>Nhánh đấu Miền Bắc</span>
-               
+
               </button>
 
               <button
                 onClick={() => setTreeRegion('MN')}
-                className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  treeRegion === 'MN'
-                    ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
-                }`}
+                className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${treeRegion === 'MN'
+                  ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
+                  }`}
               >
                 <span>Nhánh đấu Miền Nam</span>
-               
+
               </button>
             </div>
 
@@ -1017,11 +1008,10 @@ export default function Bracket({ selectedGame: initialGame }) {
             <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-[#F37022]/20 backdrop-blur-md">
               <button
                 onClick={() => setScheduleRegion('MB')}
-                className={`px-5 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  scheduleRegion === 'MB'
-                    ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
-                }`}
+                className={`px-5 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${scheduleRegion === 'MB'
+                  ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
+                  }`}
               >
                 <span>Miền Bắc</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${scheduleRegion === 'MB' ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-400'}`}>
@@ -1031,11 +1021,10 @@ export default function Bracket({ selectedGame: initialGame }) {
 
               <button
                 onClick={() => setScheduleRegion('MN')}
-                className={`px-5 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${
-                  scheduleRegion === 'MN'
-                    ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
-                    : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
-                }`}
+                className={`px-5 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${scheduleRegion === 'MN'
+                  ? 'bg-gradient-to-r from-[#F37021] to-amber-500 text-white shadow-lg shadow-orange-950/50 border border-orange-400/40 scale-[1.02]'
+                  : 'bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10'
+                  }`}
               >
                 <span>Miền Nam</span>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${scheduleRegion === 'MN' ? 'bg-white/20 text-white' : 'bg-white/10 text-slate-400'}`}>
@@ -1055,11 +1044,10 @@ export default function Bracket({ selectedGame: initialGame }) {
                   <div
                     key={match.id}
                     onClick={() => setSelectedMatchModal(match)}
-                    className={`backdrop-blur-md rounded-2xl p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group ${
-                      isNatFinal
-                        ? 'bg-gradient-to-r from-amber-950/70 via-orange-950/50 to-amber-950/70 border-2 border-amber-400/80 shadow-[0_0_25px_rgba(245,158,11,0.25)] hover:border-amber-300'
-                        : 'bg-black/60 border border-[#F37022]/20 hover:border-[#F37022]/60'
-                    }`}
+                    className={`backdrop-blur-md rounded-2xl p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group ${isNatFinal
+                      ? 'bg-gradient-to-r from-amber-950/70 via-orange-950/50 to-amber-950/70 border-2 border-amber-400/80 shadow-[0_0_25px_rgba(245,158,11,0.25)] hover:border-amber-300'
+                      : 'bg-black/60 border border-[#F37022]/20 hover:border-[#F37022]/60'
+                      }`}
                   >
                     {/* Date & Time */}
                     <div className="flex items-center gap-3 min-w-[160px]">

@@ -46,7 +46,7 @@ const AOV_STEPS = [
   },
   {
     step: '4',
-    label: 'CK Toàn Quốc',
+    label: 'Chung Kết Toàn Quốc',
     tag: 'OFFLINE',
     icon: <Crown className="w-5 h-5" />,
     details: [
@@ -92,7 +92,7 @@ const VLR_STEPS = [
   },
   {
     step: '4',
-    label: 'CK Toàn Quốc',
+    label: 'Chung Kết Toàn Quốc',
     tag: 'OFFLINE',
     icon: <Crown className="w-5 h-5" />,
     details: [
@@ -158,7 +158,7 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink }) {
                     >
                       {step.step}
                     </div>
-                    
+
                   </div>
                   {step.tag ? (
                     <span className="px-3 py-1 bg-gradient-to-r from-orange-600/30 to-[#F37022]/30 border border-[#F37022]/60 text-amber-300 text-[10px] font-black uppercase tracking-widest skew-x-[-8deg] shadow-[0_0_10px_rgba(243,112,34,0.4)]">
