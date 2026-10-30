@@ -580,12 +580,12 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
           {/* Team Matchup Banner */}
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-4 relative">
             {/* Team 1 Box */}
-            <div className={`p-2 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${match.winner === 1 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
+            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all h-full ${match.winner === 1 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
               }`}>
               {team1Obj?.logo ? (
-                <img src={team1Obj.logo} alt={t1Info.teamName} className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
+                <img src={team1Obj.logo} alt={t1Info.teamName} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
               ) : (
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
                   {t1Info.teamName ? t1Info.teamName.charAt(0) : 'T1'}
                 </div>
               )}
@@ -593,7 +593,7 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
               {t1Info.schoolName && (
                 <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{t1Info.schoolName}</div>
               )}
-              <div className="mt-1 text-sm sm:text-lg font-black font-heading text-[#F37022]">
+              <div className="mt-1 text-base sm:text-lg font-black font-heading text-[#F37022]">
                 Tỷ số: {match.score1 ?? 0}
               </div>
             </div>
@@ -604,20 +604,20 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
             </div>
 
             {/* Team 2 Box */}
-            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center text-center transition-all ${match.winner === 2 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
+            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all h-full ${match.winner === 2 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
               }`}>
               {team2Obj?.logo ? (
-                <img src={team2Obj.logo} alt={t2Info.teamName} className="w-10 h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
+                <img src={team2Obj.logo} alt={t2Info.teamName} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
                   {t2Info.teamName ? t2Info.teamName.charAt(0) : 'T2'}
                 </div>
               )}
-              <div className="font-heading font-bold text-sm sm:text-base text-white">{t2Info.teamName}</div>
+              <div className="font-heading font-bold text-xs sm:text-base text-white line-clamp-1">{t2Info.teamName}</div>
               {t2Info.schoolName && (
-                <div className="text-[11px] text-slate-400 font-medium mt-0.5">{t2Info.schoolName}</div>
+                <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{t2Info.schoolName}</div>
               )}
-              <div className="mt-1 text-lg font-black font-heading text-[#F37022]">
+              <div className="mt-1 text-base sm:text-lg font-black font-heading text-[#F37022]">
                 Tỷ số: {match.score2 ?? 0}
               </div>
             </div>
@@ -627,17 +627,17 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Team 1 Roster */}
             <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
-              {/* <h4 className="font-bold text-sm text-[#F37022] uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h4 className="font-bold text-sm text-[#FFFFFF] uppercase tracking-wider mb-3 flex items-center gap-2">
                 <p className="h-4" />  {t1Info.teamName}
-              </h4> */}
+              </h4>
               {t1Members.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
                   {t1Members.map((m, idx) => {
                     const name = typeof m === 'object' ? m.name : m;
                     const ingame = typeof m === 'object' ? m.ingame : '';
-                    const role = typeof m === 'object' ? m.role : (idx === 0 ? 'Đội trưởng' : 'Thành viên');
+                    const role = typeof m === 'object' ? m.role : (idx === 0 ? 'Đội trưởng' : idx >= 5 ? 'Dự bị' : 'Thành viên');
                     const isCaptain = role === 'Đội trưởng' || name.includes('(C)');
-                    const isSub = role === 'Dự bị' || name.toLowerCase().includes('sub');
+                    const isSub = role === 'Dự bị' || name.toLowerCase().includes('sub') || idx >= 5;
 
                     return (
                       <div
@@ -681,9 +681,9 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
 
             {/* Team 2 Roster */}
             <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
-              {/* <h4 className="font-bold text-sm text-[#F37022] uppercase tracking-wider mb-3 flex items-center gap-2">
+              <h5 className="font-bold text-sm text-[#FFFFFF] uppercase tracking-wider mb-3 flex items-center gap-2" >
                 <p className=" h-4" /> {t2Info.teamName}
-              </h4> */}
+              </h5>
               {t2Members.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
                   {t2Members.map((m, idx) => {
