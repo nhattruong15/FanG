@@ -70,7 +70,7 @@ const AOV_TIMELINE = [
     date: '15/11',
     subtitle: 'Chung kết tổng AOV',
     active: true,
-   
+
   },
 ];
 
@@ -111,7 +111,7 @@ const VLR_TIMELINE = [
     date: '14/11',
     subtitle: 'Chung kết tổng Valorant',
     active: true,
-   
+
   },
 ];
 
@@ -125,17 +125,17 @@ const fadeInUp = {
 export default function Introduction({ selectedGame, onChangeGame }) {
   const TIMELINE = selectedGame === 'valorant' ? VLR_TIMELINE : AOV_TIMELINE;
   return (
-    <section 
-      id="introduction" 
+    <section
+      id="introduction"
       className=" pt-5 sm:pt-4 pb-16 md:pb-24 px-4 sm:px-6 relative bg-cover bg-center bg-no-repeat overflow-hidden"
       style={{ backgroundImage: `url(${bgIntroImg})` }}
     >
       <div className="absolute inset-0 bg-[#0e0906]/65 pointer-events-none z-0" />
 
       <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-4">
-        
+
         <motion.div {...fadeInUp} className="mb-16">
-          <motion.div 
+          <motion.div
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.4 }}
             className=" mt-5 relative w-full rounded-3xl overflow-hidden bg-cover bg-center bg-no-repeat shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_20px_40px_-10px_rgba(243,112,34,0.4)] border border-[#F37022]/40 group"
@@ -172,7 +172,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
             <div className="relative z-10 p-4 sm:p-8 md:p-16 lg:p-20">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-16 items-center">
-                
+
                 <div className="relative flex justify-center lg:justify-center">
                   <motion.div
                     initial={{ scale: 0.9, opacity: 0, y: 15 }}
@@ -198,7 +198,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="relative w-full p-0.5"
                 >
-                  <div 
+                  <div
                     className="relative p-[1.5px] bg-gradient-to-b from-[#F37022] via-[#ff8f3d] to-[#F37022] shadow-[0_0_30px_rgba(243,112,34,0.45)]"
                     style={{
                       clipPath: 'polygon(20px 0, calc(100% - 20px) 0, 100% 20px, 100% calc(100% - 20px), calc(100% - 20px) 100%, 20px 100%, 0 calc(100% - 20px), 0 20px)',
@@ -210,7 +210,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                         clipPath: 'polygon(19px 0, calc(100% - 19px) 0, 100% 19px, 100% calc(100% - 19px), calc(100% - 19px) 100%, 19px 100%, 0 calc(100% - 19px), 0 19px)',
                       }}
                     >
-                      <div 
+                      <div
                         className="relative overflow-hidden bg-gradient-to-b from-[#e04b00] via-[#c43c00] to-[#9e2c00] text-white p-4 sm:p-7 md:p-12 text-left leading-relaxed"
                         style={{
                           clipPath: 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)',
@@ -246,7 +246,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
           </motion.div>
         </motion.div>
 
-   
+
 
         <div className="relative overflow-hidden mb-16 left-1/2 -translate-x-1/2 w-screen px-4 sm:px-8 lg:px-16 pt-4 sm:pt-6 pb-8 sm:pb-10">
           <motion.div {...fadeInUp} className="relative z-20 text-center mb-6 sm:mb-8 flex flex-col items-center">
@@ -277,118 +277,118 @@ export default function Introduction({ selectedGame, onChangeGame }) {
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-2 sm:px-6 grid grid-cols-2 gap-3 sm:gap-7">
-          {GAMES.map((game, idx) => (
-            <motion.div
-              key={game.name}
-              {...fadeInUp}
-              transition={{ duration: 0.5, delay: idx * 0.15 }}
-              whileHover={{ y: -8, scale: 1.03 }}
-              className="relative group cursor-pointer"
-            >
-              <div
-                className={`absolute -inset-1.5 rounded-3xl bg-gradient-to-r ${game.color} opacity-30 group-hover:opacity-100 blur-xl transition-all duration-500 pointer-events-none`}
-              />
-
+            {GAMES.map((game, idx) => (
               <motion.div
-                animate={{
-                  boxShadow: [
-                    `0 0 15px ${idx === 0 ? 'rgba(255,70,85,0.35)' : 'rgba(243,112,33,0.35)'}`,
-                    `0 0 35px ${idx === 0 ? 'rgba(255,70,85,0.65)' : 'rgba(243,112,33,0.65)'}`,
-                    `0 0 15px ${idx === 0 ? 'rgba(255,70,85,0.35)' : 'rgba(243,112,33,0.35)'}`,
-                  ],
-                }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                className="relative overflow-hidden"
-                style={{
-                  clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))',
-                }}
+                key={game.name}
+                {...fadeInUp}
+                transition={{ duration: 0.5, delay: idx * 0.15 }}
+                whileHover={{ y: -8, scale: 1.03 }}
+                className="relative group cursor-pointer"
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
-
                 <div
-                  className="relative m-[1.5px] overflow-hidden bg-[#0a0705] flex flex-col aspect-square sm:aspect-auto sm:min-h-[420px] md:min-h-[480px] h-full"
+                  className={`absolute -inset-1.5 rounded-3xl bg-gradient-to-r ${game.color} opacity-30 group-hover:opacity-100 blur-xl transition-all duration-500 pointer-events-none`}
+                />
+
+                <motion.div
+                  animate={{
+                    boxShadow: [
+                      `0 0 15px ${idx === 0 ? 'rgba(255,70,85,0.35)' : 'rgba(243,112,33,0.35)'}`,
+                      `0 0 35px ${idx === 0 ? 'rgba(255,70,85,0.65)' : 'rgba(243,112,33,0.65)'}`,
+                      `0 0 15px ${idx === 0 ? 'rgba(255,70,85,0.35)' : 'rgba(243,112,33,0.35)'}`,
+                    ],
+                  }}
+                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                  className="relative overflow-hidden"
                   style={{
-                    clipPath: 'polygon(0 0, calc(100% - 17px) 0, 100% 17px, 100% 100%, 17px 100%, 0 calc(100% - 17px))',
+                    clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))',
                   }}
                 >
-                  <motion.div
-                    animate={{ x: ['-150%', '250%'] }}
-                    transition={{ duration: 3, repeat: Infinity, repeatDelay: 2.5, ease: 'easeInOut' }}
-                    className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 pointer-events-none z-20"
-                  />
+                  <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
 
-                  <div className="absolute inset-0 overflow-hidden">
-                    <img
-                      src={game.bgCharacter}
-                      alt={game.name}
-                      style={{ objectPosition: game.objectPos || 'center center' }}
-                      className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-115 group-hover:brightness-110"
-                    />
-
-                    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                      {[...Array(3)].map((_, i) => (
-                        <motion.div
-                          key={i}
-                          animate={{
-                            y: [0, -60, 0],
-                            opacity: [0.2, 0.8, 0.2],
-                            scale: [0.8, 1.3, 0.8],
-                          }}
-                          transition={{
-                            duration: 3 + i,
-                            repeat: Infinity,
-                            ease: 'easeInOut',
-                            delay: i * 0.8,
-                          }}
-                          style={{ left: `${25 + i * 30}%`, top: `${40 + i * 15}%` }}
-                          className={`absolute w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-rose-400 shadow-[0_0_8px_#ff4655]' : 'bg-[#F37022] shadow-[0_0_8px_#F37022]'}`}
-                        />
-                      ))}
-                    </div>
-
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0a0705] via-[#0a0705]/60 to-transparent" />
-                    <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-10 group-hover:opacity-30 transition-opacity duration-500`} />
-
-                    <div
-                      className={`absolute top-0 right-0 w-8 h-8 sm:w-16 sm:h-16 flex items-end justify-start p-1 sm:p-2.5 bg-gradient-to-bl ${game.color} text-white shadow-xl`}
-                      style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
-                    />
-
+                  <div
+                    className="relative m-[1.5px] overflow-hidden bg-[#0a0705] flex flex-col aspect-square sm:aspect-auto sm:min-h-[420px] md:min-h-[480px] h-full"
+                    style={{
+                      clipPath: 'polygon(0 0, calc(100% - 17px) 0, 100% 17px, 100% 100%, 17px 100%, 0 calc(100% - 17px))',
+                    }}
+                  >
                     <motion.div
-                      animate={{ top: ['-10%', '110%'] }}
-                      transition={{ duration: 3.5, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
-                      className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-10"
+                      animate={{ x: ['-150%', '250%'] }}
+                      transition={{ duration: 3, repeat: Infinity, repeatDelay: 2.5, ease: 'easeInOut' }}
+                      className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 pointer-events-none z-20"
                     />
-                  </div>
 
-                  <div className="relative z-10 mt-auto p-2 sm:px-8 sm:pb-8 sm:pt-4 flex flex-col justify-end overflow-hidden">
-                    <div>
-                      <div className={`w-6 sm:w-12 h-0.5 sm:h-1 rounded-full bg-gradient-to-r ${game.color} mb-1 sm:mb-4 group-hover:w-20 transition-all duration-500 shadow-[0_0_10px_rgba(243,112,34,0.5)]`} />
+                    <div className="absolute inset-0 overflow-hidden">
+                      <img
+                        src={game.bgCharacter}
+                        alt={game.name}
+                        style={{ objectPosition: game.objectPos || 'center center' }}
+                        className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-115 group-hover:brightness-110"
+                      />
 
-                      <h3 className="font-heading font-black text-xs sm:text-2xl md:text-3xl text-white mb-0.5 sm:mb-2 tracking-wide uppercase leading-tight truncate group-hover:text-[#F37022] transition-colors duration-300" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
-                        {game.name}
-                      </h3>
+                      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                        {[...Array(3)].map((_, i) => (
+                          <motion.div
+                            key={i}
+                            animate={{
+                              y: [0, -60, 0],
+                              opacity: [0.2, 0.8, 0.2],
+                              scale: [0.8, 1.3, 0.8],
+                            }}
+                            transition={{
+                              duration: 3 + i,
+                              repeat: Infinity,
+                              ease: 'easeInOut',
+                              delay: i * 0.8,
+                            }}
+                            style={{ left: `${25 + i * 30}%`, top: `${40 + i * 15}%` }}
+                            className={`absolute w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-rose-400 shadow-[0_0_8px_#ff4655]' : 'bg-[#F37022] shadow-[0_0_8px_#F37022]'}`}
+                          />
+                        ))}
+                      </div>
+
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#0a0705] via-[#0a0705]/60 to-transparent" />
+                      <div className={`absolute inset-0 bg-gradient-to-br ${game.color} opacity-10 group-hover:opacity-30 transition-opacity duration-500`} />
+
+                      <div
+                        className={`absolute top-0 right-0 w-8 h-8 sm:w-16 sm:h-16 flex items-end justify-start p-1 sm:p-2.5 bg-gradient-to-bl ${game.color} text-white shadow-xl`}
+                        style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
+                      />
+
+                      <motion.div
+                        animate={{ top: ['-10%', '110%'] }}
+                        transition={{ duration: 3.5, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
+                        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-10"
+                      />
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-1 sm:gap-2.5 mt-auto">
-                      <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-4 sm:py-2 bg-gradient-to-r ${game.color} text-white text-[9px] sm:text-xs font-black tracking-wider uppercase shadow-lg group-hover:scale-105 transition-transform duration-300`}
-                        style={{ clipPath: 'polygon(0 0, calc(100% - 5px) 0, 100% 50%, calc(100% - 5px) 100%, 0 100%, 5px 50%)' }}
-                      >
-                        {game.format}
+                    <div className="relative z-10 mt-auto p-2 sm:px-8 sm:pb-8 sm:pt-4 flex flex-col justify-end overflow-hidden">
+                      <div>
+                        <div className={`w-6 sm:w-12 h-0.5 sm:h-1 rounded-full bg-gradient-to-r ${game.color} mb-1 sm:mb-4 group-hover:w-20 transition-all duration-500 shadow-[0_0_10px_rgba(243,112,34,0.5)]`} />
+
+                        <h3 className="font-heading font-black text-xs sm:text-2xl md:text-3xl text-white mb-0.5 sm:mb-2 tracking-wide uppercase leading-tight truncate group-hover:text-[#F37022] transition-colors duration-300" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.5)' }}>
+                          {game.name}
+                        </h3>
                       </div>
-                      <div className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-md bg-white/5 border border-white/10 text-slate-300 text-[9px] sm:text-xs font-bold group-hover:border-[#F37022]/40 transition-colors">
-                        <span className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-green-400 animate-pulse" />
-                        <span className="hidden sm:inline">Đang mở đăng ký</span>
-                        <span className="sm:hidden">Đăng ký</span>
+
+                      <div className="flex flex-wrap items-center gap-1 sm:gap-2.5 mt-auto">
+                        <div className={`inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-4 sm:py-2 bg-gradient-to-r ${game.color} text-white text-[9px] sm:text-xs font-black tracking-wider uppercase shadow-lg group-hover:scale-105 transition-transform duration-300`}
+                          style={{ clipPath: 'polygon(0 0, calc(100% - 5px) 0, 100% 50%, calc(100% - 5px) 100%, 0 100%, 5px 50%)' }}
+                        >
+                          {game.format}
+                        </div>
+                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-md bg-white/5 border border-white/10 text-slate-300 text-[9px] sm:text-xs font-bold group-hover:border-[#F37022]/40 transition-colors">
+                          <span className=" sm:w-1.5 sm:h-1.5 rounded-full bg-green-400 animate-pulse" />
+                          <span className="hidden sm:inline">Đang mở đăng ký</span>
+                          <span className="sm:hidden">Đăng ký</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r ${game.color} opacity-50 group-hover:opacity-100 transition-opacity duration-500 shadow-[0_0_10px_rgba(243,112,34,0.8)]`} />
-                </div>
+                    <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r ${game.color} opacity-50 group-hover:opacity-100 transition-opacity duration-500 shadow-[0_0_10px_rgba(243,112,34,0.8)]`} />
+                  </div>
+                </motion.div>
               </motion.div>
-            </motion.div>
-          ))}
+            ))}
           </div>
 
           <motion.div
@@ -402,13 +402,13 @@ export default function Introduction({ selectedGame, onChangeGame }) {
               }}
             >
               <div className="absolute inset-0 bg-[linear-gradient(to_right,#f3702110_1px,transparent_1px),linear-gradient(to_bottom,#f3702110_1px,transparent_1px)] bg-[size:24px_24px] pointer-events-none" />
-              
+
               <div className="relative z-10 text-center group flex-1 flex flex-col items-center">
                 <div className="font-heading font-black text-xl sm:text-3xl md:text-4xl text-[#F37022] tracking-tight group-hover:scale-105 transition-transform duration-300" style={{ textShadow: '0 0 20px rgba(243,112,34,0.6)' }}>
                   32
                 </div>
                 <div className="text-slate-400 text-[9px] sm:text-xs md:text-sm font-bold uppercase tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-[#F37021]" />
+                  <span className=" rounded-full bg-[#F37021]" />
                   Trường ĐH - CĐ
                 </div>
               </div>
@@ -424,7 +424,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   64
                 </div>
                 <div className="text-slate-400 text-[9px] sm:text-xs md:text-sm font-bold uppercase tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-white" />
+                  <span className=" rounded-full bg-white" />
                   Đội tuyển thi đấu
                 </div>
               </div>
@@ -440,7 +440,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   40 Triệu
                 </div>
                 <div className="text-slate-400 text-[9px] sm:text-xs md:text-sm font-bold uppercase tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 flex items-center gap-1">
-                  <span className="w-1 h-1 rounded-full bg-amber-400 animate-ping" />
+                  <span className=" rounded-full bg-amber-400 animate-ping" />
                   Tổng giải thưởng
                 </div>
               </div>
@@ -498,29 +498,27 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
                   <div className="relative z-10 flex-shrink-0 flex items-center justify-center">
                     <div
-                      className={`w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-                        item.active
-                          ? 'bg-gradient-to-br from-[#F37021] via-amber-500 to-orange-600 text-white shadow-[0_0_25px_rgba(243,112,34,1)] ring-4 ring-[#F37021]/40'
-                          : 'bg-[#1f140c] text-amber-400 border-2 border-[#F37021] shadow-[0_0_15px_rgba(243,112,34,0.4)] group-hover:bg-[#F37021] group-hover:text-white group-hover:shadow-[0_0_20px_rgba(243,112,34,0.8)]'
-                      }`}
+                      className={`w-9 h-9 xs:w-10 xs:h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${item.active
+                        ? 'bg-gradient-to-br from-[#F37021] via-amber-500 to-orange-600 text-white shadow-[0_0_25px_rgba(243,112,34,1)] ring-4 ring-[#F37021]/40'
+                        : 'bg-[#1f140c] text-amber-400 border-2 border-[#F37021] shadow-[0_0_15px_rgba(243,112,34,0.4)] group-hover:bg-[#F37021] group-hover:text-white group-hover:shadow-[0_0_20px_rgba(243,112,34,0.8)]'
+                        }`}
                     >
                       {item.icon}
                     </div>
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <div 
+                    <div
                       className="relative p-[1.5px] transition-all duration-300 group-hover:shadow-[0_0_25px_rgba(243,112,34,0.6)]"
                       style={{
                         clipPath: 'polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px))',
                       }}
                     >
-                      <div 
-                        className={`absolute inset-0 transition-opacity duration-300 ${
-                          item.active
-                            ? 'bg-gradient-to-b from-[#F37021] via-amber-400 to-[#F37021] opacity-100'
-                            : 'bg-gradient-to-b from-[#F37021] via-amber-500/50 to-[#F37021]/60 opacity-80 group-hover:opacity-100 group-hover:from-amber-400'
-                        }`}
+                      <div
+                        className={`absolute inset-0 transition-opacity duration-300 ${item.active
+                          ? 'bg-gradient-to-b from-[#F37021] via-amber-400 to-[#F37021] opacity-100'
+                          : 'bg-gradient-to-b from-[#F37021] via-amber-500/50 to-[#F37021]/60 opacity-80 group-hover:opacity-100 group-hover:from-amber-400'
+                          }`}
                       />
 
                       <div
@@ -530,7 +528,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                         }}
                       >
                         <div>
-                        
+
                           <h4 className="font-heading font-extrabold text-[10px] xs:text-xs sm:text-sm text-white leading-snug group-hover:text-amber-300 transition-colors drop-shadow-sm text-center">
                             {item.subtitle}
                           </h4>
@@ -576,11 +574,10 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
                   <div className="relative mb-4 flex items-center justify-center">
                     <div
-                      className={`w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${
-                        item.active
-                          ? 'bg-gradient-to-br from-[#F37021] via-amber-500 to-orange-600 text-white shadow-[0_0_25px_rgba(243,112,34,1)] ring-4 ring-[#F37021]/40'
-                          : 'bg-[#1f140c] text-amber-400 border-2 border-[#F37021] shadow-[0_0_15px_rgba(243,112,34,0.4)] group-hover:bg-[#F37021] group-hover:text-white group-hover:shadow-[0_0_20px_rgba(243,112,34,0.8)]'
-                      }`}
+                      className={`w-11 h-11 sm:w-13 sm:h-13 rounded-full flex items-center justify-center transition-all duration-300 group-hover:scale-110 ${item.active
+                        ? 'bg-gradient-to-br from-[#F37021] via-amber-500 to-orange-600 text-white shadow-[0_0_25px_rgba(243,112,34,1)] ring-4 ring-[#F37021]/40'
+                        : 'bg-[#1f140c] text-amber-400 border-2 border-[#F37021] shadow-[0_0_15px_rgba(243,112,34,0.4)] group-hover:bg-[#F37021] group-hover:text-white group-hover:shadow-[0_0_20px_rgba(243,112,34,0.8)]'
+                        }`}
                     >
                       {item.icon}
                     </div>
@@ -588,18 +585,17 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     <div className="absolute top-full left-1/2 -translate-x-1/2 w-0.5 h-4 bg-gradient-to-b from-[#F37021] to-transparent opacity-80" />
                   </div>
 
-                  <div 
+                  <div
                     className="relative w-full p-[1.5px] transition-all duration-300 group-hover:shadow-[0_0_30px_rgba(243,112,34,0.6)]"
                     style={{
                       clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))',
                     }}
                   >
-                    <div 
-                      className={`absolute inset-0 transition-opacity duration-300 ${
-                        item.active
-                          ? 'bg-gradient-to-b from-[#F37021] via-amber-400 to-[#F37021] opacity-100'
-                          : 'bg-gradient-to-b from-[#F37021] via-amber-500/50 to-[#F37021]/60 opacity-80 group-hover:opacity-100 group-hover:from-amber-400'
-                      }`}
+                    <div
+                      className={`absolute inset-0 transition-opacity duration-300 ${item.active
+                        ? 'bg-gradient-to-b from-[#F37021] via-amber-400 to-[#F37021] opacity-100'
+                        : 'bg-gradient-to-b from-[#F37021] via-amber-500/50 to-[#F37021]/60 opacity-80 group-hover:opacity-100 group-hover:from-amber-400'
+                        }`}
                     />
 
                     <div
@@ -609,7 +605,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       }}
                     >
                       <div>
-                      
+
                         <h4 className="font-heading font-extrabold text-[10px] xs:text-xs sm:text-xs text-white leading-snug group-hover:text-amber-300 transition-colors drop-shadow-sm text-center">
                           {item.subtitle}
                         </h4>

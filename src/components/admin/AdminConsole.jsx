@@ -145,13 +145,32 @@ export const formatTimeString = (isoString) => {
   if (!isoString) return '--:--:--';
   try {
     const d = new Date(isoString);
-    const h = String(d.getHours()).padStart(2, '0');
-    const m = String(d.getMinutes()).padStart(2, '0');
-    const s = String(d.getSeconds()).padStart(2, '0');
-    return `${h}:${m}:${s}`;
+    if (isNaN(d.getTime())) return isoString;
+    const timeStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return `${timeStr} - ${dateStr}`;
   } catch (e) {
     return isoString;
   }
+};
+
+export const formatDateTimeDisplay = (timestamp, formattedTime) => {
+  if (timestamp) {
+    try {
+      const d = new Date(timestamp);
+      if (!isNaN(d.getTime())) {
+        const timeStr = d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        const dateStr = d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        return `${timeStr} - ${dateStr}`;
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
+  if (formattedTime && (formattedTime.includes('/') || formattedTime.includes('-'))) {
+    return formattedTime;
+  }
+  return formattedTime || '--:--:--';
 };
 
 /* ====================================================================
@@ -1872,7 +1891,7 @@ export default function AdminConsole({ onBackToLanding }) {
                                             </span>
                                           </div>
                                           <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-3">
-                                            <span>Thời gian: <strong className="text-slate-700">{scan.formattedTime || new Date(scan.timestamp).toLocaleString('vi-VN')}</strong></span>
+                                            <span>Thời gian: <strong className="text-slate-800 font-mono font-bold">{formatDateTimeDisplay(scan.timestamp, scan.formattedTime)}</strong></span>
                                           </div>
                                         </div>
                                       </div>
@@ -2114,7 +2133,7 @@ export default function AdminConsole({ onBackToLanding }) {
                                             </span>
                                           </div>
                                           <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-3">
-                                            <span>Thời gian: <strong className="text-slate-700">{view.formattedTime || new Date(view.timestamp).toLocaleString('vi-VN')}</strong></span>
+                                            <span>Thời gian: <strong className="text-slate-800 font-mono font-bold">{formatDateTimeDisplay(view.timestamp, view.formattedTime)}</strong></span>
                                           </div>
                                         </div>
                                       </div>

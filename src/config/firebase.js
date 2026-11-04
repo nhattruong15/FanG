@@ -577,11 +577,18 @@ export async function recordQrScan(gameName = 'ALL') {
   const isVal = rawGame === 'VALORANT' || rawGame === 'VAL' || rawGame.includes('VALORANT');
   const normalizedGameName = isAov ? 'AOV' : isVal ? 'VALORANT' : (rawGame || 'ALL');
 
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateStr = now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formattedDateTime = `${timeStr} - ${dateStr}`;
+
   const newScanEntry = {
     id: `scan_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
     game: normalizedGameName,
-    timestamp: new Date().toISOString(),
-    formattedTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    timestamp: now.toISOString(),
+    formattedTime: formattedDateTime,
+    time: timeStr,
+    date: dateStr
   };
 
   try {
@@ -686,11 +693,18 @@ export const INITIAL_LIVE_STATS = {
  * Record a Live View event in Firestore collection "live_views/stats"
  */
 export async function recordLiveView(gameName = 'ALL') {
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  const dateStr = now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  const formattedDateTime = `${timeStr} - ${dateStr}`;
+
   const newViewEntry = {
     id: `live_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
     game: gameName,
-    timestamp: new Date().toISOString(),
-    formattedTime: new Date().toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+    timestamp: now.toISOString(),
+    formattedTime: formattedDateTime,
+    time: timeStr,
+    date: dateStr
   };
 
   try {

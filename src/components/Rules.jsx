@@ -326,8 +326,8 @@ export default function Rules({ selectedGame }) {
             <div className="grid grid-cols-3 gap-1.5 sm:gap-4 max-w-5xl mx-auto">
               {[
                 { rank: '', label: 'TOP 2 — Á QUÂN', amount: '7.000.000đ', sub: 'Quà vật phẩm', borderColor: 'border-slate-400/50', bgColor: 'bg-[#10121a]/90', glowColor: 'shadow-[0_0_25px_rgba(148,163,184,0.2)]', amountGradient: 'from-slate-100 via-slate-200 to-slate-400', accentColor: '#94a3b8', badgeBg: 'bg-slate-800/90 border-slate-400/50 text-slate-200' },
-                { rank: '', label: 'TOP 3 — ĐỒNG HẠNG 3', amount: '3.000.000đ', sub: 'Quà vật phẩm', borderColor: 'border-amber-600/50', bgColor: 'bg-[#15110a]/90', glowColor: 'shadow-[0_0_25px_rgba(217,119,6,0.2)]', amountGradient: 'from-amber-300 via-amber-400 to-amber-600', accentColor: '#d97706', badgeBg: 'bg-amber-950/80 border-amber-600/50 text-amber-400' },
-                { rank: '', label: 'TOP 3 — ĐỒNG HẠNG 3', amount: '3.000.000đ', sub: 'Quà vật phẩm', borderColor: 'border-amber-600/50', bgColor: 'bg-[#15110a]/90', glowColor: 'shadow-[0_0_25px_rgba(217,119,6,0.2)]', amountGradient: 'from-amber-300 via-amber-400 to-amber-600', accentColor: '#d97706', badgeBg: 'bg-amber-950/80 border-amber-600/50 text-amber-400' },
+                { rank: '', label: 'TOP 3 — ĐỒNG HẠNG', amount: '3.000.000đ', sub: 'Quà vật phẩm', borderColor: 'border-amber-600/50', bgColor: 'bg-[#15110a]/90', glowColor: 'shadow-[0_0_25px_rgba(217,119,6,0.2)]', amountGradient: 'from-amber-300 via-amber-400 to-amber-600', accentColor: '#d97706', badgeBg: 'bg-amber-950/80 border-amber-600/50 text-amber-400' },
+                { rank: '', label: 'TOP 3 — ĐỒNG HẠNG', amount: '3.000.000đ', sub: 'Quà vật phẩm', borderColor: 'border-amber-600/50', bgColor: 'bg-[#15110a]/90', glowColor: 'shadow-[0_0_25px_rgba(217,119,6,0.2)]', amountGradient: 'from-amber-300 via-amber-400 to-amber-600', accentColor: '#d97706', badgeBg: 'bg-amber-950/80 border-amber-600/50 text-amber-400' },
               ].map((card, idx) => (
                 <motion.div
                   key={idx}

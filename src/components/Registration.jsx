@@ -103,7 +103,7 @@ export default function Registration({ selectedGame }) {
                 <p className="text-slate-300 text-sm sm:text-base mb-6 leading-relaxed">
                   Đăng ký tham gia bộ môn <strong className={selectedGame === 'valorant' ? 'text-[#ff4655]' : 'text-[#f39c12]'}>
                     {selectedGame === 'valorant' ? 'VALORANT' : 'AOV (LIÊN QUÂN)'}
-                  </strong> qua FanG ID. Quét mã QR Code ở bên phải hoặc bấm nút <strong className="text-white">Mở trang Đăng Ký</strong> bên dưới để tham gia ngay!
+                  </strong> qua FanG ID. Quét mã QR Code ở bên phải hoặc bấm nút <strong className="text-white">Đăng Ký</strong> bên dưới để tham gia ngay!
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-3 justify-center md:justify-start">
@@ -115,7 +115,7 @@ export default function Registration({ selectedGame }) {
                     className="inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-[#F37021] hover:bg-[#ff8235] text-white font-black text-base shadow-xl shadow-orange-950/40 transition-all hover:scale-[1.02] active:scale-95 cursor-pointer"
                   >
                     <ExternalLink className="w-5 h-5 text-white" />
-                    Mở trang Đăng Ký
+                    Đăng Ký
                     <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                   </a>
 

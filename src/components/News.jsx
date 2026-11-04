@@ -89,7 +89,8 @@ export default function News({ selectedGame, targetGame }) {
                   key={article.id || idx}
                   {...fadeInUp}
                   transition={{ duration: 0.4, delay: idx * 0.08 }}
-                  className="bg-[#120b08] rounded-xl sm:rounded-2xl border border-[#F37022]/20 shadow-lg hover:shadow-2xl hover:shadow-[#F37022]/20 hover:border-[#F37022]/60 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between overflow-hidden"
+                  onClick={() => setSelectedArticle(article)}
+                  className="bg-[#120b08] rounded-xl sm:rounded-2xl border border-[#F37022]/20 shadow-lg hover:shadow-2xl hover:shadow-[#F37022]/20 hover:border-[#F37022]/60 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between overflow-hidden cursor-pointer"
                 >
                   <div>
                     <div className="relative aspect-video bg-[#1e130c] overflow-hidden border-b border-[#F37022]/15">
@@ -134,20 +135,10 @@ export default function News({ selectedGame, targetGame }) {
                         {article.title}
                       </h3>
 
-                      <p className="text-slate-300 text-[11px] sm:text-xs md:text-sm line-clamp-2 mb-2 sm:mb-4 leading-relaxed">
+                      <p className="text-slate-300 text-[11px] sm:text-xs md:text-sm line-clamp-2 leading-relaxed">
                         {article.summary || article.description}
                       </p>
                     </div>
-                  </div>
-
-                  <div className="p-3 sm:p-5 md:p-6 pt-0">
-                    <button
-                      onClick={() => setSelectedArticle(article)}
-                      className="w-full inline-flex items-center justify-center gap-1 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2.5 rounded-lg sm:rounded-xl bg-[#1e140f] border border-[#F37022]/30 text-white hover:bg-[#F37022] hover:border-[#F37022] text-[10px] sm:text-xs md:text-sm font-bold transition-all duration-300 cursor-pointer shadow-xs group-hover:bg-[#F37022] group-hover:border-[#F37022]"
-                    >
-                      <span>Xem chi tiết</span>
-                      <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
-                    </button>
                   </div>
                 </motion.article>
               ))}

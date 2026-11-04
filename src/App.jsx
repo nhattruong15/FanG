@@ -31,6 +31,8 @@ export default function App() {
     return localStorage.getItem('fang_selected_game') || null;
   });
 
+  const [isMatchModalOpen, setIsMatchModalOpen] = useState(false);
+
   const [isAdminView, setIsAdminView] = useState(() => {
     return localStorage.getItem('fang_is_admin_view') === 'true' || window.location.hash === '#admin';
   });
@@ -120,7 +122,7 @@ export default function App() {
     <div className="h-screen overflow-x-hidden overflow-y-auto lg:snap-y lg:snap-proximity scroll-smooth bg-[#0e0906] text-slate-100 selection:bg-[#F37021] selection:text-white relative">
       <header className="fixed top-0 left-0 right-0 z-50">
         <Navbar selectedGame={selectedGame} onChangeGame={handleChangeGame} onOpenAdmin={handleOpenAdmin} />
-        <LivestreamBanner selectedGame={selectedGame} />
+        <LivestreamBanner selectedGame={selectedGame} isHidden={isMatchModalOpen} />
       </header>
 
       <div className="snap-start scroll-mt-24">
@@ -146,7 +148,7 @@ export default function App() {
           <TeamList selectedGame={selectedGame} />
         </div>
         <div className="snap-start scroll-mt-28">
-          <Bracket selectedGame={selectedGame} />
+          <Bracket selectedGame={selectedGame} onModalToggle={setIsMatchModalOpen} />
         </div>
         <div className="snap-start scroll-mt-28">
           <Sponsor />

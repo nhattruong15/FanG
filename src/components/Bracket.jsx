@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, CalendarDays, Clock, Trophy, ChevronDown, ChevronUp, Gamepad2, Shield, X, Users, Award, Info } from 'lucide-react';
 import bracketBg from '../assets/background/background_32team.png';
@@ -538,10 +539,10 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
     ingame: `Player_${i + 1}`
   }));
 
-  return (
+  const modalContent = (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md cursor-pointer"
+      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md cursor-pointer"
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}
@@ -746,9 +747,11 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
       </motion.div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 };
 
-export default function Bracket({ selectedGame: initialGame }) {
+export default function Bracket({ selectedGame: initialGame, onModalToggle }) {
   const [viewMode, setViewMode] = useState('bracket');
   const [activeGame, setActiveGame] = useState(initialGame || 'VALORANT');
   const [scheduleRegion, setScheduleRegion] = useState('MB'); // 'MB' | 'MN'
@@ -756,6 +759,20 @@ export default function Bracket({ selectedGame: initialGame }) {
   const [teamsList, setTeamsList] = useState(INITIAL_TEAMS);
   const [treeRegion, setTreeRegion] = useState('MB'); // 'MB' | 'MN'
   const [selectedMatchModal, setSelectedMatchModal] = useState(null);
+
+  // Notify parent and broadcast event when MatchDetailModal opens or closes
+  useEffect(() => {
+    const isModalOpen = Boolean(selectedMatchModal);
+    if (onModalToggle) {
+      onModalToggle(isModalOpen);
+    }
+    window.dispatchEvent(new CustomEvent('fang:match-modal-toggle', { detail: { open: isModalOpen } }));
+
+    return () => {
+      if (onModalToggle) onModalToggle(false);
+      window.dispatchEvent(new CustomEvent('fang:match-modal-toggle', { detail: { open: false } }));
+    };
+  }, [selectedMatchModal, onModalToggle]);
 
   // Sync state if parent selectedGame changes
   useEffect(() => {

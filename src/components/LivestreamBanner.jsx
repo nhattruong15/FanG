@@ -3,10 +3,23 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, X, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
 import { subscribeVideoLivestream, parseYouTubeEmbed, INITIAL_LIVESTREAM_STREAMS, recordLiveView } from '../config/firebase';
 
-export default function LivestreamBanner({ selectedGame }) {
+export default function LivestreamBanner({ selectedGame, isHidden = false }) {
   const [isVisible, setIsVisible] = useState(true);
   const [isExpanded, setIsExpanded] = useState(false);
   const [streamData, setStreamData] = useState(INITIAL_LIVESTREAM_STREAMS);
+  const [eventHidden, setEventHidden] = useState(false);
+
+  useEffect(() => {
+    const handleModalToggle = (e) => {
+      if (e.detail && typeof e.detail.open === 'boolean') {
+        setEventHidden(e.detail.open);
+      }
+    };
+    window.addEventListener('fang:match-modal-toggle', handleModalToggle);
+    return () => window.removeEventListener('fang:match-modal-toggle', handleModalToggle);
+  }, []);
+
+  const shouldHideResponsive = Boolean(isHidden || eventHidden);
 
   useEffect(() => {
     const unsub = subscribeVideoLivestream((data) => {
@@ -46,7 +59,7 @@ export default function LivestreamBanner({ selectedGame }) {
     <motion.div
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="w-full relative z-40"
+      className={`w-full relative z-40 transition-all duration-300 ${shouldHideResponsive ? 'hidden lg:block' : ''}`}
     >
       <div className="bg-gradient-to-r from-orange-950/60 via-[#1e130d]/60 to-orange-950/60 backdrop-blur-sm border-b border-[#F37022]/20">
         <div className="max-w-7xl mx-auto px-4 py-2 flex items-center justify-between">

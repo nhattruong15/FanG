@@ -135,28 +135,38 @@ export default function TeamList({ selectedGame = 'valorant' }) {
               initial={{ opacity: 0, y: 30 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4, delay: idx * 0.05 }}
-              className="bg-glass rounded-2xl overflow-hidden border-glow"
+              className="group relative rounded-2xl overflow-hidden border border-[#F37021]/35 hover:border-[#F37021] bg-gradient-to-br from-[#1c120c]/95 via-[#140d08]/95 to-[#0b0704]/95 shadow-[0_8px_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_35px_rgba(243,112,33,0.3)] backdrop-blur-md transition-all duration-300"
             >
+              {/* Top ambient highlight line */}
+              <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#F37021] to-transparent opacity-40 group-hover:opacity-100 transition-opacity" />
+
               <button
                 onClick={() => setExpandedTeam(expandedTeam === school ? null : school)}
-                className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+                className="w-full p-4 sm:p-5 flex items-center justify-between hover:bg-white/[0.03] transition-colors cursor-pointer text-left"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3.5">
                   {teamList[0]?.logo ? (
-                    <img src={teamList[0].logo} alt={school} className="w-10 h-10 rounded-xl object-cover border border-white/20 shrink-0 shadow-md" />
+                    <img src={teamList[0].logo} alt={school} className="w-11 h-11 rounded-xl object-cover border border-[#F37021]/40 shrink-0 shadow-[0_0_12px_rgba(243,112,33,0.25)]" />
                   ) : (
-                    <div className="w-10 h-10 rounded-xl bg-[#F37021]/20 text-[#F37021] font-black text-sm flex items-center justify-center border border-[#F37021]/30 shrink-0 uppercase">
-                      {school ? school.charAt(0) : 'T'}
+                    <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-[#F37021] via-amber-500 to-[#F37021] p-[1.5px] shrink-0 shadow-[0_0_15px_rgba(243,112,33,0.35)]">
+                      <div className="w-full h-full bg-[#180e08] rounded-[10px] flex items-center justify-center font-black text-base text-amber-300 uppercase">
+                        {school ? school.charAt(0) : 'T'}
+                      </div>
                     </div>
                   )}
-                  <div className="text-left">
-                    <div className="font-bold text-white text-sm sm:text-base">{school}</div>
-                    <div className="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
-                      <span className={`font-bold ${activeGame === 'Valorant' ? 'text-rose-400' : 'text-amber-400'}`}>
+                  <div>
+                    <div className="font-heading font-black text-white text-base sm:text-lg tracking-wide group-hover:text-amber-300 transition-colors drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+                      {school}
+                    </div>
+                    <div className="text-xs flex items-center gap-2 mt-1">
+                      <span className={`px-2 py-0.5 rounded-md font-black text-[10px] uppercase tracking-wider border shadow-xs ${activeGame === 'Valorant'
+                        ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                        : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        }`}>
                         {activeGame}
                       </span>
-                      <span>·</span>
-                      <span>
+                      <span className="text-slate-300 font-medium text-xs flex items-center gap-1.5">
+                        <span className=" rounded-full bg-[#F37021] shadow-[0_0_6px_#F37021]" />
                         {teamList[0]?.region?.toLowerCase().includes('bắc') || teamList[0]?.region === 'bac'
                           ? 'Miền Bắc'
                           : 'Miền Nam'}
@@ -164,15 +174,20 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                     </div>
                   </div>
                 </div>
-                {expandedTeam === school ? (
-                  <ChevronUp className="w-4 h-4 text-[#F37021]" />
-                ) : (
-                  <ChevronDown className="w-4 h-4 text-slate-500" />
-                )}
+                <div className={`p-1.5 rounded-lg border transition-all ${expandedTeam === school
+                  ? 'bg-[#F37021]/20 border-[#F37021] text-[#F37021]'
+                  : 'bg-white/5 border-white/10 text-slate-400 group-hover:text-white group-hover:border-white/20'
+                  }`}>
+                  {expandedTeam === school ? (
+                    <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
+                  )}
+                </div>
               </button>
 
               {expandedTeam === school && (
-                <div className="px-4 pb-4 space-y-3 border-t border-slate-800/60">
+                <div className="px-4.5 sm:px-5 pb-5 space-y-3.5 border-t border-[#F37021]/20 bg-black/30">
                   {teamList.map((tItem, tIdx) => {
                     const members = tItem.membersList || (tItem.players || []).map((p, i) => ({
                       id: i + 1,
@@ -182,18 +197,13 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                     }));
 
                     return (
-                      <div key={tIdx} className="mt-3">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-
-                            <span
-                              className={`inline-block px-2.5 py-0.5 rounded-md text-xs font-bold ${tItem.game === 'Valorant' ? 'bg-rose-500/15 text-rose-400' : 'bg-[#F37021]/15 text-[#F37021]'
-                                }`}
-                            >
-                              Tên đội: {tItem.name || tItem.game}
-                            </span>
-                          </div>
-
+                      <div key={tIdx} className="mt-3.5">
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span
+                            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-gradient-to-r from-[#F37021]/25 via-amber-500/15 to-transparent border border-[#F37021]/40 text-amber-300 shadow-xs"
+                          >
+                            <span className="text-slate-400 font-semibold normal-case">Tên đội:</span> {tItem.name || tItem.game}
+                          </span>
                         </div>
                         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                           {members.map((mObj, mIdx) => {
@@ -210,21 +220,25 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                             return (
                               <div
                                 key={mIdx}
-                                className={`px-2.5 py-2 rounded-xl border transition-all ${isCaptain
-                                  ? 'bg-orange-500/10 border-orange-500/30 text-white'
+                                className={`px-3 py-2 rounded-xl border transition-all ${isCaptain
+                                  ? 'bg-gradient-to-r from-orange-500/20 to-amber-500/10 border-[#F37021]/60 text-white shadow-[0_0_12px_rgba(243,112,33,0.2)]'
                                   : isSub
-                                    ? 'bg-sky-500/10 border-sky-500/30 text-white'
-                                    : 'bg-white/5 border-slate-800 text-slate-300'
+                                    ? 'bg-sky-500/15 border-sky-400/40 text-slate-100 shadow-xs'
+                                    : 'bg-[#180f0a] border-white/10 hover:border-[#F37021]/30 text-slate-200'
                                   }`}
                               >
                                 <div className="flex items-center justify-between gap-1">
-                                  <span className="text-xs font-bold truncate">{name}</span>
-
+                                  <span className="text-xs font-bold truncate text-white">{name}</span>
                                 </div>
                                 <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono truncate mt-0.5 gap-1">
                                   <span className="truncate">{ingame}</span>
                                   {role && (
-                                    <span className="text-amber-300 font-sans font-semibold text-[9px] bg-amber-400/10 px-1.5 py-0.5 rounded border border-amber-400/20 shrink-0">
+                                    <span className={`font-sans font-bold text-[9px] px-1.5 py-0.5 rounded border shrink-0 ${isCaptain
+                                      ? 'bg-[#F37021] text-white border-[#F37021]'
+                                      : isSub
+                                        ? 'bg-sky-500/20 text-sky-300 border-sky-500/40'
+                                        : 'bg-amber-400/15 text-amber-300 border-amber-400/30'
+                                      }`}>
                                       {role}
                                     </span>
                                   )}
@@ -256,11 +270,10 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                 document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
               disabled={safePage <= 1}
-              className={`p-2 rounded-xl border transition-all ${
-                safePage <= 1
-                  ? 'border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
-                  : 'border-slate-700 text-slate-300 hover:bg-white/10 hover:border-[#F37021] hover:text-[#F37021] cursor-pointer'
-              }`}
+              className={`p-2 rounded-xl border transition-all ${safePage <= 1
+                ? 'border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
+                : 'border-slate-700 text-slate-300 hover:bg-white/10 hover:border-[#F37021] hover:text-[#F37021] cursor-pointer'
+                }`}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -295,11 +308,10 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                     setExpandedTeam(null);
                     document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }}
-                  className={`min-w-[36px] h-9 rounded-xl text-sm font-bold transition-all ${
-                    page === safePage
-                      ? 'bg-[#F37021] text-white shadow-lg shadow-orange-900/40 scale-105'
-                      : 'bg-white/5 text-slate-400 border border-slate-800 hover:bg-white/10 hover:text-white hover:border-[#F37021] cursor-pointer'
-                  }`}
+                  className={`min-w-[36px] h-9 rounded-xl text-sm font-bold transition-all ${page === safePage
+                    ? 'bg-[#F37021] text-white shadow-lg shadow-orange-900/40 scale-105'
+                    : 'bg-white/5 text-slate-400 border border-slate-800 hover:bg-white/10 hover:text-white hover:border-[#F37021] cursor-pointer'
+                    }`}
                 >
                   {page}
                 </button>
@@ -314,11 +326,10 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                 document.getElementById('teams')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }}
               disabled={safePage >= totalPages}
-              className={`p-2 rounded-xl border transition-all ${
-                safePage >= totalPages
-                  ? 'border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
-                  : 'border-slate-700 text-slate-300 hover:bg-white/10 hover:border-[#F37021] hover:text-[#F37021] cursor-pointer'
-              }`}
+              className={`p-2 rounded-xl border transition-all ${safePage >= totalPages
+                ? 'border-slate-800 text-slate-700 cursor-not-allowed opacity-50'
+                : 'border-slate-700 text-slate-300 hover:bg-white/10 hover:border-[#F37021] hover:text-[#F37021] cursor-pointer'
+                }`}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
