@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import valorantCharImg from '../assets/characters/valorant.jpeg';
+import aovCharImg from '../assets/characters/aov.jpeg';
 
 export default function GameSelector({ onSelectGame }) {
   const [hoveredGame, setHoveredGame] = useState(null);
@@ -31,12 +33,12 @@ export default function GameSelector({ onSelectGame }) {
         onTouchStart={() => setHoveredGame('valorant')}
       >
         <img
-          src="/char-valorant.jpg"
+          src={valorantCharImg}
           alt="Valorant"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out"
           style={{
-            objectPosition: 'center 35%',
-            transform: hoveredGame === 'valorant' ? 'scale(0.8)' : 'scale(1)',
+            objectPosition: 'center center',
+            transform: hoveredGame === 'valorant' ? 'scale(1.05)' : 'scale(1)',
           }}
           draggable={false}
         />
@@ -95,12 +97,12 @@ export default function GameSelector({ onSelectGame }) {
         onTouchStart={() => setHoveredGame('aov')}
       >
         <img
-          src="/char-aov.jpg"
+          src={aovCharImg}
           alt="AOV"
           className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 ease-out"
           style={{
-            objectPosition: 'center 20%',
-            transform: hoveredGame === 'aov' ? 'scale(0.8)' : 'scale(1)',
+            objectPosition: 'center center',
+            transform: hoveredGame === 'aov' ? 'scale(1.05)' : 'scale(1)',
           }}
           draggable={false}
         />
