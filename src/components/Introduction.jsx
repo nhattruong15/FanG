@@ -5,8 +5,8 @@ import logoImg from '../assets/logo/logo.png';
 import bgImg from '../assets/background/background.jpg';
 import bg2Img from '../assets/background/background2.jpg';
 import bgIntroImg from '../assets/background/background_introduction.jpg';
-import valCharImg from '../assets/characters/1790303211028_2128295498179361722_6008493916717915729_b145800701edde4b0e01cc80f0b04916.jpg';
-import aovCharImg from '../assets/characters/1790303210993_2128295498179361722_6008493916717915729_18290cb5fa83465d56ac6ad131b783b6.jpg';
+import valCharImg from '../assets/characters/valorant.jpeg';
+import aovCharImg from '../assets/characters/aov.jpeg';
 
 const GAMES = [
   {
@@ -18,7 +18,7 @@ const GAMES = [
     description: 'FPS chiến thuật 5v5 — Thể hiện kĩ năng bắn súng đỉnh cao và phối hợp đồng đội',
     format: '5v5 · Best of 3',
     bgCharacter: valCharImg,
-    objectPos: '70% 35%',
+    objectPos: 'center center',
   },
   {
     name: 'AOV',
@@ -29,7 +29,7 @@ const GAMES = [
     description: 'MOBA 5v5 Liên Quân Mobile — Chiến thuật đỉnh cao quyết định ngôi vương',
     format: '5v5 · Best of 3',
     bgCharacter: aovCharImg,
-    objectPos: '50% 20%',
+    objectPos: 'center center',
   },
 ];
 

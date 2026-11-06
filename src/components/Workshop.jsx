@@ -7,7 +7,7 @@ const fadeInUp = {};
 const WORKSHOPS = [
   {
     id: 1,
-    title: 'ĐANG CẬP NHẬT',
+    title: 'FPOLY HÀ NỘI',
     thumbnail: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80',
     date: 'ĐANG CẬP NHẬT',
     time: '',
