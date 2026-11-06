@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Gamepad2 } from 'lucide-react';
 import logoImg from '../assets/logo/logo.png';
@@ -20,35 +20,63 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
   const [scrolled, setScrolled] = useState(false);
   const [activeSection, setActiveSection] = useState('hero');
 
+  // Use refs to avoid unnecessary re-renders — only setState when value actually changes
+  const scrolledRef = useRef(false);
+  const activeSectionRef = useRef('hero');
+  const rafRef = useRef(null);
+
+  // IntersectionObserver for tracking active section without causing layout reflows during scroll
   useEffect(() => {
+    let isTicking = false;
     const handleScroll = () => {
-      setScrolled(window.scrollY > 50);
-
-      const sections = NAV_ITEMS.map(item => document.getElementById(item.id));
-      const scrollPos = window.scrollY + 100;
-
-      for (let i = sections.length - 1; i >= 0; i--) {
-        if (sections[i] && sections[i].offsetTop <= scrollPos) {
-          setActiveSection(NAV_ITEMS[i].id);
-          break;
-        }
+      if (!isTicking) {
+        window.requestAnimationFrame(() => {
+          const isScrolled = window.scrollY > 50;
+          if (isScrolled !== scrolledRef.current) {
+            scrolledRef.current = isScrolled;
+            setScrolled(isScrolled);
+          }
+          isTicking = false;
+        });
+        isTicking = true;
       }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    // Native IntersectionObserver to highlight active nav link asynchronously
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id);
+          }
+        });
+      },
+      { rootMargin: '-20% 0px -65% 0px', threshold: 0 }
+    );
+
+    NAV_ITEMS.forEach((item) => {
+      const el = document.getElementById(item.id);
+      if (el) observer.observe(el);
+    });
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      observer.disconnect();
+    };
   }, []);
 
-  const scrollTo = (id) => {
+  const scrollTo = useCallback((id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
     setIsOpen(false);
-  };
+  }, []);
 
   return (
     <>
       <nav
-        className={`w-full transition-all duration-300 ${
-          scrolled ? 'bg-[#090503]/95 backdrop-blur-md border-b border-[#F37022]/20 shadow-lg shadow-orange-950/20' : 'bg-[#0e0906]'
+        className={`w-full transition-colors duration-200 ${
+          scrolled ? 'bg-[#090503] border-b border-[#F37022]/30 shadow-xl shadow-black/80' : 'bg-[#0e0906]'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 h-14 sm:h-16 md:h-20 flex items-center justify-between">
@@ -71,7 +99,7 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
                     : 'border-[#f39c12]/60 bg-[#f39c12]/15 text-[#f39c12] shadow-[0_0_12px_rgba(243,156,18,0.3)]'
                 }`}
               >
-                <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: selectedGame === 'valorant' ? '#ff4655' : '#f39c12' }} />
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: selectedGame === 'valorant' ? '#ff4655' : '#f39c12' }} />
                 <span>{selectedGame === 'valorant' ? 'VALORANT' : 'AOV'}</span>
                 <span className="text-[10px] text-slate-300 font-normal underline ml-0.5">(Đổi)</span>
               </button>
@@ -110,7 +138,7 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/70 z-40 lg:hidden backdrop-blur-xs"
+              className="fixed inset-0 bg-black/70 z-40 lg:hidden"
               onClick={() => setIsOpen(false)}
             />
             <motion.div
@@ -118,7 +146,7 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-glass-strong rounded-t-3xl p-6 pb-8 border-t border-[#F37021]/30 max-h-[75vh] overflow-y-auto"
+              className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-[#090503]/95 backdrop-blur-lg rounded-t-3xl p-6 pb-8 border-t border-[#F37021]/30 max-h-[75vh] overflow-y-auto"
             >
               <div className="flex flex-col items-center mb-5">
                 <div className="w-12 h-1.5 bg-[#F37021]/50 rounded-full mb-4" />
@@ -135,7 +163,7 @@ export default function Navbar({ selectedGame, onChangeGame, onOpenAdmin }) {
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full animate-ping" style={{ backgroundColor: selectedGame === 'valorant' ? '#ff4655' : '#f39c12' }} />
+                      <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: selectedGame === 'valorant' ? '#ff4655' : '#f39c12' }} />
                       Bộ môn: <strong>{selectedGame === 'valorant' ? 'VALORANT' : 'AOV (LIÊN QUÂN)'}</strong>
                     </span>
                     <span className="text-[11px] underline">Đổi bộ môn</span>

@@ -6,12 +6,7 @@ import qrCodeImg from '../assets/QRCodeDangKy/qrcode_register.png';
 import { recordQrScan, subscribeQrConfig, INITIAL_QR_CONFIG } from '../config/firebase';
 import { generateQrDataUrl } from '../utils/qrcode';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.5 },
-};
+const fadeInUp = {};
 
 export default function Registration({ selectedGame }) {
   const [qrConfig, setQrConfig] = useState(INITIAL_QR_CONFIG);
@@ -79,7 +74,12 @@ export default function Registration({ selectedGame }) {
 
       <div className="absolute inset-0 bg-gradient-to-b from-[#0e0906]/50 via-transparent to-[#0e0906]/70 z-0 pointer-events-none" />
 
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-r from-[#F37021]/30 via-amber-500/20 to-blue-600/20 rounded-full blur-[120px] z-0" />
+      <div 
+        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[350px] pointer-events-none opacity-40 z-0"
+        style={{
+          background: 'radial-gradient(ellipse at center, rgba(243,112,33,0.3) 0%, rgba(0,90,158,0.15) 50%, transparent 75%)'
+        }}
+      />
 
       <div className="max-w-5xl mx-auto relative z-10 px-4 sm:px-6">
         <motion.div
@@ -87,7 +87,7 @@ export default function Registration({ selectedGame }) {
           className="relative rounded-3xl overflow-hidden shadow-[0_0_60px_rgba(243,112,34,0.4)]"
         >
           <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-[#F37021] via-amber-400 to-[#005A9E] p-[1px]">
-            <div className="absolute inset-[1px] rounded-3xl bg-[#0f1222]/85 backdrop-blur-md" />
+            <div className="absolute inset-[1px] rounded-3xl bg-[#0f1222]/85 backdrop-blur-sm" />
           </div>
 
           <div className="relative z-10 p-6 sm:p-10 md:p-12">

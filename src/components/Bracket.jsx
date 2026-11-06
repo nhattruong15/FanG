@@ -6,12 +6,7 @@ import bracketBg from '../assets/background/background_32team.png';
 import { subscribeMatches, INITIAL_BRACKET_MATCHES, subscribeTeams, INITIAL_TEAMS } from '../config/firebase';
 import { cleanTeamName, sortMatchesList } from './admin/AdminConsole';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.5 },
-};
+const fadeInUp = {};
 
 /**
  * Parse team string (or match with teams list) to extract clean Team Name & School Name separately
@@ -379,7 +374,7 @@ const VisualBracketTree = ({ regionName, matches, teamsList, onSelectMatch }) =>
   };
 
   return (
-    <div className="w-full bg-[#0a0705]/80 border border-[#F37022]/20 rounded-3xl p-4 sm:p-6 backdrop-blur-md shadow-2xl relative overflow-hidden">
+    <div className="w-full bg-[#0a0705]/80 border border-[#F37022]/20 rounded-3xl p-4 sm:p-6 backdrop-blur-sm shadow-2xl relative overflow-hidden">
       {/* Title Header */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3 mb-6 pb-4 border-b border-white/10">
         <div className="flex items-center gap-3">
@@ -542,7 +537,7 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
   const modalContent = (
     <div
       onClick={onClose}
-      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-md cursor-pointer"
+      className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/80 backdrop-blur-sm cursor-pointer"
     >
       <motion.div
         onClick={(e) => e.stopPropagation()}
@@ -858,7 +853,7 @@ export default function Bracket({ selectedGame: initialGame, onModalToggle }) {
   return (
     <section id="bracket" className="section-padding relative overflow-hidden">
       <div className="absolute inset-0 z-0">
-        <img src={bracketBg} alt="" className="w-full h-full object-cover opacity-30" />
+        <img src={bracketBg} alt="" className="w-full h-full object-cover opacity-30" loading="lazy" />
         <div className="absolute inset-0 bg-black/60" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0e0906] via-transparent to-[#0e0906]" />
       </div>
@@ -987,7 +982,7 @@ export default function Bracket({ selectedGame: initialGame, onModalToggle }) {
             })()}
 
             {/* Region Selector Tabs for Visual Tree Diagram */}
-            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-[#F37022]/20 backdrop-blur-md">
+            <div className="flex items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-[#140d08]/90 border border-[#F37022]/20">
               <button
                 onClick={() => setTreeRegion('MB')}
                 className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${treeRegion === 'MB'
@@ -1022,7 +1017,7 @@ export default function Bracket({ selectedGame: initialGame, onModalToggle }) {
           /* Real-time Schedule List View with Region Filtering */
           <motion.div {...fadeInUp} className="space-y-4 px-2 sm:px-4">
             {/* Region Filter Buttons Bar */}
-            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-white/5 border border-[#F37022]/20 backdrop-blur-md">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-3 mb-6 p-2 rounded-2xl bg-[#140d08]/90 border border-[#F37022]/20">
               <button
                 onClick={() => setScheduleRegion('MB')}
                 className={`px-5 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer flex items-center gap-2 ${scheduleRegion === 'MB'
@@ -1061,7 +1056,7 @@ export default function Bracket({ selectedGame: initialGame, onModalToggle }) {
                   <div
                     key={match.id}
                     onClick={() => setSelectedMatchModal(match)}
-                    className={`backdrop-blur-md rounded-2xl p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group ${isNatFinal
+                    className={`rounded-2xl p-4 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 cursor-pointer group ${isNatFinal
                       ? 'bg-gradient-to-r from-amber-950/70 via-orange-950/50 to-amber-950/70 border-2 border-amber-400/80 shadow-[0_0_25px_rgba(245,158,11,0.25)] hover:border-amber-300'
                       : 'bg-black/60 border border-[#F37022]/20 hover:border-[#F37022]/60'
                       }`}

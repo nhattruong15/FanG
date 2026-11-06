@@ -3,12 +3,7 @@ import { motion } from 'framer-motion';
 import { Shield, Award, ArrowRight, Users, Swords, Trophy, Crown, Sparkles } from 'lucide-react';
 import { subscribeRulesLinks, INITIAL_RULES_LINKS } from '../config/firebase';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.5 },
-};
+const fadeInUp = {};
 
 const AOV_STEPS = [
   {
@@ -119,27 +114,20 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink }) {
       <div className="relative">
         {/* Connector line (desktop only) */}
         <div className="hidden lg:block absolute top-[52px] left-[10%] right-[10%] h-[2px] bg-gradient-to-r from-[#F37022]/20 via-[#F37022] to-[#F37022]/20 z-0 pointer-events-none">
-          <motion.div
-            animate={{ x: ['0%', '100%', '0%'] }}
-            transition={{ duration: 4, repeat: Infinity, ease: 'linear' }}
-            className="w-20 h-full bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_12px_#F37022]"
+          <div
+            className="w-20 h-full bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_12px_#F37022]" style={{animation: "slide-x-rules 4s linear infinite"}}
           />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 sm:gap-6 items-stretch relative z-10">
           {steps.map((step, idx) => (
-            <motion.div
+            <div
               key={idx}
-              initial={{ opacity: 0, y: 25 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.45, delay: idx * 0.12 }}
-              whileHover={{ y: -8 }}
-              className="relative group flex flex-col h-full"
+              className="relative group flex flex-col h-full hover:-translate-y-2 transition-transform duration-200"
             >
               <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-b from-[#F37021]/40 via-transparent to-[#F37021]/20 opacity-40 group-hover:opacity-100 transition-opacity blur-xs pointer-events-none" />
               <div
-                className="relative p-5 text-center transition-all duration-300 h-full flex flex-col bg-gradient-to-b from-[#1a100a]/90 via-[#120a06]/90 to-[#0a0503]/95 backdrop-blur-xl border border-[#F37022]/35 group-hover:border-[#F37022] group-hover:shadow-[0_0_35px_rgba(243,112,34,0.3)] overflow-hidden"
+                className="relative p-5 text-center transition-all duration-300 h-full flex flex-col bg-gradient-to-b from-[#1a100a]/90 via-[#120a06]/90 to-[#0a0503]/95 backdrop-blur-sm border border-[#F37022]/35 group-hover:border-[#F37022] group-hover:shadow-[0_0_35px_rgba(243,112,34,0.3)] overflow-hidden"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))' }}
               >
                 {/* Corner accents */}
@@ -193,7 +181,7 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink }) {
                   </div>
                 )}
               </div>
-            </motion.div>
+            </div>
           ))}
         </div>
       </div>
@@ -280,16 +268,11 @@ export default function Rules({ selectedGame }) {
 
           <div className="space-y-5">
             {/* Champion */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              whileInView={{ opacity: 1, scale: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5 }}
-              whileHover={{ y: -6, scale: 1.01 }}
-              className="max-w-2xl mx-auto relative group"
+            <div
+              className="max-w-2xl mx-auto relative group hover:-translate-y-1.5 transition-transform duration-200"
             >
               <div
-                className="relative p-6 sm:p-8 text-center backdrop-blur-md border-2 border-[#F37022] bg-gradient-to-b from-[#281409]/95 via-[#1a0f08]/95 to-[#120a05]/95 shadow-[0_0_50px_rgba(243,112,34,0.5)] overflow-hidden"
+                className="relative p-6 sm:p-8 text-center backdrop-blur-sm border-2 border-[#F37022] bg-gradient-to-b from-[#281409]/95 via-[#1a0f08]/95 to-[#120a05]/95 shadow-[0_0_50px_rgba(243,112,34,0.5)] overflow-hidden"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 28px) 0, 100% 28px, 100% 100%, 28px 100%, 0 calc(100% - 28px))' }}
               >
                 <div className="absolute top-0 left-0 w-12 h-[3px] bg-gradient-to-r from-[#F37022] to-transparent" />
@@ -320,7 +303,7 @@ export default function Rules({ selectedGame }) {
                   ))}
                 </div>
               </div>
-            </motion.div>
+            </div>
 
             {/* Runner-up & 3rd place */}
             <div className="grid grid-cols-3 gap-1.5 sm:gap-4 max-w-5xl mx-auto">
@@ -329,17 +312,12 @@ export default function Rules({ selectedGame }) {
                 { rank: '', label: 'TOP 3 — ĐỒNG HẠNG', amount: '3.000.000đ', sub: 'Quà vật phẩm', borderColor: 'border-amber-600/50', bgColor: 'bg-[#15110a]/90', glowColor: 'shadow-[0_0_25px_rgba(217,119,6,0.2)]', amountGradient: 'from-amber-300 via-amber-400 to-amber-600', accentColor: '#d97706', badgeBg: 'bg-amber-950/80 border-amber-600/50 text-amber-400' },
                 { rank: '', label: 'TOP 3 — ĐỒNG HẠNG', amount: '3.000.000đ', sub: 'Quà vật phẩm', borderColor: 'border-amber-600/50', bgColor: 'bg-[#15110a]/90', glowColor: 'shadow-[0_0_25px_rgba(217,119,6,0.2)]', amountGradient: 'from-amber-300 via-amber-400 to-amber-600', accentColor: '#d97706', badgeBg: 'bg-amber-950/80 border-amber-600/50 text-amber-400' },
               ].map((card, idx) => (
-                <motion.div
+                <div
                   key={idx}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.1 }}
-                  whileHover={{ y: -4 }}
-                  className="group"
+                  className="group hover:-translate-y-1 transition-transform duration-200"
                 >
                   <div
-                    className={`relative p-2 sm:p-5 text-center backdrop-blur-md border ${card.borderColor} ${card.bgColor} ${card.glowColor} hover:shadow-[0_0_35px_rgba(243,112,34,0.2)] transition-all h-full flex flex-col justify-between overflow-hidden`}
+                    className={`relative p-2 sm:p-5 text-center backdrop-blur-sm border ${card.borderColor} ${card.bgColor} ${card.glowColor} hover:shadow-[0_0_35px_rgba(243,112,34,0.2)] transition-all h-full flex flex-col justify-between overflow-hidden`}
                     style={{ clipPath: 'polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px))' }}
                   >
                     <div className="absolute top-0 left-0 w-3 sm:w-6 h-[2px]" style={{ background: card.accentColor }} />
@@ -360,21 +338,16 @@ export default function Rules({ selectedGame }) {
                       {card.sub}
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
 
             {/* FMVP */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.4, delay: 0.4 }}
-              whileHover={{ y: -4 }}
-              className="max-w-3xl mx-auto group"
+            <div
+              className="max-w-3xl mx-auto group hover:-translate-y-1 transition-transform duration-200"
             >
               <div
-                className="relative p-3 sm:p-5 backdrop-blur-md border border-orange-500/50 bg-[#180e08]/90 shadow-[0_0_30px_rgba(243,112,34,0.2)] flex flex-row items-center justify-between gap-2 sm:gap-4 overflow-hidden"
+                className="relative p-3 sm:p-5 backdrop-blur-sm border border-orange-500/50 bg-[#180e08]/90 shadow-[0_0_30px_rgba(243,112,34,0.2)] flex flex-row items-center justify-between gap-2 sm:gap-4 overflow-hidden"
                 style={{ clipPath: 'polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px))' }}
               >
                 <div className="absolute top-0 left-0 w-6 sm:w-8 h-[2px] bg-[#F37022]" />
@@ -399,10 +372,10 @@ export default function Rules({ selectedGame }) {
                   </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </motion.div>
       </div>
-    </section>
+    <style>{`@keyframes slide-x-rules { 0% { transform: translateX(0%); } 50% { transform: translateX(300%); } 100% { transform: translateX(0%); } }`}</style></section>
   );
 }

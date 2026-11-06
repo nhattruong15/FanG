@@ -5,12 +5,7 @@ import { subscribeNews, parseYouTubeEmbed, INITIAL_NEWS_ARTICLES } from '../conf
 
 const NEWS_PER_PAGE = 6;
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 25 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.4 },
-};
+const fadeInUp = {};
 
 export default function News({ selectedGame, targetGame }) {
   const [newsList, setNewsList] = useState(INITIAL_NEWS_ARTICLES);
@@ -98,7 +93,7 @@ export default function News({ selectedGame, targetGame }) {
                         <img
                           src={article.thumbnail}
                           alt={article.title}
-                          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out"
+                          className="w-full h-full object-cover group-hover:scale-108 transition-transform duration-500 ease-out" loading="lazy"
                         />
                       ) : article.videoEmbed ? (
                         <iframe
@@ -238,7 +233,7 @@ export default function News({ selectedGame, targetGame }) {
         {selectedArticle && (
           <div
             onClick={() => setSelectedArticle(null)}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto cursor-pointer"
+            className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4 overflow-y-auto cursor-pointer"
           >
             <motion.div
               onClick={(e) => e.stopPropagation()}

@@ -5,12 +5,7 @@ import sponsor1 from '../assets/sponsor/28y7kc7ibn071.jpg';
 import sponsor2 from '../assets/sponsor/FireIconLiked.svg';
 import sponsor3 from '../assets/sponsor/TikTok-Logo-PNG.png';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.5 },
-};
+const fadeInUp = {};
 
 const SPONSOR_LOGOS = [
   { id: 1, src: sponsor1, alt: 'Sponsor Partner 1' },
@@ -55,7 +50,7 @@ export default function Sponsor() {
             >
               <div className="absolute -inset-2 bg-gradient-to-r from-[#F37021]/30 to-amber-500/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
 
-              <div className="relative bg-[#0d0805]/80 border border-[#F37021]/30 group-hover:border-[#F37021] p-4 sm:p-6 rounded-2xl flex items-center justify-center min-w-[140px] sm:min-w-[200px] h-24 sm:h-32 backdrop-blur-md shadow-lg transition-all duration-300">
+              <div className="relative bg-[#140d08] border border-[#F37021]/30 group-hover:border-[#F37021] p-4 sm:p-6 rounded-2xl flex items-center justify-center min-w-[140px] sm:min-w-[200px] h-24 sm:h-32 shadow-lg transition-all duration-300">
                 <img
                   src={sponsor.src}
                   alt={sponsor.alt}

@@ -98,17 +98,18 @@
     background-clip: text;
   }
 
+  /* Optimized glass: reduced blur radius for better perf */
   .bg-glass {
     background: var(--color-bg-glass);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     border: 1px solid var(--color-border);
   }
 
   .bg-glass-strong {
     background: rgba(14, 9, 6, 0.92);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
     border: 1px solid var(--color-border);
   }
 
@@ -183,12 +184,13 @@
   white-space: nowrap;
 }
 
+/* Replaced infinite box-shadow animations with GPU-friendly opacity pulse */
 .btn-valo {
   color: var(--valo-red);
   border: 2px solid var(--valo-red);
-  box-shadow: 0 0 10px rgba(255, 70, 85, 0.4), inset 0 0 10px rgba(255, 70, 85, 0.2);
+  box-shadow: 0 0 15px rgba(255, 70, 85, 0.4), inset 0 0 10px rgba(255, 70, 85, 0.2);
   text-shadow: 0 0 5px rgba(255, 70, 85, 0.8);
-  animation: pulse-valo 2.5s infinite alternate;
+  animation: pulse-opacity 2.5s infinite alternate;
 }
 
 .btn-valo:hover {
@@ -208,9 +210,9 @@
 .btn-aov {
   color: var(--aov-gold);
   border: 2px solid var(--aov-gold);
-  box-shadow: 0 0 10px rgba(243, 156, 18, 0.4), inset 0 0 10px rgba(243, 156, 18, 0.2);
+  box-shadow: 0 0 15px rgba(243, 156, 18, 0.4), inset 0 0 10px rgba(243, 156, 18, 0.2);
   text-shadow: 0 0 5px rgba(243, 156, 18, 0.8);
-  animation: pulse-aov 2.5s infinite alternate;
+  animation: pulse-opacity 2.5s infinite alternate;
   animation-delay: 0.5s;
 }
 
@@ -228,23 +230,8 @@
   box-shadow: 0 0 10px var(--aov-gold);
 }
 
-@keyframes pulse-valo {
-  0% { 
-    box-shadow: 0 0 10px rgba(255, 70, 85, 0.3), inset 0 0 10px rgba(255, 70, 85, 0.2); 
-  }
-  100% { 
-    box-shadow: 0 0 20px rgba(255, 70, 85, 0.6), inset 0 0 15px rgba(255, 70, 85, 0.4); 
-    text-shadow: 0 0 10px rgba(255, 70, 85, 1); 
-  }
+/* GPU-accelerated pulse using opacity instead of box-shadow */
+@keyframes pulse-opacity {
+  0% { opacity: 0.85; }
+  100% { opacity: 1; }
 }
-
-@keyframes pulse-aov {
-  0% { 
-    box-shadow: 0 0 10px rgba(243, 156, 18, 0.3), inset 0 0 10px rgba(243, 156, 18, 0.2); 
-  }
-  100% { 
-    box-shadow: 0 0 20px rgba(243, 156, 18, 0.6), inset 0 0 15px rgba(243, 156, 18, 0.4); 
-    text-shadow: 0 0 10px rgba(243, 156, 18, 1); 
-  }
-}
-

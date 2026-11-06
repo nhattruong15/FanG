@@ -2,12 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, MapPin, Clock, Users, ChevronLeft, ChevronRight, X, ChevronRight as ArrowRight } from 'lucide-react';
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.5 },
-};
+const fadeInUp = {};
 
 const WORKSHOPS = [
   {
@@ -151,7 +146,7 @@ export default function Workshop() {
                 <img
                   src={ws.thumbnail}
                   alt={ws.title}
-                  className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500"
+                  className="w-full h-full object-cover transform hover:scale-105 transition-transform duration-500" loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#140c08] via-[#140c08]/40 to-transparent" />
 
@@ -205,7 +200,7 @@ export default function Workshop() {
                   <img
                     src={ws.thumbnail}
                     alt={ws.title}
-                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#140c08] via-[#140c08]/50 to-transparent" />
 

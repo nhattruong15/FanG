@@ -115,12 +115,7 @@ const VLR_TIMELINE = [
   },
 ];
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.5 },
-};
+const fadeInUp = {};
 
 export default function Introduction({ selectedGame, onChangeGame }) {
   const TIMELINE = selectedGame === 'valorant' ? VLR_TIMELINE : AOV_TIMELINE;
@@ -141,31 +136,22 @@ export default function Introduction({ selectedGame, onChangeGame }) {
             className=" mt-5 relative w-full rounded-3xl overflow-hidden bg-cover bg-center bg-no-repeat shadow-[0_25px_60px_-15px_rgba(0,0,0,0.9),0_20px_40px_-10px_rgba(243,112,34,0.4)] border border-[#F37022]/40 group"
             style={{ backgroundImage: `url(${bgImg})` }}
           >
-            <div className="hidden md:block absolute -top-24 -left-24 w-96 h-96 bg-[#F37022]/25 rounded-full blur-[90px] pointer-events-none" />
+            <div className="hidden md:block absolute -top-24 -left-24 w-96 h-96 bg-[#F37022]/25 rounded-full blur-[60px] pointer-events-none" />
 
             <div className="absolute inset-0 bg-[#0e0906]/55 pointer-events-none" />
 
+            {/* Replaced 6 framer-motion particles with 3 CSS-animated particles */}
             <div className="hidden md:block absolute inset-0 overflow-hidden pointer-events-none">
-              {[...Array(6)].map((_, i) => (
-                <motion.div
+              {[0, 1, 2].map((i) => (
+                <div
                   key={i}
-                  animate={{
-                    y: [0, -120, 0],
-                    x: [0, (i % 2 === 0 ? 30 : -30), 0],
-                    opacity: [0.2, 0.8, 0.2],
-                    scale: [0.8, 1.4, 0.8],
-                  }}
-                  transition={{
-                    duration: 4 + i * 1.5,
-                    repeat: Infinity,
-                    ease: 'easeInOut',
-                    delay: i * 0.7,
-                  }}
                   style={{
-                    left: `${15 + i * 16}%`,
+                    left: `${20 + i * 30}%`,
                     top: `${60 + (i % 3) * 10}%`,
+                    animationDelay: `${i * 0.8}s`,
+                    animationDuration: `${4 + i * 1.5}s`,
                   }}
-                  className="absolute w-2 h-2 rounded-full bg-[#F37022] shadow-[0_0_12px_#F37022]"
+                  className="absolute w-2 h-2 rounded-full bg-[#F37022] shadow-[0_0_12px_#F37022] animate-float-particle"
                 />
               ))}
             </div>
@@ -174,30 +160,19 @@ export default function Introduction({ selectedGame, onChangeGame }) {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-8 lg:gap-16 items-center">
 
                 <div className="relative flex justify-center lg:justify-center">
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0, y: 15 }}
-                    whileInView={{ scale: 1, opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.6 }}
-                    className="relative group cursor-pointer flex justify-center"
-                  >
-                    <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-[#F37022]/40 via-amber-500/40 to-[#F37022]/40 rounded-full blur-[70px] pointer-events-none" />
+                  <div className="relative group cursor-pointer flex justify-center">
+                    <div className="hidden md:block absolute inset-0 bg-gradient-to-r from-[#F37022]/40 via-amber-500/40 to-[#F37022]/40 rounded-full blur-[50px] pointer-events-none" />
 
                     <img
                       src={logoImg}
                       alt="FanG Exports Logo"
+                      loading="lazy"
                       className="relative z-10 max-h-44 sm:max-h-72 md:max-h-[440px] lg:max-h-[500px] ml-0 lg:ml-6 w-auto h-auto object-contain filter drop-shadow-[0_0_35px_rgba(243,112,34,0.9)] group-hover:drop-shadow-[0_0_65px_rgba(243,112,34,1)] transition-all duration-300"
                     />
-                  </motion.div>
+                  </div>
                 </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: 0.1 }}
-                  className="relative w-full p-0.5"
-                >
+                <div className="relative w-full p-0.5">
                   <div
                     className="relative p-[1.5px] bg-gradient-to-b from-[#F37022] via-[#ff8f3d] to-[#F37022] shadow-[0_0_30px_rgba(243,112,34,0.45)]"
                     style={{
@@ -216,18 +191,8 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                           clipPath: 'polygon(18px 0, calc(100% - 18px) 0, 100% 18px, 100% calc(100% - 18px), calc(100% - 18px) 100%, 18px 100%, 0 calc(100% - 18px), 0 18px)',
                         }}
                       >
-                        <motion.div
-                          animate={{
-                            x: ['-100%', '200%'],
-                          }}
-                          transition={{
-                            duration: 3.5,
-                            repeat: Infinity,
-                            repeatDelay: 2,
-                            ease: 'easeInOut',
-                          }}
-                          className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 pointer-events-none"
-                        />
+                        {/* CSS-only shimmer instead of framer-motion */}
+                        <div className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 pointer-events-none animate-shimmer-slow" />
 
                         <p className="text-xs sm:text-base md:text-xl mb-3 text-white/95 font-medium leading-relaxed">
                           <strong className="text-white font-extrabold">Giải đấu Thể Thao Điện Tử Thế Hệ Số Toàn Quốc 2026</strong> là giải đấu eSports quy mô <strong className="text-white font-black">toàn quốc</strong>, được tổ chức nhằm tạo sân chơi <strong className="text-white font-black">chuyên nghiệp</strong> cho cộng đồng trẻ yêu thích Thể thao điện tử.
@@ -239,7 +204,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
 
               </div>
             </div>
@@ -250,7 +215,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
         <div className="relative overflow-hidden mb-16 left-1/2 -translate-x-1/2 w-screen px-4 sm:px-8 lg:px-16 pt-4 sm:pt-6 pb-8 sm:pb-10">
           <motion.div {...fadeInUp} className="relative z-20 text-center mb-6 sm:mb-8 flex flex-col items-center">
-            <div className="relative inline-flex items-center gap-3 sm:gap-6 px-6 sm:px-12 py-3 sm:py-4 bg-[#0c0805]/85 backdrop-blur-lg rounded-2xl border border-[#F37022]/50 shadow-[0_12px_40px_rgba(0,0,0,0.95),0_0_30px_rgba(243,112,34,0.3)]">
+            <div className="relative inline-flex items-center gap-3 sm:gap-6 px-6 sm:px-12 py-3 sm:py-4 bg-[#0c0805]/85 backdrop-blur-sm rounded-2xl border border-[#F37022]/50 shadow-[0_12px_40px_rgba(0,0,0,0.95),0_0_30px_rgba(243,112,34,0.3)]">
               <div className="hidden sm:flex items-center gap-1.5 opacity-90">
                 <div className="w-2 h-2 bg-[#F37022] rotate-45 shadow-[0_0_10px_#F37022]" />
                 <div className="w-8 sm:w-16 h-[2px] bg-gradient-to-r from-transparent via-[#F37022] to-[#F37022]" />
@@ -272,7 +237,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
             </div>
           </motion.div>
           <div className="absolute inset-0 z-0">
-            <img src={bg2Img} alt="" className="w-full h-full object-cover" />
+            <img src={bg2Img} alt="" className="w-full h-full object-cover" loading="lazy" />
             <div className="absolute inset-0 bg-[#0a0705]/40" />
           </div>
 
@@ -289,16 +254,9 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   className={`absolute -inset-1.5 rounded-3xl bg-gradient-to-r ${game.color} opacity-30 group-hover:opacity-100 blur-xl transition-all duration-500 pointer-events-none`}
                 />
 
-                <motion.div
-                  animate={{
-                    boxShadow: [
-                      `0 0 15px ${idx === 0 ? 'rgba(255,70,85,0.35)' : 'rgba(243,112,33,0.35)'}`,
-                      `0 0 35px ${idx === 0 ? 'rgba(255,70,85,0.65)' : 'rgba(243,112,33,0.65)'}`,
-                      `0 0 15px ${idx === 0 ? 'rgba(255,70,85,0.35)' : 'rgba(243,112,33,0.35)'}`,
-                    ],
-                  }}
-                  transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-                  className="relative overflow-hidden"
+                {/* Replaced infinite box-shadow animation with static shadow + hover effect */}
+                <div
+                  className={`relative overflow-hidden shadow-[0_0_20px_${idx === 0 ? 'rgba(255,70,85,0.4)' : 'rgba(243,112,33,0.4)'}] group-hover:shadow-[0_0_35px_${idx === 0 ? 'rgba(255,70,85,0.65)' : 'rgba(243,112,33,0.65)'}] transition-shadow duration-500`}
                   style={{
                     clipPath: 'polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))',
                   }}
@@ -311,37 +269,29 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       clipPath: 'polygon(0 0, calc(100% - 17px) 0, 100% 17px, 100% 100%, 17px 100%, 0 calc(100% - 17px))',
                     }}
                   >
-                    <motion.div
-                      animate={{ x: ['-150%', '250%'] }}
-                      transition={{ duration: 3, repeat: Infinity, repeatDelay: 2.5, ease: 'easeInOut' }}
-                      className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/15 to-transparent skew-x-12 pointer-events-none z-20"
-                    />
+                    {/* CSS shimmer instead of framer-motion */}
+                    <div className="absolute inset-y-0 w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 pointer-events-none z-20 animate-shimmer-slow" />
 
                     <div className="absolute inset-0 overflow-hidden">
                       <img
                         src={game.bgCharacter}
                         alt={game.name}
+                        loading="lazy"
                         style={{ objectPosition: game.objectPos || 'center center' }}
                         className="absolute inset-0 w-full h-full object-cover transition-all duration-700 ease-out group-hover:scale-115 group-hover:brightness-110"
                       />
 
+                      {/* Reduced from 3 particles to 2 static decorative dots */}
                       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-                        {[...Array(3)].map((_, i) => (
-                          <motion.div
+                        {[0, 1].map((i) => (
+                          <div
                             key={i}
-                            animate={{
-                              y: [0, -60, 0],
-                              opacity: [0.2, 0.8, 0.2],
-                              scale: [0.8, 1.3, 0.8],
+                            style={{
+                              left: `${30 + i * 35}%`,
+                              top: `${45 + i * 15}%`,
+                              animationDelay: `${i * 1.2}s`,
                             }}
-                            transition={{
-                              duration: 3 + i,
-                              repeat: Infinity,
-                              ease: 'easeInOut',
-                              delay: i * 0.8,
-                            }}
-                            style={{ left: `${25 + i * 30}%`, top: `${40 + i * 15}%` }}
-                            className={`absolute w-1.5 h-1.5 rounded-full ${idx === 0 ? 'bg-rose-400 shadow-[0_0_8px_#ff4655]' : 'bg-[#F37022] shadow-[0_0_8px_#F37022]'}`}
+                            className={`absolute w-1.5 h-1.5 rounded-full animate-pulse ${idx === 0 ? 'bg-rose-400 shadow-[0_0_8px_#ff4655]' : 'bg-[#F37022] shadow-[0_0_8px_#F37022]'}`}
                           />
                         ))}
                       </div>
@@ -354,11 +304,8 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                         style={{ clipPath: 'polygon(100% 0, 0 0, 100% 100%)' }}
                       />
 
-                      <motion.div
-                        animate={{ top: ['-10%', '110%'] }}
-                        transition={{ duration: 3.5, repeat: Infinity, ease: 'linear', repeatDelay: 1.5 }}
-                        className="absolute left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent pointer-events-none z-10"
-                      />
+                      {/* Removed infinite scanning line animation — static decorative line instead */}
+                      <div className="absolute left-0 right-0 top-1/2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent pointer-events-none z-10" />
                     </div>
 
                     <div className="relative z-10 mt-auto p-2 sm:px-8 sm:pb-8 sm:pt-4 flex flex-col justify-end overflow-hidden">
@@ -377,7 +324,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                           {game.format}
                         </div>
                         <div className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-md bg-white/5 border border-white/10 text-slate-300 text-[9px] sm:text-xs font-bold group-hover:border-[#F37022]/40 transition-colors">
-                          <span className=" sm:w-1.5 sm:h-1.5 rounded-full bg-green-400 animate-pulse" />
+                          <span className="sm:w-1.5 sm:h-1.5 rounded-full bg-green-400 animate-pulse" />
                           <span className="hidden sm:inline">Đang mở đăng ký</span>
                           <span className="sm:hidden">Đăng ký</span>
                         </div>
@@ -386,7 +333,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
                     <div className={`absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r ${game.color} opacity-50 group-hover:opacity-100 transition-opacity duration-500 shadow-[0_0_10px_rgba(243,112,34,0.8)]`} />
                   </div>
-                </motion.div>
+                </div>
               </motion.div>
             ))}
           </div>
@@ -396,7 +343,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
             className="relative z-10 max-w-4xl mx-auto mt-6 sm:mt-10 p-1 sm:p-1.5 rounded-2xl bg-gradient-to-r from-orange-500/30 via-amber-500/50 to-orange-500/30 shadow-[0_0_50px_rgba(243,112,34,0.35)]"
           >
             <div
-              className="relative bg-[#0d0805]/90 backdrop-blur-md px-2 sm:px-10 py-4 sm:py-8 rounded-[14px] overflow-hidden flex flex-row items-center justify-between gap-1 sm:gap-4 border border-orange-500/40"
+              className="relative bg-[#0d0805]/90 backdrop-blur-sm px-2 sm:px-10 py-4 sm:py-8 rounded-[14px] overflow-hidden flex flex-row items-center justify-between gap-1 sm:gap-4 border border-orange-500/40"
               style={{
                 clipPath: 'polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 20px 100%, 0 calc(100% - 20px))',
               }}
@@ -440,7 +387,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                   40 Triệu
                 </div>
                 <div className="text-slate-400 text-[9px] sm:text-xs md:text-sm font-bold uppercase tracking-tighter sm:tracking-widest mt-0.5 sm:mt-1 flex items-center gap-1">
-                  <span className=" rounded-full bg-amber-400 animate-ping" />
+                  <span className=" rounded-full bg-amber-400" />
                   Tổng giải thưởng
                 </div>
               </div>
@@ -453,7 +400,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
         <motion.div {...fadeInUp} className="relative max-w-7xl mx-auto">
           <div className="text-center mb-10 sm:mb-14 relative">
-            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-20 bg-[#F37021]/20 blur-[50px] pointer-events-none rounded-full" />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-20 bg-[#F37021]/20 blur-[40px] pointer-events-none rounded-full" />
 
             <div className="flex items-center justify-center gap-3 sm:gap-6">
               <div className="hidden sm:flex items-center gap-1.5 opacity-70">
@@ -477,12 +424,8 @@ export default function Introduction({ selectedGame, onChangeGame }) {
 
             <div className="space-y-6 sm:space-y-8 relative z-10">
               {TIMELINE.map((item, idx) => (
-                <motion.div
+                <div
                   key={idx}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.4, delay: idx * 0.1 }}
                   className="flex items-center gap-2.5 xs:gap-3 sm:gap-4 relative group"
                 >
                   <div className="w-[88px] xs:w-[104px] sm:w-[120px] flex-shrink-0 flex justify-end items-center">
@@ -522,7 +465,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       />
 
                       <div
-                        className="relative p-3 xs:p-3.5 sm:p-4 bg-[#180f09]/95 backdrop-blur-md h-full flex flex-col justify-between text-left"
+                        className="relative p-3 xs:p-3.5 sm:p-4 bg-[#180f09]/95 h-full flex flex-col justify-between text-left"
                         style={{
                           clipPath: 'polygon(0 0, calc(100% - 13px) 0, 100% 13px, 100% 100%, 13px 100%, 0 calc(100% - 13px))',
                         }}
@@ -536,30 +479,22 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
 
           <div className="hidden lg:block relative pb-8">
             <div className="absolute top-[52px] left-[8%] right-[8%] h-[3px] bg-gradient-to-r from-orange-500/20 via-[#F37021] to-orange-500/20 z-0">
-              <motion.div
-                animate={{ x: ['-100%', '200%'] }}
-                transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
-                className="w-1/3 h-full bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_12px_#F37021]"
-              />
+              {/* CSS animation instead of framer-motion */}
+              <div className="w-1/3 h-full bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_12px_#F37021] animate-slide-x" />
             </div>
 
             <div className="grid grid-cols-5 gap-4 relative z-10">
               {TIMELINE.map((item, idx) => (
-                <motion.div
+                <div
                   key={idx}
-                  initial={{ opacity: 0, y: 25 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: idx * 0.1 }}
-                  whileHover={{ y: -6 }}
-                  className="relative flex flex-col items-center group cursor-pointer"
+                  className="relative flex flex-col items-center group cursor-pointer hover:-translate-y-1.5 transition-transform duration-200"
                 >
                   <div
                     className="relative z-10 px-4 py-1.5 mb-3 transition-all duration-300 group-hover:scale-105 bg-gradient-to-r from-[#F37021] via-amber-500 to-[#F37021] text-white font-black shadow-[0_0_20px_rgba(243,112,34,0.8)] border border-amber-300"
@@ -599,7 +534,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                     />
 
                     <div
-                      className="relative p-4 bg-[#180f09]/95 backdrop-blur-md h-full flex flex-col justify-between text-left"
+                      className="relative p-4 bg-[#180f09]/95 h-full flex flex-col justify-between text-left"
                       style={{
                         clipPath: 'polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 15px 100%, 0 calc(100% - 15px))',
                       }}
@@ -612,14 +547,38 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </div>
               ))}
             </div>
           </div>
         </motion.div>
 
       </div>
+
+      <style>{`
+        @keyframes float-particle {
+          0%, 100% { transform: translateY(0) scale(0.8); opacity: 0.2; }
+          50% { transform: translateY(-80px) scale(1.2); opacity: 0.7; }
+        }
+        .animate-float-particle {
+          animation: float-particle 5s ease-in-out infinite;
+        }
+        @keyframes shimmer-slow {
+          0% { transform: translateX(-150%) skewX(12deg); }
+          100% { transform: translateX(350%) skewX(12deg); }
+        }
+        .animate-shimmer-slow {
+          animation: shimmer-slow 4s ease-in-out infinite;
+          animation-delay: 2s;
+        }
+        @keyframes slide-x {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(300%); }
+        }
+        .animate-slide-x {
+          animation: slide-x 3.5s ease-in-out infinite;
+        }
+      `}</style>
     </section>
   );
 }
-

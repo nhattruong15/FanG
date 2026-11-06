@@ -1064,7 +1064,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   type="text"
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
-                  placeholder="Nhập tài khoản (ví dụ: admin)"
+                  placeholder="Nhập tài khoản"
                   required
                   className="w-full bg-black/60 border border-slate-700 focus:border-[#F37022] rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all focus:ring-2 focus:ring-[#F37022]/30"
                 />
@@ -1079,7 +1079,7 @@ export default function AdminConsole({ onBackToLanding }) {
                   type="password"
                   value={passwordInput}
                   onChange={(e) => setPasswordInput(e.target.value)}
-                  placeholder="Nhập mật khẩu (ví dụ: admin)"
+                  placeholder="Nhập mật khẩu "
                   required
                   className="w-full bg-black/60 border border-slate-700 focus:border-[#F37022] rounded-xl py-3 pl-10 pr-4 text-sm text-white placeholder-slate-500 outline-none transition-all focus:ring-2 focus:ring-[#F37022]/30"
                 />

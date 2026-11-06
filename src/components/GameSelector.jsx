@@ -69,7 +69,7 @@ export default function GameSelector({ onSelectGame }) {
             </h2>
 
             <div className="mt-2 sm:mt-3 flex items-center gap-1.5">
-              <span className="inline-flex items-center gap-1.5 text-[9px] xs:text-[11px] sm:text-xs tracking-widest text-white font-bold bg-gradient-to-r from-[#ff4655]/40 to-[#ff4655]/15 border border-[#ff4655]/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-md backdrop-blur-md shadow-[0_0_15px_rgba(255,70,85,0.4)] group-hover:from-[#ff4655] group-hover:to-[#ff2a3d] group-hover:shadow-[0_0_25px_rgba(255,70,85,0.8)] transition-all duration-300">
+              <span className="inline-flex items-center gap-1.5 text-[9px] xs:text-[11px] sm:text-xs tracking-widest text-white font-bold bg-gradient-to-r from-[#ff4655]/40 to-[#ff4655]/15 border border-[#ff4655]/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-md backdrop-blur-sm shadow-[0_0_15px_rgba(255,70,85,0.4)] group-hover:from-[#ff4655] group-hover:to-[#ff2a3d] group-hover:shadow-[0_0_25px_rgba(255,70,85,0.8)] transition-all duration-300">
                 <motion.span
                   animate={{ x: [0, 4, 0] }}
                   transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
@@ -133,7 +133,7 @@ export default function GameSelector({ onSelectGame }) {
             </h2>
 
             <div className="mt-2 sm:mt-3 flex items-center justify-end gap-1.5">
-              <span className="inline-flex items-center gap-1.5 text-[9px] xs:text-[11px] sm:text-xs tracking-widest text-white font-bold bg-gradient-to-r from-[#f39c12]/15 to-[#f39c12]/40 border border-[#f39c12]/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-md backdrop-blur-md shadow-[0_0_15px_rgba(243,156,18,0.4)] group-hover:from-[#f39c12] group-hover:to-[#d35400] group-hover:text-black group-hover:shadow-[0_0_25px_rgba(243,156,18,0.8)] transition-all duration-300">
+              <span className="inline-flex items-center gap-1.5 text-[9px] xs:text-[11px] sm:text-xs tracking-widest text-white font-bold bg-gradient-to-r from-[#f39c12]/15 to-[#f39c12]/40 border border-[#f39c12]/60 px-2.5 py-1 sm:px-3.5 sm:py-1.5 rounded-md backdrop-blur-sm shadow-[0_0_15px_rgba(243,156,18,0.4)] group-hover:from-[#f39c12] group-hover:to-[#d35400] group-hover:text-black group-hover:shadow-[0_0_25px_rgba(243,156,18,0.8)] transition-all duration-300">
                 <span>CHỌN AOV</span>
                 <motion.span
                   animate={{ x: [0, -4, 0] }}

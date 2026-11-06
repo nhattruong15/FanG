@@ -5,12 +5,7 @@ import { subscribeTeams, INITIAL_TEAMS } from '../config/firebase';
 
 const TEAMS_PER_PAGE = 4;
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true, margin: '-50px' },
-  transition: { duration: 0.5 },
-};
+const fadeInUp = {};
 
 export default function TeamList({ selectedGame = 'valorant' }) {
   const [search, setSearch] = useState('');
@@ -129,13 +124,10 @@ export default function TeamList({ selectedGame = 'valorant' }) {
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {paginatedEntries.map(([school, teamList], idx) => (
-            <motion.div
+          {paginatedEntries.map(([school, teamList]) => (
+            <div
               key={school}
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: idx * 0.05 }}
-              className="group relative rounded-2xl overflow-hidden border border-[#F37021]/35 hover:border-[#F37021] bg-gradient-to-br from-[#1c120c]/95 via-[#140d08]/95 to-[#0b0704]/95 shadow-[0_8px_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_35px_rgba(243,112,33,0.3)] backdrop-blur-md transition-all duration-300"
+              className="group relative rounded-2xl overflow-hidden border border-[#F37021]/35 hover:border-[#F37021] bg-gradient-to-br from-[#1c120c] via-[#140d08] to-[#0b0704] shadow-[0_8px_25px_rgba(0,0,0,0.6)] hover:shadow-[0_0_35px_rgba(243,112,33,0.3)] transition-all duration-300"
             >
               {/* Top ambient highlight line */}
               <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-[#F37021] to-transparent opacity-40 group-hover:opacity-100 transition-opacity" />
@@ -252,7 +244,7 @@ export default function TeamList({ selectedGame = 'valorant' }) {
                   })}
                 </div>
               )}
-            </motion.div>
+            </div>
           ))}
         </div>
 

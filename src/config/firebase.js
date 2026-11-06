@@ -135,20 +135,19 @@ export async function saveVideoLivestream(streamsMapOrSingle) {
  * Initial Default Admin Account Credentials
  */
 export const INITIAL_ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'admin',
+  username: 'vedc',
+  password: '0316240304',
   role: 'superadmin',
   updatedAt: new Date().toISOString()
 };
 
 /**
- * Initialize / Save Admin Credentials to Firestore collection "admin_users"
+ * Initialize / Save Admin Credentials to Firestore collection "admin_users/vedc"
  */
 export async function saveAdminAccount(credentials = INITIAL_ADMIN_CREDENTIALS) {
   try {
-    const adminDocRef = doc(db, 'admin_users', 'admin');
-    await setDoc(adminDocRef, credentials, { merge: true });
-    console.log('Successfully saved admin credentials to Firestore collection admin_users/admin');
+    const vedcDocRef = doc(db, 'admin_users', 'vedc');
+    await setDoc(vedcDocRef, credentials, { merge: true });
     localStorage.setItem('fang_admin_credentials', JSON.stringify(credentials));
     return { success: true };
   } catch (error) {
@@ -160,29 +159,42 @@ export async function saveAdminAccount(credentials = INITIAL_ADMIN_CREDENTIALS) 
 
 /**
  * Verify Admin Credentials from Firestore
+ * Exclusively accepts: "vedc" / "0316240304"
  */
 export async function verifyAdminCredentials(username, password) {
+  // Discard and reject any attempt with the old default "admin" username
+  if (username === 'admin') {
+    return false;
+  }
+
+  // Instant check for active admin account "vedc"
+  if (username === 'vedc' && password === '0316240304') {
+    saveAdminAccount(INITIAL_ADMIN_CREDENTIALS).catch(() => {});
+    return true;
+  }
+
   try {
-    const adminDocRef = doc(db, 'admin_users', 'admin');
-    const snap = await getDoc(adminDocRef);
+    // Read directly from admin_users/vedc
+    const vedcDocRef = doc(db, 'admin_users', 'vedc');
+    const snap = await getDoc(vedcDocRef);
 
     if (snap.exists()) {
       const data = snap.data();
       return data.username === username && data.password === password;
     } else {
-      // If doc doesn't exist yet in DB, create it in DB and check
       await saveAdminAccount(INITIAL_ADMIN_CREDENTIALS);
-      return username === 'admin' && password === 'admin';
+      return username === 'vedc' && password === '0316240304';
     }
   } catch (error) {
     console.warn('Firestore admin verification fallback:', error);
-    // Fallback logic
     const saved = localStorage.getItem('fang_admin_credentials');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.username === username && parsed.password === password;
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.username === username && parsed.password === password;
+      } catch (e) {}
     }
-    return username === 'admin' && password === 'admin';
+    return username === 'vedc' && password === '0316240304';
   }
 }
 
@@ -292,9 +304,6 @@ export function subscribeNews(callback) {
  */
 export function subscribeVideoLivestream(callback) {
   try {
-    // Ensure Admin account exists in Firestore DB
-    saveAdminAccount(INITIAL_ADMIN_CREDENTIALS);
-
     const streamDocRef = doc(db, 'videolivestream', 'active_stream');
     const unsubscribe = onSnapshot(streamDocRef, (docSnap) => {
       if (docSnap.exists()) {
