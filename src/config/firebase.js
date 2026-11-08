@@ -62,37 +62,69 @@ export const INITIAL_LIVESTREAM_STREAMS = {
 export const INITIAL_VIDEO_LIVESTREAM = INITIAL_LIVESTREAM_STREAMS.VALORANT;
 
 /**
+ * Extract YouTube 11-character Video ID from various link formats:
+ * - https://www.youtube.com/live/VIDEO_ID
+ * - https://www.youtube.com/watch?v=VIDEO_ID
+ * - https://youtu.be/VIDEO_ID
+ * - https://www.youtube.com/embed/VIDEO_ID
+ * - https://www.youtube.com/shorts/VIDEO_ID
+ * - iframe embed strings or raw 11-char ID
+ */
+export function extractYouTubeId(url) {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  const iframeMatch = trimmed.match(/src=["']([^"']+)["']/i);
+  const target = iframeMatch ? iframeMatch[1] : trimmed;
+  if (/^[a-zA-Z0-9_-]{11}$/.test(target)) return target;
+  const regExp = /(?:youtu\.be\/|youtube(?:-nocookie)?\.com\/(?:embed\/|v\/|live\/|shorts\/|watch\?v=|watch\?.+&v=))([a-zA-Z0-9_-]{11})/i;
+  const match = target.match(regExp);
+  return match ? match[1] : null;
+}
+
+/**
+ * Convert standard YouTube watch/live/short/share link to an iframe Embed URL
+ */
+export function parseYouTubeEmbed(url) {
+  if (!url) return 'https://www.youtube.com/embed/mrBPS2WscD8';
+  const videoId = extractYouTubeId(url);
+  if (videoId) {
+    return `https://www.youtube.com/embed/${videoId}`;
+  }
+  return url;
+}
+
+/**
  * Normalize Firestore stream data to ensure per-game streams object map
  */
 export function normalizeLivestreamData(raw) {
   if (!raw) return INITIAL_LIVESTREAM_STREAMS;
+
+  const normalizeSingleStream = (stream, defaultStream) => {
+    if (!stream) return defaultStream;
+    const url = stream.url || stream.embedUrl || defaultStream.url;
+    const embedUrl = parseYouTubeEmbed(stream.embedUrl || url);
+    const videoId = extractYouTubeId(url) || defaultStream.videoId;
+    return {
+      ...defaultStream,
+      ...stream,
+      url,
+      embedUrl,
+      videoId
+    };
+  };
+
   if (raw.VALORANT || raw.AOV || raw.ALL) {
     return {
-      VALORANT: { ...INITIAL_LIVESTREAM_STREAMS.VALORANT, ...(raw.VALORANT || {}) },
-      AOV: { ...INITIAL_LIVESTREAM_STREAMS.AOV, ...(raw.AOV || {}) },
-      ALL: { ...INITIAL_LIVESTREAM_STREAMS.ALL, ...(raw.ALL || {}) }
+      VALORANT: normalizeSingleStream(raw.VALORANT, INITIAL_LIVESTREAM_STREAMS.VALORANT),
+      AOV: normalizeSingleStream(raw.AOV, INITIAL_LIVESTREAM_STREAMS.AOV),
+      ALL: normalizeSingleStream(raw.ALL, INITIAL_LIVESTREAM_STREAMS.ALL)
     };
   }
   const legacyGame = raw.game || 'VALORANT';
   return {
     ...INITIAL_LIVESTREAM_STREAMS,
-    [legacyGame]: {
-      ...raw,
-      embedUrl: parseYouTubeEmbed(raw.embedUrl || raw.url)
-    }
+    [legacyGame]: normalizeSingleStream(raw, INITIAL_LIVESTREAM_STREAMS[legacyGame] || INITIAL_LIVESTREAM_STREAMS.VALORANT)
   };
-}
-
-/**
- * Convert standard YouTube watch link to Embed URL
- */
-export function parseYouTubeEmbed(url) {
-  if (!url) return 'https://www.youtube.com/embed/mrBPS2WscD8';
-  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-  const match = url.match(regExp);
-  return (match && match[2].length === 11)
-    ? `https://www.youtube.com/embed/${match[2]}`
-    : url;
 }
 
 /**

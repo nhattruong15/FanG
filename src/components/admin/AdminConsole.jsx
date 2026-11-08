@@ -2248,8 +2248,8 @@ export default function AdminConsole({ onBackToLanding }) {
                     <label className="block text-xs font-bold text-slate-700 uppercase mb-1">Stream Link YouTube / Embed URL ({selectedStreamGame})</label>
                     <input
                       type="text"
-                      placeholder="Dán link YouTube (Ví dụ: https://www.youtube.com/watch?v=cI5b71ZBAn0)"
-                      value={currentStream.embedUrl || currentStream.url || ''}
+                      placeholder="Dán link YouTube (Ví dụ: https://www.youtube.com/watch?v=... hoặc https://www.youtube.com/live/...)"
+                      value={currentStream.url || currentStream.embedUrl || ''}
                       onChange={(e) => {
                         const newUrl = e.target.value;
                         setStreamsMap({
@@ -2275,7 +2275,7 @@ export default function AdminConsole({ onBackToLanding }) {
                           [selectedStreamGame]: {
                             ...currentStream,
                             isLive: nextLiveState,
-                            embedUrl: parseYouTubeEmbed(currentStream.embedUrl || currentStream.url)
+                            embedUrl: parseYouTubeEmbed(currentStream.url || currentStream.embedUrl)
                           }
                         };
                         setStreamsMap(updatedMap);
@@ -2296,7 +2296,7 @@ export default function AdminConsole({ onBackToLanding }) {
                       }}
                       className="flex items-center gap-2 px-5 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
                     >
-                      <p className="-4" />
+                      <Save className="w-4 h-4" />
                       Lưu Thay Đổi
                     </button>
                   </div>
@@ -2323,7 +2323,8 @@ export default function AdminConsole({ onBackToLanding }) {
                         className="w-full h-full"
                         src={parseYouTubeEmbed(currentStream.embedUrl || currentStream.url)}
                         title={`Livestream Preview ${selectedStreamGame}`}
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
                         allowFullScreen
                       />
                     ) : (
@@ -2811,7 +2812,14 @@ export default function AdminConsole({ onBackToLanding }) {
                           {item.thumbnail ? (
                             <img src={item.thumbnail} alt={item.title} className="w-full h-full object-cover" />
                           ) : item.videoEmbed ? (
-                            <iframe src={parseYouTubeEmbed(item.videoEmbed)} title={item.title} className="w-full h-full pointer-events-none" />
+                            <iframe
+                              src={parseYouTubeEmbed(item.videoEmbed)}
+                              title={item.title}
+                              className="w-full h-full pointer-events-none"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                              referrerPolicy="strict-origin-when-cross-origin"
+                              allowFullScreen
+                            />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-400">
                               <Newspaper className="w-8 h-8" />

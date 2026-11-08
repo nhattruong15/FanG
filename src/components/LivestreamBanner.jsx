@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, X, ChevronDown, ChevronUp, ExternalLink } from 'lucide-react';
-import { subscribeVideoLivestream, parseYouTubeEmbed, INITIAL_LIVESTREAM_STREAMS, recordLiveView } from '../config/firebase';
+import { subscribeVideoLivestream, parseYouTubeEmbed, extractYouTubeId, INITIAL_LIVESTREAM_STREAMS, recordLiveView } from '../config/firebase';
 
 export default function LivestreamBanner({ selectedGame, isHidden = false }) {
   const [isVisible, setIsVisible] = useState(true);
@@ -44,8 +44,12 @@ export default function LivestreamBanner({ selectedGame, isHidden = false }) {
   if (!isVisible || !activeStream || activeStream.isLive === false) return null;
 
   const streamGame = activeStream.game || activeGameKey;
-  const embedUrl = parseYouTubeEmbed(activeStream.embedUrl || activeStream.url) + '?autoplay=1';
-  const watchUrl = activeStream.url || activeStream.embedUrl || 'https://www.youtube.com';
+  const baseEmbed = parseYouTubeEmbed(activeStream.embedUrl || activeStream.url);
+  const embedUrl = baseEmbed.includes('?') ? `${baseEmbed}&autoplay=1` : `${baseEmbed}?autoplay=1`;
+  const videoId = extractYouTubeId(activeStream.url || activeStream.embedUrl);
+  const watchUrl = activeStream.url && !activeStream.url.includes('/embed/')
+    ? activeStream.url
+    : (videoId ? `https://www.youtube.com/watch?v=${videoId}` : (activeStream.url || 'https://www.youtube.com'));
 
   const handleToggleExpand = () => {
     const nextExpanded = !isExpanded;
@@ -102,8 +106,9 @@ export default function LivestreamBanner({ selectedGame, isHidden = false }) {
                   <iframe
                     className="absolute inset-0 w-full h-full"
                     src={embedUrl}
-                    title={streamData.title || "FanG Exports Livestream"}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title={activeStream.title || "FanG Esports Livestream"}
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    referrerPolicy="strict-origin-when-cross-origin"
                     allowFullScreen
                   />
                 </div>

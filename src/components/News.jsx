@@ -100,6 +100,9 @@ export default function News({ selectedGame, targetGame }) {
                           className="w-full h-full pointer-events-none"
                           src={parseYouTubeEmbed(article.videoEmbed)}
                           title={article.title}
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                          referrerPolicy="strict-origin-when-cross-origin"
+                          allowFullScreen
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-[#1e130c] text-slate-600">
