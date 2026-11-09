@@ -133,7 +133,10 @@ export function normalizeLivestreamData(raw) {
  * Save / Update Livestream Document in Firestore collection "videolivestream"
  */
 export async function saveVideoLivestream(streamsMapOrSingle) {
-  await ensureAdminAuth();
+  const user = await ensureAdminAuth();
+  if (!user) {
+    throw new Error('Xác thực admin thất bại. Vui lòng đăng nhập lại.');
+  }
   try {
     let normalized = normalizeLivestreamData(streamsMapOrSingle);
     if (streamsMapOrSingle && streamsMapOrSingle.game && !streamsMapOrSingle.VALORANT) {
@@ -162,7 +165,7 @@ export async function saveVideoLivestream(streamsMapOrSingle) {
     console.warn('Firestore write error:', error);
     let normalized = normalizeLivestreamData(streamsMapOrSingle);
     localStorage.setItem('fang_videolivestream', JSON.stringify(normalized));
-    return { success: true, fallback: true, data: normalized };
+    return { success: false, fallback: true, data: normalized };
   }
 }
 
@@ -188,7 +191,7 @@ export async function saveAdminAccount(credentials = INITIAL_ADMIN_CREDENTIALS) 
   } catch (error) {
     console.warn('Firestore admin save warning:', error);
     localStorage.setItem('fang_admin_credentials', JSON.stringify(credentials));
-    return { success: true, fallback: true };
+    return { success: false, fallback: true };
   }
 }
 
@@ -207,6 +210,11 @@ export async function ensureAdminAuth() {
     }
   }
   return null;
+}
+
+// Auto-authenticate on load if admin session exists
+if (typeof window !== 'undefined' && sessionStorage.getItem('fang_admin_authenticated') === 'true') {
+  ensureAdminAuth().catch(() => {});
 }
 
 /**
@@ -305,7 +313,10 @@ export const INITIAL_NEWS_ARTICLES = [
  * Save / Update News Articles list in Firestore collection "news/articles_list"
  */
 export async function saveNewsArticles(articles) {
-  await ensureAdminAuth();
+  const user = await ensureAdminAuth();
+  if (!user) {
+    throw new Error('Xác thực admin thất bại. Vui lòng đăng nhập lại.');
+  }
   try {
     const payload = {
       items: articles,
@@ -319,7 +330,7 @@ export async function saveNewsArticles(articles) {
   } catch (error) {
     console.warn('Firestore news write error:', error);
     localStorage.setItem('fang_news_articles', JSON.stringify(articles));
-    return { success: true, fallback: true, articles };
+    return { success: false, fallback: true, articles };
   }
 }
 
@@ -597,7 +608,10 @@ export const INITIAL_TEAMS = [
  * Save / Update Teams list in Firestore collection "teams/teams_list"
  */
 export async function saveTeams(teams) {
-  await ensureAdminAuth();
+  const user = await ensureAdminAuth();
+  if (!user) {
+    throw new Error('Xác thực admin thất bại. Vui lòng đăng nhập lại.');
+  }
   try {
     const payload = {
       items: teams,
@@ -609,9 +623,9 @@ export async function saveTeams(teams) {
     localStorage.setItem('fang_registered_teams', JSON.stringify(teams));
     return { success: true, teams };
   } catch (error) {
-    console.warn('Firestore teams write error:', error);
+    console.error('Firestore teams write error:', error);
     localStorage.setItem('fang_registered_teams', JSON.stringify(teams));
-    return { success: true, fallback: true, teams };
+    return { success: false, fallback: true, teams, error: error.message };
   }
 }
 
@@ -749,7 +763,7 @@ export async function recordQrScan(gameName = 'ALL') {
       updatedAt: newScanEntry.timestamp
     };
     localStorage.setItem('fang_qr_stats', JSON.stringify(updatedStats));
-    return { success: true, fallback: true, stats: updatedStats, newScan: newScanEntry };
+    return { success: false, fallback: true, stats: updatedStats, newScan: newScanEntry };
   }
 }
 
@@ -864,7 +878,7 @@ export async function recordLiveView(gameName = 'ALL') {
       updatedAt: newViewEntry.timestamp
     };
     localStorage.setItem('fang_live_stats', JSON.stringify(updatedStats));
-    return { success: true, fallback: true, stats: updatedStats, newView: newViewEntry };
+    return { success: false, fallback: true, stats: updatedStats, newView: newViewEntry };
   }
 }
 
@@ -1011,7 +1025,7 @@ export async function recordPageVisit() {
       lastVisitTime: now
     };
     localStorage.setItem('fang_visitor_stats', JSON.stringify(updated));
-    return { success: true, fallback: true, stats: updated };
+    return { success: false, fallback: true, stats: updated };
   }
 }
 
@@ -1233,7 +1247,10 @@ export const INITIAL_BRACKET_MATCHES = [
  * Save / Update Bracket Matches list in Firestore collection "bracket_matches/active_bracket"
  */
 export async function saveMatches(matches) {
-  await ensureAdminAuth();
+  const user = await ensureAdminAuth();
+  if (!user) {
+    throw new Error('Xác thực admin thất bại. Vui lòng đăng nhập lại.');
+  }
   try {
     const payload = {
       items: matches,
@@ -1249,7 +1266,7 @@ export async function saveMatches(matches) {
     console.warn('Firestore matches write error:', error);
     localStorage.setItem('fang_bracket_matches', JSON.stringify(matches));
     window.dispatchEvent(new CustomEvent('fang_bracket_updated', { detail: matches }));
-    return { success: true, fallback: true, matches };
+    return { success: false, fallback: true, matches };
   }
 }
 
@@ -1354,7 +1371,10 @@ export const INITIAL_QR_CONFIG = {
  * Save / Update Dynamic QR Code & Target Link Configuration in Firestore "settings/qr_config"
  */
 export async function saveQrConfig(config) {
-  await ensureAdminAuth();
+  const user = await ensureAdminAuth();
+  if (!user) {
+    throw new Error('Xác thực admin thất bại. Vui lòng đăng nhập lại.');
+  }
   try {
     const payload = {
       destinationUrl: config.destinationUrl || 'https://fangtv.vn/',
@@ -1378,7 +1398,7 @@ export async function saveQrConfig(config) {
       updatedAt: new Date().toISOString()
     };
     localStorage.setItem('fang_qr_config', JSON.stringify(payload));
-    return { success: true, fallback: true, config: payload };
+    return { success: false, fallback: true, config: payload };
   }
 }
 
@@ -1432,16 +1452,19 @@ export function subscribeQrConfig(callback) {
  * Initial Default Rules Links (Chi tiết thể thức giải đấu)
  */
 export const INITIAL_RULES_LINKS = {
-  aov: '',
-  valorant: '',
-  updatedAt: null,
+  aov: 'https://drive.google.com/file/d/1ktNE31QCWn2aRr6HGi_R2CacgjmNd1sp/view?usp=sharing',
+  valorant: 'https://drive.google.com/file/d/1SayABmd473hLgF5tsUe9mrymzpBWeIKP/view?usp=sharing',
+  updatedAt: '2026-11-09T05:12:20.909Z',
 };
 
 /**
  * Save Rules Links to Firestore collection "settings/rules_links"
  */
 export async function saveRulesLinks(links) {
-  await ensureAdminAuth();
+  const user = await ensureAdminAuth();
+  if (!user) {
+    throw new Error('Xác thực admin thất bại. Vui lòng đăng nhập lại.');
+  }
   try {
     const payload = {
       ...links,
@@ -1455,7 +1478,7 @@ export async function saveRulesLinks(links) {
   } catch (error) {
     console.warn('[Firestore] Rules links save error:', error);
     localStorage.setItem('fang_rules_links', JSON.stringify(links));
-    return { success: true, fallback: true, data: links };
+    return { success: false, fallback: true, data: links };
   }
 }
 

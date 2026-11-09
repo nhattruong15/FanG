@@ -420,6 +420,22 @@ export default function AdminConsole({ onBackToLanding }) {
   const isInitialQrLoad = React.useRef(true);
   const isInitialLiveLoad = React.useRef(true);
   //NHẬT TRƯỜNG CODE
+  // Helper: Wrap Firestore save with error handling & toast notification
+  const safeFirestoreSave = async (saveFn, successMsg, errorPrefix = 'Lỗi lưu') => {
+    try {
+      const result = await saveFn();
+      if (result && result.success === false) {
+        triggerToast(`⚠️ ${errorPrefix}: Lưu offline nhưng chưa đồng bộ Firestore!`);
+        return result;
+      }
+      if (successMsg) triggerToast(successMsg);
+      return result;
+    } catch (err) {
+      triggerToast(`❌ ${errorPrefix}: ${err.message || 'Vui lòng đăng nhập lại.'}`);
+      return { success: false, error: err.message };
+    }
+  };
+
   // Subscribe to real-time Firestore database collection "videolivestream", "news", "teams", "qr_scans" & "live_views"
   React.useEffect(() => {
     const unsubStream = subscribeVideoLivestream((data) => {
@@ -798,7 +814,11 @@ export default function AdminConsole({ onBackToLanding }) {
     }
 
     setTeams(updatedTeams);
-    await saveTeams(updatedTeams);
+    await safeFirestoreSave(
+      () => saveTeams(updatedTeams),
+      editingTeamId ? 'Đã cập nhật đội tuyển thành công!' : null,
+      'Lỗi lưu đội'
+    );
     setShowAddTeamModal(false);
     setEditingTeamId(null);
     setNewTeam({ name: '', school: '', region: 'Miền Bắc', game: 'Valorant', captain: '', members: 7, logo: '' });
@@ -831,7 +851,7 @@ export default function AdminConsole({ onBackToLanding }) {
     }
 
     setNews(updatedNews);
-    await saveNewsArticles(updatedNews);
+    await safeFirestoreSave(() => saveNewsArticles(updatedNews), null, 'Lỗi lưu tin tức');
 
     setShowAddNewsModal(false);
     setEditingArticleId(null);
@@ -877,14 +897,13 @@ export default function AdminConsole({ onBackToLanding }) {
   const handleDeleteTeam = async (id) => {
     const updatedTeams = teams.filter(t => t.id !== id);
     setTeams(updatedTeams);
-    await saveTeams(updatedTeams);
-    triggerToast('Đã xóa đội tuyển.');
+    await safeFirestoreSave(() => saveTeams(updatedTeams), 'Đã xóa đội tuyển.', 'Lỗi xóa đội');
   };
 
   const handleDeleteNews = async (id) => {
     const updatedNews = news.filter(n => n.id !== id);
     setNews(updatedNews);
-    await saveNewsArticles(updatedNews);
+    await safeFirestoreSave(() => saveNewsArticles(updatedNews), null, 'Lỗi lưu tin tức');
     triggerToast('Đã xóa bài viết.');
   };
 
@@ -905,8 +924,7 @@ export default function AdminConsole({ onBackToLanding }) {
       return m;
     });
     setMatches(updated);
-    await saveMatches(updated);
-    triggerToast('Đã lưu thay đổi trận đấu!');
+    await safeFirestoreSave(() => saveMatches(updated), 'Đã lưu thay đổi trận đấu!', 'Lỗi lưu trận đấu');
   };
 
   // Delete a specific match
@@ -914,8 +932,7 @@ export default function AdminConsole({ onBackToLanding }) {
     if (window.confirm('Bạn có chắc chắn muốn xóa trận đấu này không?')) {
       const updated = matches.filter(m => m.id !== matchId);
       setMatches(updated);
-      await saveMatches(updated);
-      triggerToast('Đã xóa trận đấu!');
+      await safeFirestoreSave(() => saveMatches(updated), 'Đã xóa trận đấu!', 'Lỗi xóa trận đấu');
     }
   };
 
@@ -932,8 +949,7 @@ export default function AdminConsole({ onBackToLanding }) {
         status: 'UPCOMING'
       }));
       setMatches(resetList);
-      await saveMatches(resetList);
-      triggerToast('Đã đặt lại tất cả các trận đấu về "-- Chọn Đội --"!');
+      await safeFirestoreSave(() => saveMatches(resetList), 'Đã đặt lại tất cả các trận đấu về "-- Chọn Đội --"!', 'Lỗi reset trận đấu');
     }
   };
 
@@ -1011,8 +1027,7 @@ export default function AdminConsole({ onBackToLanding }) {
 
     const updatedMatches = [...nonNationalMatches, updatedVal, updatedAov];
     setMatches(updatedMatches);
-    await saveMatches(updatedMatches);
-    triggerToast('Đã lưu 2 trận Chung Kết Toàn Quốc (VALORANT & AOV) thành công!');
+    await safeFirestoreSave(() => saveMatches(updatedMatches), 'Đã lưu 2 trận Chung Kết Toàn Quốc (VALORANT & AOV) thành công!', 'Lỗi lưu trận chung kết');
     setShowNationalFinalsModal(false);
   };
 
@@ -2281,8 +2296,7 @@ export default function AdminConsole({ onBackToLanding }) {
                           }
                         };
                         setStreamsMap(updatedMap);
-                        await saveVideoLivestream(updatedMap);
-                        triggerToast(nextLiveState ? `Đã BẬT stream live cho ${selectedStreamGame}!` : `Đã TẮT stream live cho ${selectedStreamGame}!`);
+                        await safeFirestoreSave(() => saveVideoLivestream(updatedMap), nextLiveState ? `Đã BẬT stream live cho ${selectedStreamGame}!` : `Đã TẮT stream live cho ${selectedStreamGame}!`, 'Lỗi lưu livestream');
                       }}
                       className={`px-5 py-2.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${currentStream.isLive ? 'bg-rose-600 hover:bg-rose-700 text-white' : 'bg-emerald-600 hover:bg-emerald-700 text-white'
                         }`}
@@ -2293,8 +2307,7 @@ export default function AdminConsole({ onBackToLanding }) {
                     <button
                       type="button"
                       onClick={async () => {
-                        await saveVideoLivestream(streamsMap);
-                        triggerToast(`Đã lưu cấu hình livestream riêng cho [${selectedStreamGame}] vào CSDL Firestore!`);
+                        await safeFirestoreSave(() => saveVideoLivestream(streamsMap), `Đã lưu cấu hình livestream riêng cho [${selectedStreamGame}] vào CSDL Firestore!`, 'Lỗi lưu livestream');
                       }}
                       className="flex items-center gap-2 px-5 py-2.5 bg-[#F37022] hover:bg-orange-600 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
                     >
@@ -3079,8 +3092,7 @@ export default function AdminConsole({ onBackToLanding }) {
                     <button
                       type="button"
                       onClick={async () => {
-                        await saveRulesLinks(tempRulesLinks);
-                        triggerToast('Đã lưu link thể thức giải đấu thành công!');
+                        await safeFirestoreSave(() => saveRulesLinks(tempRulesLinks), 'Đã lưu link thể thức giải đấu thành công!', 'Lỗi lưu thể thức');
                       }}
                       className="px-6 py-2.5 rounded-xl bg-[#F37022] hover:bg-orange-600 text-white text-xs font-black transition-all shadow-md shadow-orange-500/20 flex items-center gap-2 cursor-pointer"
                     >
