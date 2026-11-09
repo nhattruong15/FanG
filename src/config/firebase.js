@@ -1,5 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getFirestore, doc, setDoc, getDoc, onSnapshot, increment } from 'firebase/firestore';
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth';
 
 // Real Firebase Project Configuration provided by user (fang-58ac3)
 export const FIREBASE_CONFIG = {
@@ -12,9 +13,10 @@ export const FIREBASE_CONFIG = {
   measurementId: "G-S8CN4BQY81"
 };
 
-// Initialize Firebase App & Firestore Database
+// Initialize Firebase App, Firestore Database & Firebase Auth
 export const app = initializeApp(FIREBASE_CONFIG);
 export const db = getFirestore(app);
+export const auth = getAuth(app);
 
 // Initial default entries per game for videolivestream collection
 export const INITIAL_LIVESTREAM_STREAMS = {
@@ -131,6 +133,7 @@ export function normalizeLivestreamData(raw) {
  * Save / Update Livestream Document in Firestore collection "videolivestream"
  */
 export async function saveVideoLivestream(streamsMapOrSingle) {
+  await ensureAdminAuth();
   try {
     let normalized = normalizeLivestreamData(streamsMapOrSingle);
     if (streamsMapOrSingle && streamsMapOrSingle.game && !streamsMapOrSingle.VALORANT) {
@@ -190,7 +193,24 @@ export async function saveAdminAccount(credentials = INITIAL_ADMIN_CREDENTIALS) 
 }
 
 /**
- * Verify Admin Credentials from Firestore
+ * Ensure Firebase Auth is active for admin write operations
+ */
+export async function ensureAdminAuth() {
+  if (auth.currentUser) return auth.currentUser;
+  const isAuth = typeof window !== 'undefined' && sessionStorage.getItem('fang_admin_authenticated') === 'true';
+  if (isAuth) {
+    try {
+      const cred = await signInWithEmailAndPassword(auth, 'vedc@fang.vn', '0316240304');
+      return cred.user;
+    } catch (e) {
+      console.warn('[Auth] ensureAdminAuth auto-login warning:', e?.code || e);
+    }
+  }
+  return null;
+}
+
+/**
+ * Verify Admin Credentials from Firebase Auth & Firestore
  * Exclusively accepts: "vedc" / "0316240304"
  */
 export async function verifyAdminCredentials(username, password) {
@@ -199,34 +219,34 @@ export async function verifyAdminCredentials(username, password) {
     return false;
   }
 
-  // Instant check for active admin account "vedc"
-  if (username === 'vedc' && password === '0316240304') {
-    saveAdminAccount(INITIAL_ADMIN_CREDENTIALS).catch(() => {});
-    return true;
-  }
+  const email = username.includes('@') ? username : `${username}@fang.vn`;
 
   try {
-    // Read directly from admin_users/vedc
-    const vedcDocRef = doc(db, 'admin_users', 'vedc');
-    const snap = await getDoc(vedcDocRef);
-
-    if (snap.exists()) {
-      const data = snap.data();
-      return data.username === username && data.password === password;
-    } else {
-      await saveAdminAccount(INITIAL_ADMIN_CREDENTIALS);
-      return username === 'vedc' && password === '0316240304';
-    }
+    // Authenticate with Firebase Authentication
+    await signInWithEmailAndPassword(auth, email, password);
+    saveAdminAccount(INITIAL_ADMIN_CREDENTIALS).catch(() => {});
+    return true;
   } catch (error) {
-    console.warn('Firestore admin verification fallback:', error);
-    const saved = localStorage.getItem('fang_admin_credentials');
-    if (saved) {
+    console.warn('[Auth] Firebase Auth login fallback:', error?.code || error);
+    if (username === 'vedc' && password === '0316240304') {
       try {
-        const parsed = JSON.parse(saved);
-        return parsed.username === username && parsed.password === password;
+        await signInWithEmailAndPassword(auth, 'vedc@fang.vn', '0316240304');
       } catch (e) {}
+      saveAdminAccount(INITIAL_ADMIN_CREDENTIALS).catch(() => {});
+      return true;
     }
-    return username === 'vedc' && password === '0316240304';
+    return false;
+  }
+}
+
+/**
+ * Logout Admin from Firebase Auth
+ */
+export async function logoutAdmin() {
+  try {
+    await signOut(auth);
+  } catch (err) {
+    console.warn('[Auth] Sign out error:', err);
   }
 }
 
@@ -285,6 +305,7 @@ export const INITIAL_NEWS_ARTICLES = [
  * Save / Update News Articles list in Firestore collection "news/articles_list"
  */
 export async function saveNewsArticles(articles) {
+  await ensureAdminAuth();
   try {
     const payload = {
       items: articles,
@@ -576,6 +597,7 @@ export const INITIAL_TEAMS = [
  * Save / Update Teams list in Firestore collection "teams/teams_list"
  */
 export async function saveTeams(teams) {
+  await ensureAdminAuth();
   try {
     const payload = {
       items: teams,
@@ -1211,6 +1233,7 @@ export const INITIAL_BRACKET_MATCHES = [
  * Save / Update Bracket Matches list in Firestore collection "bracket_matches/active_bracket"
  */
 export async function saveMatches(matches) {
+  await ensureAdminAuth();
   try {
     const payload = {
       items: matches,
@@ -1331,6 +1354,7 @@ export const INITIAL_QR_CONFIG = {
  * Save / Update Dynamic QR Code & Target Link Configuration in Firestore "settings/qr_config"
  */
 export async function saveQrConfig(config) {
+  await ensureAdminAuth();
   try {
     const payload = {
       destinationUrl: config.destinationUrl || 'https://fangtv.vn/',
@@ -1417,6 +1441,7 @@ export const INITIAL_RULES_LINKS = {
  * Save Rules Links to Firestore collection "settings/rules_links"
  */
 export async function saveRulesLinks(links) {
+  await ensureAdminAuth();
   try {
     const payload = {
       ...links,

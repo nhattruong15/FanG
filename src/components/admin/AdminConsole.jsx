@@ -51,6 +51,7 @@ import {
   saveVideoLivestream,
   subscribeVideoLivestream,
   verifyAdminCredentials,
+  logoutAdmin,
   INITIAL_NEWS_ARTICLES,
   saveNewsArticles,
   subscribeNews,
@@ -710,6 +711,7 @@ export default function AdminConsole({ onBackToLanding }) {
   };
 
   const handleLogout = () => {
+    logoutAdmin();
     sessionStorage.removeItem('fang_admin_authenticated');
     setIsAuthenticated(false);
     triggerToast('Đã đăng xuất khỏi Admin Console.');
