@@ -312,21 +312,37 @@ export function subscribeNews(callback) {
       if (docSnap.exists() && Array.isArray(docSnap.data().items)) {
         callback(docSnap.data().items);
       } else {
-        saveNewsArticles(INITIAL_NEWS_ARTICLES);
+        const saved = localStorage.getItem('fang_news_articles');
+        if (saved) {
+          try {
+            callback(JSON.parse(saved));
+            return;
+          } catch (e) {}
+        }
         callback(INITIAL_NEWS_ARTICLES);
       }
     }, (err) => {
       console.warn('Firestore news subscription warning:', err);
       const saved = localStorage.getItem('fang_news_articles');
-      if (saved) callback(JSON.parse(saved));
-      else callback(INITIAL_NEWS_ARTICLES);
+      if (saved) {
+        try {
+          callback(JSON.parse(saved));
+          return;
+        } catch (e) {}
+      }
+      callback(INITIAL_NEWS_ARTICLES);
     });
     return unsubscribe;
   } catch (e) {
     console.warn('Firestore news init error:', e);
     const saved = localStorage.getItem('fang_news_articles');
-    if (saved) callback(JSON.parse(saved));
-    else callback(INITIAL_NEWS_ARTICLES);
+    if (saved) {
+      try {
+        callback(JSON.parse(saved));
+        return () => {};
+      } catch (e) {}
+    }
+    callback(INITIAL_NEWS_ARTICLES);
     return () => {};
   }
 }
@@ -341,28 +357,37 @@ export function subscribeVideoLivestream(callback) {
       if (docSnap.exists()) {
         callback(normalizeLivestreamData(docSnap.data()));
       } else {
-        // Create initial default document in Firestore if not existing yet
-        saveVideoLivestream(INITIAL_LIVESTREAM_STREAMS);
+        const saved = localStorage.getItem('fang_videolivestream');
+        if (saved) {
+          try {
+            callback(normalizeLivestreamData(JSON.parse(saved)));
+            return;
+          } catch (e) {}
+        }
         callback(INITIAL_LIVESTREAM_STREAMS);
       }
     }, (err) => {
       console.warn('Firestore subscription warning:', err);
       const saved = localStorage.getItem('fang_videolivestream');
       if (saved) {
-        callback(normalizeLivestreamData(JSON.parse(saved)));
-      } else {
-        callback(INITIAL_LIVESTREAM_STREAMS);
+        try {
+          callback(normalizeLivestreamData(JSON.parse(saved)));
+          return;
+        } catch (e) {}
       }
+      callback(INITIAL_LIVESTREAM_STREAMS);
     });
     return unsubscribe;
   } catch (e) {
     console.warn('Firestore init error:', e);
     const saved = localStorage.getItem('fang_videolivestream');
     if (saved) {
-      callback(normalizeLivestreamData(JSON.parse(saved)));
-    } else {
-      callback(INITIAL_LIVESTREAM_STREAMS);
+      try {
+        callback(normalizeLivestreamData(JSON.parse(saved)));
+        return () => {};
+      } catch (e) {}
     }
+    callback(INITIAL_LIVESTREAM_STREAMS);
     return () => {};
   }
 }
@@ -578,21 +603,37 @@ export function subscribeTeams(callback) {
       if (docSnap.exists() && Array.isArray(docSnap.data().items)) {
         callback(docSnap.data().items);
       } else {
-        saveTeams(INITIAL_TEAMS);
+        const saved = localStorage.getItem('fang_registered_teams');
+        if (saved) {
+          try {
+            callback(JSON.parse(saved));
+            return;
+          } catch (e) {}
+        }
         callback(INITIAL_TEAMS);
       }
     }, (err) => {
       console.warn('Firestore teams subscription warning:', err);
       const saved = localStorage.getItem('fang_registered_teams');
-      if (saved) callback(JSON.parse(saved));
-      else callback(INITIAL_TEAMS);
+      if (saved) {
+        try {
+          callback(JSON.parse(saved));
+          return;
+        } catch (e) {}
+      }
+      callback(INITIAL_TEAMS);
     });
     return unsubscribe;
   } catch (e) {
     console.warn('Firestore teams init error:', e);
     const saved = localStorage.getItem('fang_registered_teams');
-    if (saved) callback(JSON.parse(saved));
-    else callback(INITIAL_TEAMS);
+    if (saved) {
+      try {
+        callback(JSON.parse(saved));
+        return () => {};
+      } catch (err) {}
+    }
+    callback(INITIAL_TEAMS);
     return () => {};
   }
 }
@@ -1217,26 +1258,33 @@ export function subscribeMatches(callback) {
     const bracketDocRef = doc(db, 'bracket_matches', 'active_bracket');
     const unsubscribe = onSnapshot(bracketDocRef, (docSnap) => {
       if (docSnap.exists() && Array.isArray(docSnap.data().items)) {
-        const savedItems = docSnap.data().items;
-        const existingIds = new Set(savedItems.map(m => m.id));
-        const missingMatches = INITIAL_BRACKET_MATCHES.filter(m => !existingIds.has(m.id));
-        const merged = missingMatches.length > 0 ? [...savedItems, ...missingMatches] : savedItems;
-        callback(merged);
+        callback(docSnap.data().items);
       } else {
-        saveMatches(INITIAL_BRACKET_MATCHES);
+        const saved = localStorage.getItem('fang_bracket_matches');
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (Array.isArray(parsed)) {
+              callback(parsed);
+              return;
+            }
+          } catch (e) {}
+        }
         callback(INITIAL_BRACKET_MATCHES);
       }
     }, (err) => {
       console.warn('[Firestore] Matches subscription error:', err);
       const saved = localStorage.getItem('fang_bracket_matches');
       if (saved) {
-        const parsed = JSON.parse(saved);
-        const existingIds = new Set(parsed.map(m => m.id));
-        const missingMatches = INITIAL_BRACKET_MATCHES.filter(m => !existingIds.has(m.id));
-        callback(missingMatches.length > 0 ? [...parsed, ...missingMatches] : parsed);
-      } else {
-        callback(INITIAL_BRACKET_MATCHES);
+        try {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            callback(parsed);
+            return;
+          }
+        } catch (e) {}
       }
+      callback(INITIAL_BRACKET_MATCHES);
     });
 
     return () => {
@@ -1248,10 +1296,16 @@ export function subscribeMatches(callback) {
     console.warn('[Firestore] Matches init error:', e);
     const saved = localStorage.getItem('fang_bracket_matches');
     if (saved) {
-      const parsed = JSON.parse(saved);
-      const existingIds = new Set(parsed.map(m => m.id));
-      const missingMatches = INITIAL_BRACKET_MATCHES.filter(m => !existingIds.has(m.id));
-      callback(missingMatches.length > 0 ? [...parsed, ...missingMatches] : parsed);
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) {
+          callback(parsed);
+        } else {
+          callback(INITIAL_BRACKET_MATCHES);
+        }
+      } catch (err) {
+        callback(INITIAL_BRACKET_MATCHES);
+      }
     } else {
       callback(INITIAL_BRACKET_MATCHES);
     }
@@ -1314,21 +1368,37 @@ export function subscribeQrConfig(callback) {
       if (docSnap.exists()) {
         callback(docSnap.data());
       } else {
-        saveQrConfig(INITIAL_QR_CONFIG);
+        const saved = localStorage.getItem('fang_qr_config');
+        if (saved) {
+          try {
+            callback(JSON.parse(saved));
+            return;
+          } catch (e) {}
+        }
         callback(INITIAL_QR_CONFIG);
       }
     }, (err) => {
       console.warn('[Firestore] QR config subscription error:', err);
       const saved = localStorage.getItem('fang_qr_config');
-      if (saved) callback(JSON.parse(saved));
-      else callback(INITIAL_QR_CONFIG);
+      if (saved) {
+        try {
+          callback(JSON.parse(saved));
+          return;
+        } catch (e) {}
+      }
+      callback(INITIAL_QR_CONFIG);
     });
     return unsubscribe;
   } catch (e) {
     console.warn('[Firestore] QR config init error:', e);
     const saved = localStorage.getItem('fang_qr_config');
-    if (saved) callback(JSON.parse(saved));
-    else callback(INITIAL_QR_CONFIG);
+    if (saved) {
+      try {
+        callback(JSON.parse(saved));
+        return () => {};
+      } catch (err) {}
+    }
+    callback(INITIAL_QR_CONFIG);
     return () => {};
   }
 }
@@ -1374,21 +1444,37 @@ export function subscribeRulesLinks(callback) {
       if (docSnap.exists()) {
         callback(docSnap.data());
       } else {
-        saveRulesLinks(INITIAL_RULES_LINKS);
+        const saved = localStorage.getItem('fang_rules_links');
+        if (saved) {
+          try {
+            callback(JSON.parse(saved));
+            return;
+          } catch (e) {}
+        }
         callback(INITIAL_RULES_LINKS);
       }
     }, (err) => {
       console.warn('[Firestore] Rules links subscription error:', err);
       const saved = localStorage.getItem('fang_rules_links');
-      if (saved) callback(JSON.parse(saved));
-      else callback(INITIAL_RULES_LINKS);
+      if (saved) {
+        try {
+          callback(JSON.parse(saved));
+          return;
+        } catch (e) {}
+      }
+      callback(INITIAL_RULES_LINKS);
     });
     return unsubscribe;
   } catch (e) {
     console.warn('[Firestore] Rules links init error:', e);
     const saved = localStorage.getItem('fang_rules_links');
-    if (saved) callback(JSON.parse(saved));
-    else callback(INITIAL_RULES_LINKS);
+    if (saved) {
+      try {
+        callback(JSON.parse(saved));
+        return () => {};
+      } catch (err) {}
+    }
+    callback(INITIAL_RULES_LINKS);
     return () => {};
   }
 }
