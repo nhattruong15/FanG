@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Backups (Contains sensitive credentials and player PII)
+backups/

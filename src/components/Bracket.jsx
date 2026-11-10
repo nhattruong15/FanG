@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { GitBranch, CalendarDays, Clock, Trophy, ChevronDown, ChevronUp, Gamepad2, Shield, X, Users, Award, Info } from 'lucide-react';
@@ -58,6 +58,67 @@ export const parseTeamInfo = (teamStr, teamsList = []) => {
     fullObj: null,
   };
 };
+
+/**
+ * Auto-scrolling horizontal text marquee for long titles
+ * Scrolls smoothly and continuously when text overflows container width
+ */
+export function AutoScrollText({ text, className = '', innerClassName = '', align = 'center', title = '' }) {
+  const containerRef = useRef(null);
+  const measureRef = useRef(null);
+  const [isOverflow, setIsOverflow] = useState(false);
+
+  useEffect(() => {
+    const check = () => {
+      if (containerRef.current && measureRef.current) {
+        setIsOverflow(measureRef.current.offsetWidth > containerRef.current.clientWidth + 1);
+      }
+    };
+    check();
+    const timer = setTimeout(check, 150);
+    window.addEventListener('resize', check);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', check);
+    };
+  }, [text]);
+
+  if (!text) return null;
+
+  // Slow, smooth reading speed (~0.4s per character, minimum 10s)
+  const duration = Math.max(10, (text.length || 20) * 0.4);
+
+  return (
+    <div
+      ref={containerRef}
+      className={`w-full overflow-hidden whitespace-nowrap relative ${isOverflow ? 'marquee-mask' : ''} ${className}`}
+      title={title || text}
+    >
+      {/* Invisible measurement element with natural full width */}
+      <span
+        ref={measureRef}
+        className={`absolute invisible whitespace-nowrap pointer-events-none ${innerClassName}`}
+        aria-hidden="true"
+      >
+        {text}
+      </span>
+
+      {isOverflow ? (
+        <div
+          className="inline-flex animate-marquee-text hover:[animation-play-state:paused]"
+          style={{ animationDuration: `${duration}s` }}
+        >
+          <span className={`inline-block pr-8 shrink-0 ${innerClassName}`}>{text}</span>
+          <span className={`inline-block pr-8 shrink-0 ${innerClassName}`} aria-hidden="true">{text}</span>
+        </div>
+      ) : (
+        <span className={`inline-block w-full ${align === 'center' ? 'text-center' : 'text-left'} truncate ${innerClassName}`}>
+          {text}
+        </span>
+      )}
+    </div>
+  );
+}
 
 /**
  * Single Match Card in Bracket View
@@ -296,14 +357,18 @@ const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => 
           ) : (
             <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${t1Win ? 'bg-[#F37022] shadow-[0_0_6px_#F37022]' : 'bg-slate-600'}`} />
           )}
-          <div className="flex flex-col min-w-0">
-            <span className={`truncate text-xs ${t1Info.teamName ? 'font-bold text-slate-100' : 'italic text-slate-400'}`}>
-              {t1Info.teamName || '#'}
-            </span>
+          <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+            <AutoScrollText
+              text={t1Info.teamName || '#'}
+              innerClassName={`text-xs ${t1Info.teamName ? 'font-bold text-slate-100' : 'italic text-slate-400'}`}
+              align="left"
+            />
             {t1Info.schoolName && (
-              <span className="truncate text-[9px] text-slate-400 font-normal leading-tight">
-                {t1Info.schoolName}
-              </span>
+              <AutoScrollText
+                text={t1Info.schoolName}
+                innerClassName="text-[9px] text-slate-400 font-normal leading-tight"
+                align="left"
+              />
             )}
           </div>
         </div>
@@ -324,14 +389,18 @@ const TreeMatchNode = ({ match, teamsList, onSelectMatch, isFinal = false }) => 
           ) : (
             <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${t2Win ? 'bg-[#F37022] shadow-[0_0_6px_#F37022]' : 'bg-slate-600'}`} />
           )}
-          <div className="flex flex-col min-w-0">
-            <span className={`truncate text-xs ${t2Info.teamName ? 'font-bold text-slate-100' : 'italic text-slate-400'}`}>
-              {t2Info.teamName || '#'}
-            </span>
+          <div className="flex flex-col min-w-0 flex-1 overflow-hidden">
+            <AutoScrollText
+              text={t2Info.teamName || '#'}
+              innerClassName={`text-xs ${t2Info.teamName ? 'font-bold text-slate-100' : 'italic text-slate-400'}`}
+              align="left"
+            />
             {t2Info.schoolName && (
-              <span className="truncate text-[9px] text-slate-400 font-normal leading-tight">
-                {t2Info.schoolName}
-              </span>
+              <AutoScrollText
+                text={t2Info.schoolName}
+                innerClassName="text-[9px] text-slate-400 font-normal leading-tight"
+                align="left"
+              />
             )}
           </div>
         </div>
@@ -576,20 +645,31 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
           {/* Team Matchup Banner */}
           <div className="grid grid-cols-2 gap-2 sm:gap-2.5 mb-4 relative">
             {/* Team 1 Box */}
-            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all h-full ${match.winner === 1 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
+            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all h-full min-w-0 overflow-hidden ${match.winner === 1 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
               }`}>
               {team1Obj?.logo ? (
-                <img src={team1Obj.logo} alt={t1Info.teamName} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
+                <img src={team1Obj.logo} alt={t1Info.teamName} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm shrink-0" />
               ) : (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm shrink-0">
                   {t1Info.teamName ? t1Info.teamName.charAt(0) : 'T1'}
                 </div>
               )}
-              <div className="font-heading font-bold text-xs sm:text-base text-white line-clamp-1">{t1Info.teamName}</div>
-              {t1Info.schoolName && (
-                <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{t1Info.schoolName}</div>
-              )}
-              <div className="mt-1 text-base sm:text-lg font-black font-heading text-[#F37022]">
+              <div className="w-full min-w-0 max-w-full px-1">
+                <AutoScrollText
+                  text={t1Info.teamName}
+                  innerClassName="font-heading font-bold text-xs sm:text-base text-white"
+                  align="center"
+                />
+                {t1Info.schoolName && (
+                  <AutoScrollText
+                    text={t1Info.schoolName}
+                    innerClassName="text-[10px] sm:text-[11px] text-slate-400 font-medium"
+                    align="center"
+                    className="mt-0.5"
+                  />
+                )}
+              </div>
+              <div className="mt-1 text-base sm:text-lg font-black font-heading text-[#F37022] shrink-0">
                 Tỷ số: {match.score1 ?? 0}
               </div>
             </div>
@@ -600,20 +680,31 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
             </div>
 
             {/* Team 2 Box */}
-            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all h-full ${match.winner === 2 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
+            <div className={`p-2.5 sm:p-3 rounded-xl border flex flex-col items-center justify-center text-center transition-all h-full min-w-0 overflow-hidden ${match.winner === 2 ? 'bg-orange-500/20 border-[#F37022] shadow-[0_0_15px_rgba(243,112,34,0.3)]' : 'bg-white/5 border-slate-800'
               }`}>
               {team2Obj?.logo ? (
-                <img src={team2Obj.logo} alt={t2Info.teamName} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm" />
+                <img src={team2Obj.logo} alt={t2Info.teamName} className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl object-cover border border-[#F37022]/40 mb-1 shadow-sm shrink-0" />
               ) : (
-                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-[#F37022]/20 text-[#F37022] font-black text-sm sm:text-base flex items-center justify-center border border-[#F37022]/40 mb-1 uppercase shadow-sm shrink-0">
                   {t2Info.teamName ? t2Info.teamName.charAt(0) : 'T2'}
                 </div>
               )}
-              <div className="font-heading font-bold text-xs sm:text-base text-white line-clamp-1">{t2Info.teamName}</div>
-              {t2Info.schoolName && (
-                <div className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 line-clamp-1">{t2Info.schoolName}</div>
-              )}
-              <div className="mt-1 text-base sm:text-lg font-black font-heading text-[#F37022]">
+              <div className="w-full min-w-0 max-w-full px-1">
+                <AutoScrollText
+                  text={t2Info.teamName}
+                  innerClassName="font-heading font-bold text-xs sm:text-base text-white"
+                  align="center"
+                />
+                {t2Info.schoolName && (
+                  <AutoScrollText
+                    text={t2Info.schoolName}
+                    innerClassName="text-[10px] sm:text-[11px] text-slate-400 font-medium"
+                    align="center"
+                    className="mt-0.5"
+                  />
+                )}
+              </div>
+              <div className="mt-1 text-base sm:text-lg font-black font-heading text-[#F37022] shrink-0">
                 Tỷ số: {match.score2 ?? 0}
               </div>
             </div>
@@ -622,9 +713,13 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
           {/* Rosters Comparison */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {/* Team 1 Roster */}
-            <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
-              <h4 className="font-bold text-sm text-[#FFFFFF] uppercase tracking-wider mb-3 flex items-center gap-2">
-                <p className="h-4" />  {t1Info.teamName}
+            <div className="bg-white/5 rounded-xl p-4 border border-slate-800 min-w-0 overflow-hidden">
+              <h4 className="font-bold text-sm text-[#FFFFFF] uppercase tracking-wider mb-3 flex items-center gap-2 min-w-0 w-full overflow-hidden">
+                <AutoScrollText
+                  text={t1Info.teamName}
+                  innerClassName="text-white uppercase font-bold text-sm"
+                  align="left"
+                />
               </h4>
               {t1Members.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">
@@ -676,9 +771,13 @@ const MatchDetailModal = ({ match, teamsList, onClose }) => {
             </div>
 
             {/* Team 2 Roster */}
-            <div className="bg-white/5 rounded-xl p-4 border border-slate-800">
-              <h5 className="font-bold text-sm text-[#FFFFFF] uppercase tracking-wider mb-3 flex items-center gap-2" >
-                <p className=" h-4" /> {t2Info.teamName}
+            <div className="bg-white/5 rounded-xl p-4 border border-slate-800 min-w-0 overflow-hidden">
+              <h5 className="font-bold text-sm text-[#FFFFFF] uppercase tracking-wider mb-3 flex items-center gap-2 min-w-0 w-full overflow-hidden" >
+                <AutoScrollText
+                  text={t2Info.teamName}
+                  innerClassName="text-white uppercase font-bold text-sm"
+                  align="left"
+                />
               </h5>
               {t2Members.length > 0 ? (
                 <div className="grid grid-cols-1 gap-2">

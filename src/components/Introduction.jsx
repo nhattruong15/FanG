@@ -323,11 +323,7 @@ export default function Introduction({ selectedGame, onChangeGame }) {
                         >
                           {game.format}
                         </div>
-                        <div className="inline-flex items-center gap-1 px-1.5 py-0.5 sm:px-3 sm:py-1.5 rounded-md bg-white/5 border border-white/10 text-slate-300 text-[9px] sm:text-xs font-bold group-hover:border-[#F37022]/40 transition-colors">
-                          <span className="sm:w-1.5 sm:h-1.5 rounded-full bg-green-400 animate-pulse" />
-                          <span className="hidden sm:inline">Đang mở đăng ký</span>
-                          <span className="sm:hidden">Đăng ký</span>
-                        </div>
+
                       </div>
                     </div>
 

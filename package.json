@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "backup": "powershell.exe -ExecutionPolicy Bypass -File scripts/backup-firebase.ps1"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
