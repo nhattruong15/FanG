@@ -57,37 +57,29 @@ export default function Sponsor() {
               <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
             </div>
           </div>
-          <p className="mt-3 text-xs sm:text-sm text-slate-400 font-medium tracking-wide">
-            Các cơ quan, đối tác chiến lược và nhà tài trợ đồng hành cùng FanG Esports Tournament
-          </p>
+
         </motion.div>
       </div>
 
       {/* Infinite Horizontal Marquee Carousel */}
-      <div className="relative w-full overflow-hidden py-4">
+      <div className="relative w-full overflow-hidden py-6 sm:py-8">
         {/* Left & Right gradient fade masks for smooth cinematic fade-in / fade-out */}
         <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 bg-gradient-to-r from-[#0e0906] via-[#0e0906]/80 to-transparent z-20 pointer-events-none" />
         <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 bg-gradient-to-l from-[#0e0906] via-[#0e0906]/80 to-transparent z-20 pointer-events-none" />
 
-        <div className="animate-sponsor-slide gap-4 sm:gap-6 md:gap-8 px-4">
+        <div className="animate-sponsor-slide items-center gap-8 sm:gap-12 md:gap-16 px-4">
           {MARQUEE_ITEMS.map((sponsor, idx) => (
             <div
               key={`${sponsor.id}-${idx}`}
-              className="flex-shrink-0 group relative cursor-pointer"
+              className="flex-shrink-0 flex items-center justify-center px-2 cursor-pointer transition-all duration-300 hover:scale-110"
               title={sponsor.name}
             >
-              {/* Outer Glow on Hover */}
-              <div className="absolute -inset-1 bg-gradient-to-r from-[#F37021]/30 via-amber-500/25 to-[#F37021]/30 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
-
-              {/* Card Container */}
-              <div className="relative bg-[#140d08]/85 backdrop-blur-md border border-[#F37021]/20 group-hover:border-[#F37021]/70 px-5 py-3 sm:px-7 sm:py-4 rounded-2xl flex items-center justify-center w-[160px] sm:w-[200px] md:w-[230px] h-20 sm:h-24 md:h-28 shadow-[0_4px_20px_rgba(0,0,0,0.6)] group-hover:shadow-[0_0_25px_rgba(243,112,34,0.35)] transition-all duration-300 transform group-hover:-translate-y-1">
-                <img
-                  src={sponsor.src}
-                  alt={sponsor.alt}
-                  loading="lazy"
-                  className="max-h-12 sm:max-h-16 md:max-h-18 max-w-[120px] sm:max-w-[160px] md:max-w-[180px] w-auto h-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] group-hover:drop-shadow-[0_0_16px_rgba(243,112,34,0.5)] group-hover:scale-105 transition-all duration-300"
-                />
-              </div>
+              <img
+                src={sponsor.src}
+                alt={sponsor.alt}
+                loading="lazy"
+                className="h-12 sm:h-16 md:h-20 w-auto max-w-[140px] sm:max-w-[180px] md:max-w-[220px] object-contain opacity-85 hover:opacity-100 filter drop-shadow-[0_2px_10px_rgba(0,0,0,0.6)] hover:drop-shadow-[0_0_20px_rgba(243,112,34,0.6)] transition-all duration-300"
+              />
             </div>
           ))}
         </div>
