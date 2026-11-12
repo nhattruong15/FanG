@@ -261,3 +261,25 @@
   mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
   -webkit-mask-image: linear-gradient(to right, transparent, black 10px, black calc(100% - 10px), transparent);
 }
+
+/* ===== Smooth Infinite Horizontal Marquee for Sponsors ===== */
+@keyframes sponsor-marquee-scroll {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-sponsor-slide {
+  display: flex;
+  width: max-content;
+  animation: sponsor-marquee-scroll 35s linear infinite;
+  will-change: transform;
+}
+
+.animate-sponsor-slide:hover {
+  animation-play-state: paused;
+}
+

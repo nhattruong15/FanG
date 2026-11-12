@@ -1,25 +1,47 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-import sponsor1 from '../assets/sponsor/28y7kc7ibn071.jpg';
-import sponsor2 from '../assets/sponsor/FireIconLiked.svg';
-import sponsor3 from '../assets/sponsor/TikTok-Logo-PNG.png';
+import logoTheDucTheThao from '../assets/sponsor/logo cục thể dục thể thao option 2.png';
+import logoAnNinhMang from '../assets/sponsor/Cục an ninh mạng.png';
+import logoFanG from '../assets/sponsor/_0000_FanG.png';
+import logoCamDoc from '../assets/sponsor/Cam-doc.png';
+import logoSamsung from '../assets/sponsor/_0004_Samsung-Odyssey.png';
+import logoGarena from '../assets/sponsor/garena-logo.png';
+import logoVMG from '../assets/sponsor/_0003_VMGGames.png';
 
-const fadeInUp = {};
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true },
+  transition: { duration: 0.6 }
+};
 
 const SPONSOR_LOGOS = [
-  { id: 1, src: sponsor1, alt: 'Sponsor Partner 1' },
-  { id: 2, src: sponsor2, alt: 'Sponsor Partner 2' },
-  { id: 3, src: sponsor3, alt: 'TikTok Sponsor Partner' },
+  { id: 'the-duc-the-thao', name: 'Cục Thể Dục Thể Thao', src: logoTheDucTheThao, alt: 'Logo Cục Thể Dục Thể Thao' },
+  { id: 'an-ninh-mang', name: 'Cục An Ninh Mạng A05', src: logoAnNinhMang, alt: 'Logo Cục An Ninh Mạng A05' },
+  { id: 'fang', name: 'FanG Esports', src: logoFanG, alt: 'Logo FanG Esports' },
+  { id: 'fpt-edu', name: 'FPT Education', src: logoCamDoc, alt: 'Logo FPT Education' },
+  { id: 'samsung-odyssey', name: 'Samsung Odyssey', src: logoSamsung, alt: 'Logo Samsung Odyssey' },
+  { id: 'garena', name: 'Garena', src: logoGarena, alt: 'Logo Garena' },
+  { id: 'vmg-games', name: 'VMG Games', src: logoVMG, alt: 'Logo VMG Games' },
+];
+
+// Repeat 4 times so marquee flows seamlessly across any screen resolution
+const MARQUEE_ITEMS = [
+  ...SPONSOR_LOGOS,
+  ...SPONSOR_LOGOS,
+  ...SPONSOR_LOGOS,
+  ...SPONSOR_LOGOS,
 ];
 
 export default function Sponsor() {
   return (
-    <section id="sponsors" className="section-padding relative overflow-hidden py-16 sm:py-24">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
-        <motion.div {...fadeInUp} className="text-center mb-10 sm:mb-14 relative">
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-20 bg-[#F37022]/20 blur-[50px] pointer-events-none rounded-full" />
+    <section id="sponsors" className="relative overflow-hidden py-16 sm:py-24 bg-gradient-to-b from-transparent via-[#120b07]/50 to-transparent">
+      {/* Decorative ambient background glows */}
+      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-48 bg-[#F37022]/10 blur-[90px] pointer-events-none rounded-full" />
 
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10 mb-10 sm:mb-14">
+        <motion.div {...fadeInUp} className="text-center relative">
           <div className="flex items-center justify-center gap-3 sm:gap-6">
             <div className="hidden sm:flex items-center gap-1.5 opacity-70">
               <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
@@ -35,33 +57,41 @@ export default function Sponsor() {
               <div className="w-1.5 h-1.5 bg-[#F37022] rotate-45 shadow-[0_0_8px_#F37022]" />
             </div>
           </div>
+          <p className="mt-3 text-xs sm:text-sm text-slate-400 font-medium tracking-wide">
+            Các cơ quan, đối tác chiến lược và nhà tài trợ đồng hành cùng FanG Esports Tournament
+          </p>
         </motion.div>
+      </div>
 
-        <motion.div
-          {...fadeInUp}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 md:gap-14"
-        >
-          {SPONSOR_LOGOS.map((sponsor) => (
-            <motion.div
-              key={sponsor.id}
-              whileHover={{ y: -6, scale: 1.05 }}
-              className="relative group cursor-pointer"
+      {/* Infinite Horizontal Marquee Carousel */}
+      <div className="relative w-full overflow-hidden py-4">
+        {/* Left & Right gradient fade masks for smooth cinematic fade-in / fade-out */}
+        <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 bg-gradient-to-r from-[#0e0906] via-[#0e0906]/80 to-transparent z-20 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 md:w-44 bg-gradient-to-l from-[#0e0906] via-[#0e0906]/80 to-transparent z-20 pointer-events-none" />
+
+        <div className="animate-sponsor-slide gap-4 sm:gap-6 md:gap-8 px-4">
+          {MARQUEE_ITEMS.map((sponsor, idx) => (
+            <div
+              key={`${sponsor.id}-${idx}`}
+              className="flex-shrink-0 group relative cursor-pointer"
+              title={sponsor.name}
             >
-              <div className="absolute -inset-2 bg-gradient-to-r from-[#F37021]/30 to-amber-500/30 rounded-2xl blur-lg opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
+              {/* Outer Glow on Hover */}
+              <div className="absolute -inset-1 bg-gradient-to-r from-[#F37021]/30 via-amber-500/25 to-[#F37021]/30 rounded-2xl blur-md opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none" />
 
-              <div className="relative bg-[#140d08] border border-[#F37021]/30 group-hover:border-[#F37021] p-4 sm:p-6 rounded-2xl flex items-center justify-center min-w-[140px] sm:min-w-[200px] h-24 sm:h-32 shadow-lg transition-all duration-300">
+              {/* Card Container */}
+              <div className="relative bg-[#140d08]/85 backdrop-blur-md border border-[#F37021]/20 group-hover:border-[#F37021]/70 px-5 py-3 sm:px-7 sm:py-4 rounded-2xl flex items-center justify-center w-[160px] sm:w-[200px] md:w-[230px] h-20 sm:h-24 md:h-28 shadow-[0_4px_20px_rgba(0,0,0,0.6)] group-hover:shadow-[0_0_25px_rgba(243,112,34,0.35)] transition-all duration-300 transform group-hover:-translate-y-1">
                 <img
                   src={sponsor.src}
                   alt={sponsor.alt}
-                  className="max-h-16 sm:max-h-20 max-w-[140px] sm:max-w-[170px] w-auto h-auto object-contain filter drop-shadow-[0_2px_10px_rgba(0,0,0,0.8)] group-hover:drop-shadow-[0_0_20px_rgba(243,112,34,0.6)] transition-all duration-300"
+                  loading="lazy"
+                  className="max-h-12 sm:max-h-16 md:max-h-18 max-w-[120px] sm:max-w-[160px] md:max-w-[180px] w-auto h-auto object-contain filter drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)] group-hover:drop-shadow-[0_0_16px_rgba(243,112,34,0.5)] group-hover:scale-105 transition-all duration-300"
                 />
               </div>
-            </motion.div>
+            </div>
           ))}
-        </motion.div>
+        </div>
       </div>
     </section>
   );
 }
-
