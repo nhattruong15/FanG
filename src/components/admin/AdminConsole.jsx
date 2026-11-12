@@ -895,12 +895,22 @@ export default function AdminConsole({ onBackToLanding }) {
 
   // Delete Handlers
   const handleDeleteTeam = async (id) => {
+    const targetTeam = teams.find(t => t.id === id);
+    const teamName = targetTeam?.name ? `đội "${targetTeam.name}"` : 'đội tuyển này';
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${teamName} không?\nThao tác này sẽ xóa vĩnh viễn khỏi danh sách và CSDL.`)) {
+      return;
+    }
     const updatedTeams = teams.filter(t => t.id !== id);
     setTeams(updatedTeams);
     await safeFirestoreSave(() => saveTeams(updatedTeams), 'Đã xóa đội tuyển.', 'Lỗi xóa đội');
   };
 
   const handleDeleteNews = async (id) => {
+    const targetNews = news.find(n => n.id === id);
+    const newsTitle = targetNews?.title ? `bài viết "${targetNews.title}"` : 'bài viết này';
+    if (!window.confirm(`Bạn có chắc chắn muốn xóa ${newsTitle} không?\nThao tác này sẽ xóa vĩnh viễn khỏi danh sách và CSDL.`)) {
+      return;
+    }
     const updatedNews = news.filter(n => n.id !== id);
     setNews(updatedNews);
     await safeFirestoreSave(() => saveNewsArticles(updatedNews), null, 'Lỗi lưu tin tức');
