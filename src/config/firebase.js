@@ -199,7 +199,7 @@ export async function saveAdminAccount(credentials = INITIAL_ADMIN_CREDENTIALS) 
  * Ensure Firebase Auth is active for admin write operations
  */
 export async function ensureAdminAuth() {
-  if (auth.currentUser) return auth.currentUser;
+  if (auth.currentUser && auth.currentUser.email === 'vedc@fang.vn') return auth.currentUser;
   const isAuth = typeof window !== 'undefined' && sessionStorage.getItem('fang_admin_authenticated') === 'true';
   if (isAuth) {
     try {
@@ -212,9 +212,28 @@ export async function ensureAdminAuth() {
   return null;
 }
 
-// Auto-authenticate on load if admin session exists
-if (typeof window !== 'undefined' && sessionStorage.getItem('fang_admin_authenticated') === 'true') {
-  ensureAdminAuth().catch(() => {});
+/**
+ * Ensure Firebase Auth is active for client operations (tracking page visits, presence, QR scans, live views)
+ */
+export async function ensureClientAuth() {
+  if (auth.currentUser) return auth.currentUser;
+  const isAdmin = typeof window !== 'undefined' && sessionStorage.getItem('fang_admin_authenticated') === 'true';
+  try {
+    if (isAdmin) {
+      const cred = await signInWithEmailAndPassword(auth, 'vedc@fang.vn', '0316240304');
+      return cred.user;
+    }
+    const cred = await signInWithEmailAndPassword(auth, 'analytics@fang.vn', 'FangAnalytics2026!');
+    return cred.user;
+  } catch (e) {
+    console.warn('[Auth] ensureClientAuth warning:', e?.code || e);
+    return null;
+  }
+}
+
+// Auto-authenticate on load for client reads and analytics
+if (typeof window !== 'undefined') {
+  ensureClientAuth().catch(() => {});
 }
 
 /**
@@ -690,6 +709,7 @@ export const INITIAL_QR_STATS = {
  * Record a QR Code Scan event in Firestore collection "qr_scans/stats"
  */
 export async function recordQrScan(gameName = 'ALL') {
+  await ensureClientAuth();
   const rawGame = (gameName || '').toString().trim().toUpperCase();
   const isAov = rawGame === 'AOV' || rawGame.includes('LIÊN QUÂN') || rawGame.includes('LIEN QUAN');
   const isVal = rawGame === 'VALORANT' || rawGame === 'VAL' || rawGame.includes('VALORANT');
@@ -811,6 +831,7 @@ export const INITIAL_LIVE_STATS = {
  * Record a Live View event in Firestore collection "live_views/stats"
  */
 export async function recordLiveView(gameName = 'ALL') {
+  await ensureClientAuth();
   const now = new Date();
   const timeStr = now.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
   const dateStr = now.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -952,14 +973,9 @@ export const INITIAL_VISITOR_STATS = {
  * Uses atomic/increment tracking per unique device visit
  */
 export async function recordPageVisit() {
+  await ensureClientAuth();
   const visitorId = getOrCreateVisitorId();
   const now = new Date().toISOString();
-  
-  // Track if this device has ever visited before
-  const isFirstDeviceVisit = !localStorage.getItem('fang_device_visited');
-  if (isFirstDeviceVisit) {
-    localStorage.setItem('fang_device_visited', 'true');
-  }
 
   const visitorEntry = {
     id: visitorId,
@@ -1001,11 +1017,8 @@ export async function recordPageVisit() {
       activeSessions.push(visitorEntry);
     }
 
-    // Only increment totalVisits counter if first visit for this device or new session
-    const updatedTotal = isFirstDeviceVisit ? currentTotal + 1 : currentTotal;
-
     const payload = {
-      totalVisits: updatedTotal,
+      totalVisits: increment(1),
       activeSessions,
       lastVisitTime: now,
       updatedAt: now
@@ -1013,15 +1026,21 @@ export async function recordPageVisit() {
 
     await setDoc(visitorDocRef, payload, { merge: true });
     console.log('[Visitor] Browser visit recorded. VisitorId:', visitorId, 'Online Visitors:', activeSessions.length);
-    localStorage.setItem('fang_visitor_stats', JSON.stringify(payload));
-    return { success: true, stats: payload };
+    const localSaved = {
+      totalVisits: currentTotal + 1,
+      activeSessions,
+      lastVisitTime: now,
+      updatedAt: now
+    };
+    localStorage.setItem('fang_visitor_stats', JSON.stringify(localSaved));
+    return { success: true, stats: localSaved };
   } catch (error) {
     console.warn('[Visitor] Record page visit fallback:', error);
     const saved = localStorage.getItem('fang_visitor_stats');
     const parsed = saved ? JSON.parse(saved) : INITIAL_VISITOR_STATS;
     const updated = {
       ...parsed,
-      totalVisits: isFirstDeviceVisit ? (parsed.totalVisits || 0) + 1 : (parsed.totalVisits || 0),
+      totalVisits: (parsed.totalVisits || 0) + 1,
       lastVisitTime: now
     };
     localStorage.setItem('fang_visitor_stats', JSON.stringify(updated));
@@ -1034,6 +1053,7 @@ export async function recordPageVisit() {
  * Overwrites the current browser's VISITOR_ID lastSeen timestamp in Firestore
  */
 export async function updatePresenceHeartbeat() {
+  await ensureClientAuth();
   const visitorId = getOrCreateVisitorId();
   const now = new Date().toISOString();
 
@@ -1083,6 +1103,7 @@ export async function updatePresenceHeartbeat() {
  * Only removes if this is the last open tab in this browser
  */
 export async function removePresenceSession() {
+  await ensureClientAuth();
   const visitorId = getOrCreateVisitorId();
   try {
     // Check if other tabs are still open in this browser

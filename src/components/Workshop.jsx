@@ -285,8 +285,8 @@ export default function Workshop() {
 
                 <div className="p-6 sm:p-8">
                   <div className="bg-white/5 border border-white/10 rounded-xl p-4 mb-5 text-slate-200 text-xs sm:text-sm leading-relaxed">
-                    <p className="font-semibold text-amber-300 text-xs mb-1 uppercase tracking-wider">Mô tả nội dung:</p>
-                    <p>{selectedWorkshop.description}</p>
+                    <p className="font-semibold text-amber-300 text-xs mb-1 uppercase tracking-wider">Địa chỉ:</p>
+                    <p>{selectedWorkshop.guest}</p>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs sm:text-sm mb-6">
@@ -314,13 +314,7 @@ export default function Workshop() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-3 bg-white/5 p-3.5 rounded-xl border border-slate-800">
-                      <Users className="w-5 h-5 text-blue-400 flex-shrink-0" />
-                      <div className="min-w-0">
-                        <span className="block text-[10px] text-slate-400">Địa chỉ</span>
-                        <strong className="text-white font-semibold truncate block">{selectedWorkshop.guest}</strong>
-                      </div>
-                    </div>
+
                   </div>
 
                   <div className="flex justify-end">
