@@ -125,7 +125,7 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink, isValorant }) 
 
         {/* Outer Electric Cyber Frame */}
         <div className="relative rounded-3xl p-5 sm:p-7 lg:p-9 bg-gradient-to-b from-[#180e08]/95 via-[#0f0906]/98 to-[#080402]/98 backdrop-blur-xl border-2 border-[#F37022]/40 shadow-[0_0_50px_rgba(243,112,34,0.18)] overflow-hidden">
-          
+
           {/* Subtle Cyber Grid Matrix Background */}
           <div
             className="absolute inset-0 opacity-[0.05] pointer-events-none"
@@ -181,7 +181,7 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink, isValorant }) 
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F37022] opacity-75" />
                 <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F37022] shadow-[0_0_8px_#F37022]" />
               </span>
-              <span className="text-[#F37022] font-black uppercase text-[11px] sm:text-xs">SYS // THỂ THỨC THI ĐẤU</span>
+              <span className="text-[#F37022] font-black uppercase text-[11px] sm:text-xs">THỂ THỨC THI ĐẤU</span>
               <span className="text-slate-600 hidden md:inline">|</span>
               <span className="text-slate-400 text-[11px] hidden md:inline">LỘ TRÌNH 4 GIAI ĐOẠN</span>
             </div>
