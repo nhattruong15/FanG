@@ -177,12 +177,7 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink, isValorant }) 
           <div className="flex flex-wrap items-center justify-between gap-3 pb-5 mb-7 border-b border-[#F37022]/20 relative z-10">
             {/* Left Status Indicator */}
             <div className="flex items-center gap-2 text-xs font-mono tracking-widest text-slate-400">
-              <span className="relative flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#F37022] opacity-75" />
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#F37022] shadow-[0_0_8px_#F37022]" />
-              </span>
-              <span className="text-[#F37022] font-black uppercase text-[11px] sm:text-xs">THỂ THỨC THI ĐẤU</span>
-              <span className="text-slate-600 hidden md:inline">|</span>
+
               <span className="text-slate-400 text-[11px] hidden md:inline">LỘ TRÌNH 4 GIAI ĐOẠN</span>
             </div>
 
@@ -191,7 +186,6 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink, isValorant }) 
               className={`inline-flex items-center justify-center gap-2 py-2 px-8 border ${gameColor.border} ${gameColor.bg} shadow-[0_0_20px_rgba(243,112,34,0.3)] backdrop-blur-sm`}
               style={{ clipPath: 'polygon(10px 0, calc(100% - 10px) 0, 100% 50%, calc(100% - 10px) 100%, 10px 100%, 0 50%)' }}
             >
-              <Zap className="w-3.5 h-3.5 text-amber-400 animate-pulse" />
               <span className={`font-heading font-black text-xs sm:text-sm uppercase tracking-widest ${gameColor.text}`}>
                 {gameName}
               </span>
