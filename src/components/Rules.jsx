@@ -281,23 +281,21 @@ function GameFlowColumn({ steps, gameName, gameColor, detailLink, isValorant }) 
                           </div>
 
                           {/* Tech Stage Code */}
-                          <span className="text-[10px] font-mono font-bold text-slate-400 tracking-wider">
-                            {step.code}
-                          </span>
+
                         </div>
 
                         {/* Tag Pill with Electric Border */}
                         {step.tag === 'ONLINE' ? (
                           <span className="px-2.5 py-1 bg-cyan-950/70 border border-cyan-400/70 text-cyan-300 text-[10px] font-black uppercase tracking-widest skew-x-[-8deg] shadow-[0_0_12px_rgba(6,182,212,0.45)]">
                             <span className="skew-x-[8deg] inline-flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping inline-block" />
+                              <span className=" rounded-full bg-cyan-400 animate-ping inline-block" />
                               {step.tag}
                             </span>
                           </span>
                         ) : step.tag === 'OFFLINE' ? (
                           <span className="px-2.5 py-1 bg-orange-950/70 border border-[#F37022] text-amber-300 text-[10px] font-black uppercase tracking-widest skew-x-[-8deg] shadow-[0_0_12px_rgba(243,112,34,0.5)]">
                             <span className="skew-x-[8deg] inline-flex items-center gap-1">
-                              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse inline-block" />
+                              <span className=" bg-amber-400 animate-pulse inline-block" />
                               {step.tag}
                             </span>
                           </span>
