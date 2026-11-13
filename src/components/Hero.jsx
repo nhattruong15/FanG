@@ -5,8 +5,8 @@ import kvImage from '../assets/KV/kv_new.jpg';
 
 export default function Hero() {
   return (
-    <section id="hero" className="relative w-full bg-[#0e0906] pt-14 sm:pt-16 lg:pt-0 overflow-hidden">
-      <div className="relative w-full aspect-video lg:aspect-auto lg:h-screen overflow-hidden bg-[#0e0906]">
+    <section id="hero" className="relative w-full bg-[#0e0906] pt-14 sm:pt-16 lg:pt-[116px] overflow-hidden">
+      <div className="relative w-full aspect-video overflow-hidden bg-[#0e0906]">
         <img
           src={kvImage}
           alt="FanG Exports FPT Tournament Key Visual"
@@ -16,7 +16,7 @@ export default function Hero() {
           decoding="async"
         />
 
-        <div className="absolute bottom-4 sm:bottom-8 md:bottom-12 left-1/2 -translate-x-1/2 z-20 px-4 text-center">
+        <div className="absolute bottom-3 sm:bottom-6 md:bottom-8 lg:bottom-10 left-1/2 -translate-x-1/2 z-20 px-4 text-center">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
